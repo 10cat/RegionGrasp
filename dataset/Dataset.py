@@ -191,8 +191,9 @@ class GrabNetDataset(data.Dataset):
         # ObjMesh.vertices = np.matmul(ObjMesh.vertices, raw_datas['root_orient_obj_rotmat'][0].T) + raw_datas['trans_obj']
         # HandMesh.vertices = np.matmul(HandMesh.vertices, raw_datas['global_orient_rhand_rotmat'][0].T) + raw_datas['trans_rhand']
         # 注意: raw_datas中的rotmat shape都是(1,3,3)
-        #TODO: [checkpoint!!] visualize and check if it is actually "object-centric"
 
+        # TODO: [checkpoint!!] visualize and check if it is actually "object-centric"
+        # point out the (0,0) point in the coordinate
 
         """
         [Ray tracing with pycaster]
