@@ -1,8 +1,27 @@
 import numpy as np
 import torch
 import logging
+import time
+from functools import wraps
+import inspect
 
 to_cpu = lambda tensor: tensor.detach().cpu().numpy() # 好！直接用lambda代入法一句话代替函数
+
+def func_timer(function):
+    @wraps(function)
+    def function_timer(*args, **kwargs):
+        print('[Function: {name} start...]'.format(name=function.__name__))
+        t0 = time.time()
+        result = function(*args, **kwargs)
+        t1 = time.time()
+        print('[Function: {name} finished, spent time: {time:.8f}s]'.format(name=function.__name__, time=t1 - t0))
+        return result
+
+    return function_timer
+
+def retrieve_name(var):
+    local_vars = inspect.currentframe().f_back.f_locals.items()
+    return [var_name for var_name, var_val in local_vars if var_val is var]
 
 
 def to_tensor(array, dtype=torch.float32):
@@ -59,6 +78,36 @@ def euler(rots, order="xyz", units="deg"):
         return rotmats[0]
     else:
         return rotmats
+
+def size_splits(tensor, split_sizes, dim=0):
+    """
+    Splits the tensor according to the chunks of split_sizes.
+    Arguments:
+        tensor(Tensor): tensor to split
+        size_splits(list(int)): sizes of chunks (unit lengths)
+        dim(int): dimension along which to split the tensor
+    """
+    """
+    [Coding notes]
+    Applied functions:
+    - torch.narrow: https://pytorch.org/docs/stable/generated/torch.narrow.html
+    - torch.cumsum: https://pytorch.org/docs/stable/generated/torch.cumsum.html
+    """
+
+    if dim < 0:
+        dim += tensor.dim()
+    
+    dim_size = tensor.size(dim)
+    if dim_size != torch.sum(torch.Tensor(split_sizes)):
+        raise KeyError("Sum of split sizes exceeds tensor dim")
+
+    splits = torch.cumsum(torch.Tensor([0] + split_sizes), dim=0)[:-1] # 不包括最后一个：cumsum最后的结果就是原tensor.dim()
+
+    return tuple(tensor.narrow(int(dim), int(start), int(length)) 
+                 for start, length in zip(splits, split_sizes))
+
+
+
     
 contact_ids={'Body': 1,
              'L_Thigh': 2,

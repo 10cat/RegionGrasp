@@ -80,9 +80,11 @@ class GRAB(data.Dataset):
 if __name__ == '__main__':
     import smplx
     import trimesh
+    import cv2
 
     root = config.dataset_root
     model_path = config.model_root
+    obj_model_path = os.path.join(root, "object_meshes/contact_meshes")
 
     mode = "train"
 
@@ -121,10 +123,14 @@ if __name__ == '__main__':
     #TODO: visualize object mesh
     print("model faces: ", sample["obj_info"]["faces"])
     # 有bug：现在downsample的结果没法直接可视化
+    #TODO 直接读取object model进行contact标注
+    obj_mesh_path = os.path.join(obj_model_path, sample["object_name"]+'.ply')
+    obj_mesh = trimesh.load(obj_mesh_path)
+    obj_verts = np.matmul(obj_mesh.vertices, cv2.Rodrigues(sample["obj_global_orient"])[0].T) + sample["obj_transl"]
     # obj_verts_np = to_cpu(sample["obj_verts"])
     # contact_np = to_cpu(sample["contact"])
 
-    # object_mesh = Mesh(vertices=obj_verts_np, faces=sample["obj_info"]["faces"], vc=colors['yellow'])
+    object_mesh = Mesh(vertices=obj_verts, faces=sample["obj_info"]["faces"], vc=colors['yellow'])
     # object_mesh.set_vertex_colors(vc=colors['red'], vertex_ids=contact_np > 0)
     # object_mesh.show()
 

@@ -40,7 +40,7 @@ def sample_surface(mesh, count, vertices):
     # total area (float)
     area_sum = np.sum(area)
     # cumulative area (len(mesh.faces))
-    area_cum = np.cumsum(area)
+    area_cum = np.cumsum(area) # cumulative axis: order number 0 -> (total-1)
     face_pick = np.random.random(count) * area_sum
     face_index = np.searchsorted(area_cum, face_pick) 
 
@@ -58,7 +58,7 @@ def sample_surface(mesh, count, vertices):
     # print(tri_vectors[0:2],tri_origins[0:2])
     
     tri_faces = tri_faces[face_index]
-    tri_torch = vertices[0,torch.from_numpy(tri_faces).long()]
+    tri_torch = vertices[0, torch.from_numpy(tri_faces).long()]
     # print(tri_torch.shape)
     tri_origins_torch = tri_torch[:,0]
     tri_vectors_torch = tri_torch[:,1:]
@@ -88,7 +88,7 @@ def sample_surface(mesh, count, vertices):
     # print(tri_vectors_torch.detach().cpu()[0:2], tri_origins_torch.detach().cpu()[0:2])
     sample_vector = (tri_vectors_torch * random_lengths).sum(dim=1)
     # print(random_lengths.shape,random_lengths[0:5])
-    random_lengths = 1-random_lengths.sum(dim=1)
+    random_lengths = 1 - random_lengths.sum(dim=1)
     # print(random_lengths.shape, tri_origins_torch.shape, random_lengths[0:5])
     tri_origins_torch = tri_origins_torch*random_lengths
 
@@ -153,54 +153,54 @@ def sample_surface(mesh, count, vertices):
 
 
 def sample_surface_even(mesh, count, vertices, radius=None):
-    """
-    Sample the surface of a mesh, returning samples which are
-    VERY approximately evenly spaced. This is accomplished by
-    sampling and then rejecting pairs that are too close together.
+  """
+  Sample the surface of a mesh, returning samples which are
+  VERY approximately evenly spaced. This is accomplished by
+  sampling and then rejecting pairs that are too close together.
 
-    Note that since it is using rejection sampling it may return
-    fewer points than requested (i.e. n < count). If this is the
-    case a log.warning will be emitted.
+  Note that since it is using rejection sampling it may return
+  fewer points than requested (i.e. n < count). If this is the
+  case a log.warning will be emitted.
 
-    Parameters
-    -----------
-    mesh : trimesh.Trimesh
-      Geometry to sample the surface of
-    count : int
-      Number of points to return
-    radius : None or float
-      Removes samples below this radius
+  Parameters
+  -----------
+  mesh : trimesh.Trimesh
+    Geometry to sample the surface of
+  count : int
+    Number of points to return
+  radius : None or float
+    Removes samples below this radius
 
-    Returns
-    ---------
-    samples : (n, 3) float
-      Points in space on the surface of mesh
-    face_index : (n,) int
-      Indices of faces for each sampled point
-    """
-    from trimesh.points import remove_close#########################
+  Returns
+  ---------
+  samples : (n, 3) float
+    Points in space on the surface of mesh
+  face_index : (n,) int
+    Indices of faces for each sampled point
+  """
+  from trimesh.points import remove_close#########################
 
-    # guess radius from area
-    if radius is None:
-        radius = np.sqrt(mesh.area / (3 * count))
-        print(radius, mesh.area)
+  # guess radius from area
+  if radius is None:
+      radius = np.sqrt(mesh.area / (3 * count))
+      print(radius, mesh.area)
 
-    # get points on the surface
-    points = sample_surface(mesh, count * 3, vertices)
+  # get points on the surface
+  points = sample_surface(mesh, count * 3, vertices)
 
-    # remove the points closer than radius
-    _, mask = remove_close(points.detach().squeeze().cpu(), radius)
-    points = points[0, torch.from_numpy(mask).long()]
+  # remove the points closer than radius
+  _, mask = remove_close(points.detach().squeeze().cpu(), radius)
+  points = points[0, torch.from_numpy(mask).long()]
 
-    # we got all the samples we expect
-    if len(points) >= count:
-        return points[:count][None]
+  # we got all the samples we expect
+  if len(points) >= count:
+      return points[:count][None]
 
-    # warn if we didn't get all the samples we expect
-    util.log.warning('only got {}/{} samples!'.format(
-        len(points), count))
-    
-    return points[None]
+  # warn if we didn't get all the samples we expect
+  util.log.warning('only got {}/{} samples!'.format(
+      len(points), count))
+  
+  return points[None]
 
 
 # def sample_surface_sphere(count):
