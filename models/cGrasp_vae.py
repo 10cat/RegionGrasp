@@ -11,14 +11,14 @@ import torch.nn.functional as F
 
 import numpy as np
 
-from network.pointnet_encoder import PointNetEncoder
-from network.CVAE import VAE
+from pointnet_encoder import PointNetEncoder
+from CVAE import VAE
 
 
 class cGraspvae(nn.Module):
     def __init__(self, in_channel_obj=4, in_channel_hand=3, encoder_sizes=[1024, 512, 256], \
                 latent_size=64, decoder_sizes=[1024, 256, 61], condition_size=1024):
-        super(cGraspvae).__init__()
+        super(cGraspvae, self).__init__()
 
         self.in_channel_obj = in_channel_obj
         self.in_channel_hand = in_channel_hand
@@ -30,9 +30,9 @@ class cGraspvae(nn.Module):
         self.obj_encoder = PointNetEncoder(global_feat=True, feature_transform=False, channel=self.in_channel_obj)
         self.hand_encoder = PointNetEncoder(global_feat=True, feature_transform=False, channel=self.in_channel_hand)
 
-        self.cvae = VAE(encoder_layer_sizes=self.encoder_size,
+        self.cvae = VAE(encoder_layer_sizes=self.encoder_sizes,
                         latent_size=self.latent_size,
-                        decoder_layer_size=self.decoder_sizes,
+                        decoder_layer_sizes=self.decoder_sizes,
                         condition_size=self.condition_size)
 
     def forward(self, obj_pc, hand_xyz):
@@ -51,7 +51,20 @@ class cGraspvae(nn.Module):
 
     def inference(self, obj_pc):
         B = obj_pc.size(0)
-        obj_glb_feature, _, _ = self.obj_encoder
+        obj_glb_feature, _, _ = self.obj_encoder(obj_pc)
         recon, z = self.cvae.inference(n=B, c=obj_glb_feature)
         recon = recon.contiguous().view(B, 61)
         return recon
+
+
+if __name__ == "__main__":
+    obj_verts = torch.randn(16, 3, 3000)
+    hand_verts = torch.randn(16, 3, 778)
+
+    model = cGraspvae(in_channel_obj=3)
+
+    recon, means, log_var, z = model(obj_verts, hand_verts)
+
+    recon_inf = model.inference(obj_verts)
+    import pdb; pdb.set_trace()
+    

@@ -14,6 +14,15 @@ class MyOptions:
     fit_Condition: bool = True
     fit_cGrasp: bool = True
 
+    """
+    Model Hyperparams
+    """
+    # SDmapNet
+    class SDmapNet:
+        input_dim: int = 1088
+        output_dim: int = 1
+        layers: list = [512, 256, 128]
+
     output_root: str=f"/home/datassd/yilin/Outputs/ConditionHOI/"
     model_root: str= os.path.join(output_root, 'model', exp_name)
 

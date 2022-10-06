@@ -4,7 +4,7 @@ import torch.nn as nn
 class VAE(nn.Module):
     def __init__(self, encoder_layer_sizes, latent_size, decoder_layer_sizes,
                  conditional=True, condition_size=1024):
-        super(VAE).__init__()
+        super(VAE, self).__init__()
 
         if conditional:
             assert condition_size > 0
@@ -54,7 +54,7 @@ class Encoder(nn.Module):
 
         for i, (in_size, out_size) in enumerate(zip(layer_sizes[:-1], layer_sizes[1:])):
             self.MLP.add_module(
-                name="L{:d}".foramt(i), module=nn.Linear(in_size, out_size)
+                name="L{:d}".format(i), module=nn.Linear(in_size, out_size)
             )
             self.MLP.add_module(name="A{:d}".format(i), module=nn.ReLU())
 
@@ -80,11 +80,11 @@ class Decoder(nn.Module):
         else:
             input_size = latent_size
 
-        for i, (in_size, out_size) in enumerate(zip([input_size + layer_sizes[:-1], layer_sizes])):
+        for i, (in_size, out_size) in enumerate(zip([input_size] + layer_sizes[:-1], layer_sizes)):
             self.MLP.add_module(name="L{:d}".format(i), module=nn.Linear(in_size, out_size))
 
             if i+1 < len(layer_sizes):
-                self.MLP.add_module(name="A{:d}".foramt(i), module=nn.ReLU())
+                self.MLP.add_module(name="A{:d}".format(i), module=nn.ReLU())
 
     def forward(self, z, c):
         if self.conditional:
