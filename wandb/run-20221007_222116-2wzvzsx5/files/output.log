@@ -1,0 +1,11 @@
+
+[Function: __init__ start...]
+[Function: __init__ finished, spent time: 3.16032767s]
+[Function: __init__ start...]
+[Function: __init__ finished, spent time: 0.54269052s]
+[Function: __init__ start...]
+[Function: __init__ finished, spent time: 0.84270501s]
+Traceback (most recent call last):
+  File "traineval.py", line 62, in <module>
+    train_val(trainloader, valloader, testloader, cfg)
+TypeError: train_val() takes 3 positional arguments but 4 were given

@@ -1,0 +1,24 @@
+{
+    "os": "Linux-5.4.0-126-generic-x86_64-with-glibc2.17",
+    "python": "3.8.13",
+    "heartbeatAt": "2022-10-08T04:24:10.128994",
+    "startedAt": "2022-10-08T04:24:09.580562",
+    "docker": null,
+    "gpu": "NVIDIA GeForce RTX 2080 Ti",
+    "gpu_count": 2,
+    "cpu_count": 36,
+    "cuda": null,
+    "args": [],
+    "state": "running",
+    "program": "traineval.py",
+    "codePath": "traineval.py",
+    "git": {
+        "remote": "https://github.com/YiLin32Wang/ConditionHOI.git",
+        "commit": "f12b529e2d37689671f29aadb2240341b687b01c"
+    },
+    "email": "yilinwang0573@gmail.com",
+    "root": "/home/datassd/yilin/Codes/Hand/ConditionHOI",
+    "host": "licheng-workstation1",
+    "username": "yilin",
+    "executable": "/home/yilin/anaconda3/envs/pytorch3d/bin/python"
+}

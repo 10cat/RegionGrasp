@@ -11,8 +11,8 @@ import torch.nn.functional as F
 
 import numpy as np
 
-from pointnet_encoder import PointNetEncoder
-from CVAE import VAE
+from models.pointnet_encoder import PointNetEncoder
+from models.CVAE import VAE
 
 
 class cGraspvae(nn.Module):

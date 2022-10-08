@@ -15,10 +15,20 @@ os.environ['CUDA_VISIBLE_DEVICES'] = "0,1"
 
 
 def train_val(trainloader, valloader, testloader):
+    trainer = TrainEpoch(trainloader)
+    valer = ValEpoch(valloader, mode='val')
+    tester = ValEpoch(testloader, mode='test')
+    best_val = None
 
-    for epoch in range(cfg.num_epochs):
-        TrainEpoch(trainloader, epoch)
-        ValEpoch(valloader, epoch)
+    for epoch in range(cfg.start_epoch - 1, cfg.num_epoch):
+        trainer.epoch(epoch + 1)
+        valer.epoch(epoch, best_val=best_val)
+    
+    # tester.epoch(epoch, best_val=best_val)
+    # print(f"Done with experiment: {cfg.exp_name}")
+        
+
+    
 
 def evaluation(testloader):
     ValEpoch(testloader)
@@ -49,7 +59,7 @@ if __name__ == "__main__":
     testloader = data.DataLoader(testdataset, batch_size=cfg.batch_size, shuffle=False)
 
     if cfg.mode == 'train':
-        train_val(trainloader, valloader, testloader, cfg)
+        train_val(trainloader, valloader, testloader)
     else:
         evaluation(testloader)
 

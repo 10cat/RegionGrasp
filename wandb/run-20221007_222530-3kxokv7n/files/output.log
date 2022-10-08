@@ -1,0 +1,26 @@
+
+[Function: __init__ start...]
+[Function: __init__ finished, spent time: 2.22386885s]
+[Function: __init__ start...]
+[Function: __init__ finished, spent time: 0.44830251s]
+[Function: __init__ start...]
+[Function: __init__ finished, spent time: 0.65328240s]
+train epoch:1:   0%|                                                                                                                                                                                   | 0/20227 [00:00<?, ?it/s]
+Traceback (most recent call last):
+  File "traineval.py", line 62, in <module>
+    train_val(trainloader, valloader, testloader)
+  File "traineval.py", line 24, in train_val
+    trainer.epoch(epoch + 1)
+  File "/home/datassd/yilin/Codes/Hand/ConditionHOI/epochbase.py", line 217, in epoch
+    self.one_batch(sample)
+  File "/home/datassd/yilin/Codes/Hand/ConditionHOI/epochbase.py", line 181, in one_batch
+    data_elements = self.read_data(sample)
+  File "/home/datassd/yilin/Codes/Hand/ConditionHOI/epochbase.py", line 73, in read_data
+    region = self.to_device(sample['region_mask'])
+  File "/home/datassd/yilin/Codes/Hand/ConditionHOI/epochbase.py", line 66, in to_device
+    return to_gpu(tensor)
+  File "/home/datassd/yilin/Codes/Hand/ConditionHOI/epochbase.py", line 23, in <lambda>
+    to_gpu = lambda tensor: tensor.cuda()
+  File "/home/yilin/anaconda3/envs/pytorch3d/lib/python3.8/site-packages/torch/cuda/__init__.py", line 166, in _lazy_init
+    raise AssertionError("Torch not compiled with CUDA enabled")
+AssertionError: Torch not compiled with CUDA enabled

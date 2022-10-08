@@ -1,18 +1,30 @@
 import os
+import torch 
+from torch import optim
 from dataclasses import dataclass
 
-from pyrsistent import T
+# from pyrsistent import T
 @dataclass
 class MyOptions:
-    
-    exp_name: str='exp_1' # 1
+
+    """
+    Base Configuration
+    """
+    exp_name: str='conditionnet_pretrain_1' # 1
     mode: str = 'train'
     num_mask: int = 1
-    batch_size: int = 32
-    num_epochs: int = 100
-    learning_rate: float = 1e-3
+    batch_size: int = 16
+    start_epoch: int = 1
+    num_epoch: int = 60
     fit_Condition: bool = True
-    fit_cGrasp: bool = True
+    fit_cGrasp: bool = False
+
+    learning_rate: float = 1e-3
+    class optimizer_cond:
+        type: str = 'adam'
+    class optimizer_cgrasp:
+        type: str = 'adam'
+
 
     """
     Model Hyperparams
@@ -21,10 +33,23 @@ class MyOptions:
     class SDmapNet:
         input_dim: int = 1088
         output_dim: int = 1
-        layers: list = [512, 256, 128]
+        layer_dims: list = [512, 256, 128]
+        leaky_slope: float = 0.01
 
+    """
+    Loss Configuration
+    """
+    lambda_cond: float = 1.0 # = lambda_cond / lambda_vae
+    class LossCondNet:
+        lambda_om: float = 1
+        lambda_feat: float = 1e-3
+    
+    """
+    Root Path
+    """
     output_root: str=f"/home/datassd/yilin/Outputs/ConditionHOI/"
     model_root: str= os.path.join(output_root, 'model', exp_name)
+    check_interval: int = 5
 
 if __name__=="__main__":
     config = MyOptions()
