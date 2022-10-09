@@ -1,0 +1,445 @@
+2022-10-09 02:13:41,957 INFO    StreamThr :34848 [internal.py:wandb_internal():88] W&B internal server running at pid: 34848, started at: 2022-10-09 02:13:41.956439
+2022-10-09 02:13:41,960 DEBUG   HandlerThread:34848 [handler.py:handle_request():138] handle_request: status
+2022-10-09 02:13:41,963 DEBUG   SenderThread:34848 [sender.py:send_request():315] send_request: status
+2022-10-09 02:13:41,966 DEBUG   SenderThread:34848 [sender.py:send():301] send: header
+2022-10-09 02:13:41,966 INFO    WriterThread:34848 [datastore.py:open_for_write():75] open: /home/datassd/yilin/Codes/Hand/ConditionHOI/wandb/run-20221009_021341-18h8crjf/run-18h8crjf.wandb
+2022-10-09 02:13:41,984 DEBUG   SenderThread:34848 [sender.py:send():301] send: run
+2022-10-09 02:13:42,316 DEBUG   HandlerThread:34848 [handler.py:handle_request():138] handle_request: check_version
+2022-10-09 02:13:42,318 INFO    SenderThread:34848 [dir_watcher.py:__init__():216] watching files in: /home/datassd/yilin/Codes/Hand/ConditionHOI/wandb/run-20221009_021341-18h8crjf/files
+2022-10-09 02:13:42,319 INFO    SenderThread:34848 [sender.py:_start_run_threads():912] run started: 18h8crjf with start time 1665303221.948519
+2022-10-09 02:13:42,319 DEBUG   SenderThread:34848 [sender.py:send():301] send: summary
+2022-10-09 02:13:42,319 INFO    SenderThread:34848 [sender.py:_save_file():1155] saving file wandb-summary.json with policy end
+2022-10-09 02:13:42,319 DEBUG   SenderThread:34848 [sender.py:send_request():315] send_request: check_version
+2022-10-09 02:13:42,474 DEBUG   HandlerThread:34848 [handler.py:handle_request():138] handle_request: run_start
+2022-10-09 02:13:42,481 DEBUG   HandlerThread:34848 [meta.py:__init__():34] meta init
+2022-10-09 02:13:42,481 DEBUG   HandlerThread:34848 [meta.py:__init__():49] meta init done
+2022-10-09 02:13:42,481 DEBUG   HandlerThread:34848 [meta.py:probe():215] probe
+2022-10-09 02:13:42,489 DEBUG   HandlerThread:34848 [meta.py:_setup_git():205] setup git
+2022-10-09 02:13:42,519 DEBUG   HandlerThread:34848 [meta.py:_setup_git():212] setup git done
+2022-10-09 02:13:42,519 DEBUG   HandlerThread:34848 [meta.py:_save_pip():53] save pip
+2022-10-09 02:13:42,520 DEBUG   HandlerThread:34848 [meta.py:_save_pip():67] save pip done
+2022-10-09 02:13:42,520 DEBUG   HandlerThread:34848 [meta.py:_save_conda():74] save conda
+2022-10-09 02:13:43,322 INFO    Thread-13 :34848 [dir_watcher.py:_on_file_created():275] file/dir created: /home/datassd/yilin/Codes/Hand/ConditionHOI/wandb/run-20221009_021341-18h8crjf/files/requirements.txt
+2022-10-09 02:13:43,323 INFO    Thread-13 :34848 [dir_watcher.py:_on_file_created():275] file/dir created: /home/datassd/yilin/Codes/Hand/ConditionHOI/wandb/run-20221009_021341-18h8crjf/files/wandb-summary.json
+2022-10-09 02:13:43,323 INFO    Thread-13 :34848 [dir_watcher.py:_on_file_created():275] file/dir created: /home/datassd/yilin/Codes/Hand/ConditionHOI/wandb/run-20221009_021341-18h8crjf/files/conda-environment.yaml
+2022-10-09 02:13:45,250 DEBUG   HandlerThread:34848 [meta.py:_save_conda():84] save conda done
+2022-10-09 02:13:45,250 DEBUG   HandlerThread:34848 [meta.py:probe():253] probe done
+2022-10-09 02:13:45,256 DEBUG   SenderThread:34848 [sender.py:send():301] send: files
+2022-10-09 02:13:45,256 INFO    SenderThread:34848 [sender.py:_save_file():1155] saving file wandb-metadata.json with policy now
+2022-10-09 02:13:45,265 DEBUG   HandlerThread:34848 [handler.py:handle_request():138] handle_request: stop_status
+2022-10-09 02:13:45,266 DEBUG   SenderThread:34848 [sender.py:send_request():315] send_request: stop_status
+2022-10-09 02:13:45,324 INFO    Thread-13 :34848 [dir_watcher.py:_on_file_modified():292] file/dir modified: /home/datassd/yilin/Codes/Hand/ConditionHOI/wandb/run-20221009_021341-18h8crjf/files/conda-environment.yaml
+2022-10-09 02:13:45,324 INFO    Thread-13 :34848 [dir_watcher.py:_on_file_created():275] file/dir created: /home/datassd/yilin/Codes/Hand/ConditionHOI/wandb/run-20221009_021341-18h8crjf/files/wandb-metadata.json
+2022-10-09 02:13:45,415 DEBUG   SenderThread:34848 [sender.py:send():301] send: telemetry
+2022-10-09 02:13:45,742 INFO    Thread-17 :34848 [upload_job.py:push():139] Uploaded file /tmp/tmp2bo657zrwandb/1dhtfyuv-wandb-metadata.json
+2022-10-09 02:13:52,327 INFO    Thread-13 :34848 [dir_watcher.py:_on_file_created():275] file/dir created: /home/datassd/yilin/Codes/Hand/ConditionHOI/wandb/run-20221009_021341-18h8crjf/files/output.log
+2022-10-09 02:13:54,328 INFO    Thread-13 :34848 [dir_watcher.py:_on_file_modified():292] file/dir modified: /home/datassd/yilin/Codes/Hand/ConditionHOI/wandb/run-20221009_021341-18h8crjf/files/output.log
+2022-10-09 02:13:56,329 INFO    Thread-13 :34848 [dir_watcher.py:_on_file_modified():292] file/dir modified: /home/datassd/yilin/Codes/Hand/ConditionHOI/wandb/run-20221009_021341-18h8crjf/files/output.log
+2022-10-09 02:13:58,329 INFO    Thread-13 :34848 [dir_watcher.py:_on_file_modified():292] file/dir modified: /home/datassd/yilin/Codes/Hand/ConditionHOI/wandb/run-20221009_021341-18h8crjf/files/output.log
+2022-10-09 02:14:00,330 INFO    Thread-13 :34848 [dir_watcher.py:_on_file_modified():292] file/dir modified: /home/datassd/yilin/Codes/Hand/ConditionHOI/wandb/run-20221009_021341-18h8crjf/files/output.log
+2022-10-09 02:14:00,418 DEBUG   HandlerThread:34848 [handler.py:handle_request():138] handle_request: stop_status
+2022-10-09 02:14:00,418 DEBUG   SenderThread:34848 [sender.py:send_request():315] send_request: stop_status
+2022-10-09 02:14:02,002 DEBUG   HandlerThread:34848 [handler.py:handle_request():138] handle_request: partial_history
+2022-10-09 02:14:02,005 DEBUG   SenderThread:34848 [sender.py:send():301] send: history
+2022-10-09 02:14:02,006 DEBUG   SenderThread:34848 [sender.py:send():301] send: summary
+2022-10-09 02:14:02,006 INFO    SenderThread:34848 [sender.py:_save_file():1155] saving file wandb-summary.json with policy end
+2022-10-09 02:14:02,331 INFO    Thread-13 :34848 [dir_watcher.py:_on_file_modified():292] file/dir modified: /home/datassd/yilin/Codes/Hand/ConditionHOI/wandb/run-20221009_021341-18h8crjf/files/wandb-summary.json
+2022-10-09 02:14:02,331 INFO    Thread-13 :34848 [dir_watcher.py:_on_file_modified():292] file/dir modified: /home/datassd/yilin/Codes/Hand/ConditionHOI/wandb/run-20221009_021341-18h8crjf/files/output.log
+2022-10-09 02:14:04,331 INFO    Thread-13 :34848 [dir_watcher.py:_on_file_modified():292] file/dir modified: /home/datassd/yilin/Codes/Hand/ConditionHOI/wandb/run-20221009_021341-18h8crjf/files/output.log
+2022-10-09 02:14:04,847 DEBUG   HandlerThread:34848 [handler.py:handle_request():138] handle_request: partial_history
+2022-10-09 02:14:04,847 DEBUG   SenderThread:34848 [sender.py:send():301] send: history
+2022-10-09 02:14:04,848 DEBUG   SenderThread:34848 [sender.py:send():301] send: summary
+2022-10-09 02:14:04,848 INFO    SenderThread:34848 [sender.py:_save_file():1155] saving file wandb-summary.json with policy end
+2022-10-09 02:14:05,332 INFO    Thread-13 :34848 [dir_watcher.py:_on_file_modified():292] file/dir modified: /home/datassd/yilin/Codes/Hand/ConditionHOI/wandb/run-20221009_021341-18h8crjf/files/wandb-summary.json
+2022-10-09 02:14:06,332 INFO    Thread-13 :34848 [dir_watcher.py:_on_file_modified():292] file/dir modified: /home/datassd/yilin/Codes/Hand/ConditionHOI/wandb/run-20221009_021341-18h8crjf/files/output.log
+2022-10-09 02:14:08,333 INFO    Thread-13 :34848 [dir_watcher.py:_on_file_modified():292] file/dir modified: /home/datassd/yilin/Codes/Hand/ConditionHOI/wandb/run-20221009_021341-18h8crjf/files/output.log
+2022-10-09 02:14:10,333 INFO    Thread-13 :34848 [dir_watcher.py:_on_file_modified():292] file/dir modified: /home/datassd/yilin/Codes/Hand/ConditionHOI/wandb/run-20221009_021341-18h8crjf/files/output.log
+2022-10-09 02:14:11,044 DEBUG   SenderThread:34848 [sender.py:send():301] send: stats
+2022-10-09 02:14:12,334 INFO    Thread-13 :34848 [dir_watcher.py:_on_file_modified():292] file/dir modified: /home/datassd/yilin/Codes/Hand/ConditionHOI/wandb/run-20221009_021341-18h8crjf/files/output.log
+2022-10-09 02:14:13,335 INFO    Thread-13 :34848 [dir_watcher.py:_on_file_modified():292] file/dir modified: /home/datassd/yilin/Codes/Hand/ConditionHOI/wandb/run-20221009_021341-18h8crjf/files/config.yaml
+2022-10-09 02:14:14,335 INFO    Thread-13 :34848 [dir_watcher.py:_on_file_modified():292] file/dir modified: /home/datassd/yilin/Codes/Hand/ConditionHOI/wandb/run-20221009_021341-18h8crjf/files/output.log
+2022-10-09 02:14:15,559 DEBUG   HandlerThread:34848 [handler.py:handle_request():138] handle_request: stop_status
+2022-10-09 02:14:15,559 DEBUG   SenderThread:34848 [sender.py:send_request():315] send_request: stop_status
+2022-10-09 02:14:15,677 DEBUG   HandlerThread:34848 [handler.py:handle_request():138] handle_request: partial_history
+2022-10-09 02:14:15,697 DEBUG   SenderThread:34848 [sender.py:send():301] send: history
+2022-10-09 02:14:15,697 DEBUG   SenderThread:34848 [sender.py:send():301] send: summary
+2022-10-09 02:14:15,699 INFO    SenderThread:34848 [sender.py:_save_file():1155] saving file wandb-summary.json with policy end
+2022-10-09 02:14:16,336 INFO    Thread-13 :34848 [dir_watcher.py:_on_file_modified():292] file/dir modified: /home/datassd/yilin/Codes/Hand/ConditionHOI/wandb/run-20221009_021341-18h8crjf/files/wandb-summary.json
+2022-10-09 02:14:16,336 INFO    Thread-13 :34848 [dir_watcher.py:_on_file_modified():292] file/dir modified: /home/datassd/yilin/Codes/Hand/ConditionHOI/wandb/run-20221009_021341-18h8crjf/files/output.log
+2022-10-09 02:14:18,211 DEBUG   HandlerThread:34848 [handler.py:handle_request():138] handle_request: partial_history
+2022-10-09 02:14:18,212 DEBUG   SenderThread:34848 [sender.py:send():301] send: history
+2022-10-09 02:14:18,212 DEBUG   SenderThread:34848 [sender.py:send():301] send: summary
+2022-10-09 02:14:18,213 INFO    SenderThread:34848 [sender.py:_save_file():1155] saving file wandb-summary.json with policy end
+2022-10-09 02:14:18,336 INFO    Thread-13 :34848 [dir_watcher.py:_on_file_modified():292] file/dir modified: /home/datassd/yilin/Codes/Hand/ConditionHOI/wandb/run-20221009_021341-18h8crjf/files/wandb-summary.json
+2022-10-09 02:14:18,337 INFO    Thread-13 :34848 [dir_watcher.py:_on_file_modified():292] file/dir modified: /home/datassd/yilin/Codes/Hand/ConditionHOI/wandb/run-20221009_021341-18h8crjf/files/output.log
+2022-10-09 02:14:20,337 INFO    Thread-13 :34848 [dir_watcher.py:_on_file_modified():292] file/dir modified: /home/datassd/yilin/Codes/Hand/ConditionHOI/wandb/run-20221009_021341-18h8crjf/files/output.log
+2022-10-09 02:14:22,338 INFO    Thread-13 :34848 [dir_watcher.py:_on_file_modified():292] file/dir modified: /home/datassd/yilin/Codes/Hand/ConditionHOI/wandb/run-20221009_021341-18h8crjf/files/output.log
+2022-10-09 02:14:24,339 INFO    Thread-13 :34848 [dir_watcher.py:_on_file_modified():292] file/dir modified: /home/datassd/yilin/Codes/Hand/ConditionHOI/wandb/run-20221009_021341-18h8crjf/files/output.log
+2022-10-09 02:14:26,340 INFO    Thread-13 :34848 [dir_watcher.py:_on_file_modified():292] file/dir modified: /home/datassd/yilin/Codes/Hand/ConditionHOI/wandb/run-20221009_021341-18h8crjf/files/output.log
+2022-10-09 02:14:28,341 INFO    Thread-13 :34848 [dir_watcher.py:_on_file_modified():292] file/dir modified: /home/datassd/yilin/Codes/Hand/ConditionHOI/wandb/run-20221009_021341-18h8crjf/files/output.log
+2022-10-09 02:14:28,653 DEBUG   HandlerThread:34848 [handler.py:handle_request():138] handle_request: partial_history
+2022-10-09 02:14:28,655 DEBUG   SenderThread:34848 [sender.py:send():301] send: history
+2022-10-09 02:14:28,655 DEBUG   SenderThread:34848 [sender.py:send():301] send: summary
+2022-10-09 02:14:28,656 INFO    SenderThread:34848 [sender.py:_save_file():1155] saving file wandb-summary.json with policy end
+2022-10-09 02:14:29,341 INFO    Thread-13 :34848 [dir_watcher.py:_on_file_modified():292] file/dir modified: /home/datassd/yilin/Codes/Hand/ConditionHOI/wandb/run-20221009_021341-18h8crjf/files/wandb-summary.json
+2022-10-09 02:14:30,341 INFO    Thread-13 :34848 [dir_watcher.py:_on_file_modified():292] file/dir modified: /home/datassd/yilin/Codes/Hand/ConditionHOI/wandb/run-20221009_021341-18h8crjf/files/output.log
+2022-10-09 02:14:30,701 DEBUG   HandlerThread:34848 [handler.py:handle_request():138] handle_request: stop_status
+2022-10-09 02:14:30,701 DEBUG   SenderThread:34848 [sender.py:send_request():315] send_request: stop_status
+2022-10-09 02:14:31,186 DEBUG   HandlerThread:34848 [handler.py:handle_request():138] handle_request: partial_history
+2022-10-09 02:14:31,187 DEBUG   SenderThread:34848 [sender.py:send():301] send: history
+2022-10-09 02:14:31,187 DEBUG   SenderThread:34848 [sender.py:send():301] send: summary
+2022-10-09 02:14:31,188 INFO    SenderThread:34848 [sender.py:_save_file():1155] saving file wandb-summary.json with policy end
+2022-10-09 02:14:31,341 INFO    Thread-13 :34848 [dir_watcher.py:_on_file_modified():292] file/dir modified: /home/datassd/yilin/Codes/Hand/ConditionHOI/wandb/run-20221009_021341-18h8crjf/files/wandb-summary.json
+2022-10-09 02:14:32,342 INFO    Thread-13 :34848 [dir_watcher.py:_on_file_modified():292] file/dir modified: /home/datassd/yilin/Codes/Hand/ConditionHOI/wandb/run-20221009_021341-18h8crjf/files/output.log
+2022-10-09 02:14:34,343 INFO    Thread-13 :34848 [dir_watcher.py:_on_file_modified():292] file/dir modified: /home/datassd/yilin/Codes/Hand/ConditionHOI/wandb/run-20221009_021341-18h8crjf/files/output.log
+2022-10-09 02:14:36,343 INFO    Thread-13 :34848 [dir_watcher.py:_on_file_modified():292] file/dir modified: /home/datassd/yilin/Codes/Hand/ConditionHOI/wandb/run-20221009_021341-18h8crjf/files/output.log
+2022-10-09 02:14:38,344 INFO    Thread-13 :34848 [dir_watcher.py:_on_file_modified():292] file/dir modified: /home/datassd/yilin/Codes/Hand/ConditionHOI/wandb/run-20221009_021341-18h8crjf/files/output.log
+2022-10-09 02:14:40,345 INFO    Thread-13 :34848 [dir_watcher.py:_on_file_modified():292] file/dir modified: /home/datassd/yilin/Codes/Hand/ConditionHOI/wandb/run-20221009_021341-18h8crjf/files/output.log
+2022-10-09 02:14:41,545 DEBUG   SenderThread:34848 [sender.py:send():301] send: stats
+2022-10-09 02:14:42,147 DEBUG   HandlerThread:34848 [handler.py:handle_request():138] handle_request: partial_history
+2022-10-09 02:14:42,148 DEBUG   SenderThread:34848 [sender.py:send():301] send: history
+2022-10-09 02:14:42,149 DEBUG   SenderThread:34848 [sender.py:send():301] send: summary
+2022-10-09 02:14:42,150 INFO    SenderThread:34848 [sender.py:_save_file():1155] saving file wandb-summary.json with policy end
+2022-10-09 02:14:42,345 INFO    Thread-13 :34848 [dir_watcher.py:_on_file_modified():292] file/dir modified: /home/datassd/yilin/Codes/Hand/ConditionHOI/wandb/run-20221009_021341-18h8crjf/files/wandb-summary.json
+2022-10-09 02:14:42,346 INFO    Thread-13 :34848 [dir_watcher.py:_on_file_modified():292] file/dir modified: /home/datassd/yilin/Codes/Hand/ConditionHOI/wandb/run-20221009_021341-18h8crjf/files/output.log
+2022-10-09 02:14:44,346 INFO    Thread-13 :34848 [dir_watcher.py:_on_file_modified():292] file/dir modified: /home/datassd/yilin/Codes/Hand/ConditionHOI/wandb/run-20221009_021341-18h8crjf/files/output.log
+2022-10-09 02:14:44,723 DEBUG   HandlerThread:34848 [handler.py:handle_request():138] handle_request: partial_history
+2022-10-09 02:14:44,723 DEBUG   SenderThread:34848 [sender.py:send():301] send: history
+2022-10-09 02:14:44,724 DEBUG   SenderThread:34848 [sender.py:send():301] send: summary
+2022-10-09 02:14:44,724 INFO    SenderThread:34848 [sender.py:_save_file():1155] saving file wandb-summary.json with policy end
+2022-10-09 02:14:45,346 INFO    Thread-13 :34848 [dir_watcher.py:_on_file_modified():292] file/dir modified: /home/datassd/yilin/Codes/Hand/ConditionHOI/wandb/run-20221009_021341-18h8crjf/files/wandb-summary.json
+2022-10-09 02:14:45,859 DEBUG   HandlerThread:34848 [handler.py:handle_request():138] handle_request: stop_status
+2022-10-09 02:14:45,859 DEBUG   SenderThread:34848 [sender.py:send_request():315] send_request: stop_status
+2022-10-09 02:14:46,346 INFO    Thread-13 :34848 [dir_watcher.py:_on_file_modified():292] file/dir modified: /home/datassd/yilin/Codes/Hand/ConditionHOI/wandb/run-20221009_021341-18h8crjf/files/output.log
+2022-10-09 02:14:48,347 INFO    Thread-13 :34848 [dir_watcher.py:_on_file_modified():292] file/dir modified: /home/datassd/yilin/Codes/Hand/ConditionHOI/wandb/run-20221009_021341-18h8crjf/files/output.log
+2022-10-09 02:14:50,347 INFO    Thread-13 :34848 [dir_watcher.py:_on_file_modified():292] file/dir modified: /home/datassd/yilin/Codes/Hand/ConditionHOI/wandb/run-20221009_021341-18h8crjf/files/output.log
+2022-10-09 02:14:52,348 INFO    Thread-13 :34848 [dir_watcher.py:_on_file_modified():292] file/dir modified: /home/datassd/yilin/Codes/Hand/ConditionHOI/wandb/run-20221009_021341-18h8crjf/files/output.log
+2022-10-09 02:14:54,349 INFO    Thread-13 :34848 [dir_watcher.py:_on_file_modified():292] file/dir modified: /home/datassd/yilin/Codes/Hand/ConditionHOI/wandb/run-20221009_021341-18h8crjf/files/output.log
+2022-10-09 02:14:55,313 DEBUG   HandlerThread:34848 [handler.py:handle_request():138] handle_request: partial_history
+2022-10-09 02:14:55,314 DEBUG   SenderThread:34848 [sender.py:send():301] send: history
+2022-10-09 02:14:55,315 DEBUG   SenderThread:34848 [sender.py:send():301] send: summary
+2022-10-09 02:14:55,315 INFO    SenderThread:34848 [sender.py:_save_file():1155] saving file wandb-summary.json with policy end
+2022-10-09 02:14:55,349 INFO    Thread-13 :34848 [dir_watcher.py:_on_file_modified():292] file/dir modified: /home/datassd/yilin/Codes/Hand/ConditionHOI/wandb/run-20221009_021341-18h8crjf/files/wandb-summary.json
+2022-10-09 02:14:56,350 INFO    Thread-13 :34848 [dir_watcher.py:_on_file_modified():292] file/dir modified: /home/datassd/yilin/Codes/Hand/ConditionHOI/wandb/run-20221009_021341-18h8crjf/files/output.log
+2022-10-09 02:14:57,879 DEBUG   HandlerThread:34848 [handler.py:handle_request():138] handle_request: partial_history
+2022-10-09 02:14:57,880 DEBUG   SenderThread:34848 [sender.py:send():301] send: history
+2022-10-09 02:14:57,880 DEBUG   SenderThread:34848 [sender.py:send():301] send: summary
+2022-10-09 02:14:57,881 INFO    SenderThread:34848 [sender.py:_save_file():1155] saving file wandb-summary.json with policy end
+2022-10-09 02:14:58,351 INFO    Thread-13 :34848 [dir_watcher.py:_on_file_modified():292] file/dir modified: /home/datassd/yilin/Codes/Hand/ConditionHOI/wandb/run-20221009_021341-18h8crjf/files/wandb-summary.json
+2022-10-09 02:14:58,351 INFO    Thread-13 :34848 [dir_watcher.py:_on_file_modified():292] file/dir modified: /home/datassd/yilin/Codes/Hand/ConditionHOI/wandb/run-20221009_021341-18h8crjf/files/output.log
+2022-10-09 02:15:00,351 INFO    Thread-13 :34848 [dir_watcher.py:_on_file_modified():292] file/dir modified: /home/datassd/yilin/Codes/Hand/ConditionHOI/wandb/run-20221009_021341-18h8crjf/files/output.log
+2022-10-09 02:15:00,993 DEBUG   HandlerThread:34848 [handler.py:handle_request():138] handle_request: stop_status
+2022-10-09 02:15:00,994 DEBUG   SenderThread:34848 [sender.py:send_request():315] send_request: stop_status
+2022-10-09 02:15:02,352 INFO    Thread-13 :34848 [dir_watcher.py:_on_file_modified():292] file/dir modified: /home/datassd/yilin/Codes/Hand/ConditionHOI/wandb/run-20221009_021341-18h8crjf/files/output.log
+2022-10-09 02:15:04,353 INFO    Thread-13 :34848 [dir_watcher.py:_on_file_modified():292] file/dir modified: /home/datassd/yilin/Codes/Hand/ConditionHOI/wandb/run-20221009_021341-18h8crjf/files/output.log
+2022-10-09 02:15:06,354 INFO    Thread-13 :34848 [dir_watcher.py:_on_file_modified():292] file/dir modified: /home/datassd/yilin/Codes/Hand/ConditionHOI/wandb/run-20221009_021341-18h8crjf/files/output.log
+2022-10-09 02:15:08,355 INFO    Thread-13 :34848 [dir_watcher.py:_on_file_modified():292] file/dir modified: /home/datassd/yilin/Codes/Hand/ConditionHOI/wandb/run-20221009_021341-18h8crjf/files/output.log
+2022-10-09 02:15:08,861 DEBUG   HandlerThread:34848 [handler.py:handle_request():138] handle_request: partial_history
+2022-10-09 02:15:08,863 DEBUG   SenderThread:34848 [sender.py:send():301] send: history
+2022-10-09 02:15:08,863 DEBUG   SenderThread:34848 [sender.py:send():301] send: summary
+2022-10-09 02:15:08,864 INFO    SenderThread:34848 [sender.py:_save_file():1155] saving file wandb-summary.json with policy end
+2022-10-09 02:15:09,355 INFO    Thread-13 :34848 [dir_watcher.py:_on_file_modified():292] file/dir modified: /home/datassd/yilin/Codes/Hand/ConditionHOI/wandb/run-20221009_021341-18h8crjf/files/wandb-summary.json
+2022-10-09 02:15:10,355 INFO    Thread-13 :34848 [dir_watcher.py:_on_file_modified():292] file/dir modified: /home/datassd/yilin/Codes/Hand/ConditionHOI/wandb/run-20221009_021341-18h8crjf/files/output.log
+2022-10-09 02:15:11,435 DEBUG   HandlerThread:34848 [handler.py:handle_request():138] handle_request: partial_history
+2022-10-09 02:15:11,436 DEBUG   SenderThread:34848 [sender.py:send():301] send: history
+2022-10-09 02:15:11,436 DEBUG   SenderThread:34848 [sender.py:send():301] send: summary
+2022-10-09 02:15:11,437 INFO    SenderThread:34848 [sender.py:_save_file():1155] saving file wandb-summary.json with policy end
+2022-10-09 02:15:12,025 DEBUG   SenderThread:34848 [sender.py:send():301] send: stats
+2022-10-09 02:15:12,356 INFO    Thread-13 :34848 [dir_watcher.py:_on_file_modified():292] file/dir modified: /home/datassd/yilin/Codes/Hand/ConditionHOI/wandb/run-20221009_021341-18h8crjf/files/wandb-summary.json
+2022-10-09 02:15:12,356 INFO    Thread-13 :34848 [dir_watcher.py:_on_file_modified():292] file/dir modified: /home/datassd/yilin/Codes/Hand/ConditionHOI/wandb/run-20221009_021341-18h8crjf/files/output.log
+2022-10-09 02:15:14,357 INFO    Thread-13 :34848 [dir_watcher.py:_on_file_modified():292] file/dir modified: /home/datassd/yilin/Codes/Hand/ConditionHOI/wandb/run-20221009_021341-18h8crjf/files/output.log
+2022-10-09 02:15:16,151 DEBUG   HandlerThread:34848 [handler.py:handle_request():138] handle_request: stop_status
+2022-10-09 02:15:16,152 DEBUG   SenderThread:34848 [sender.py:send_request():315] send_request: stop_status
+2022-10-09 02:15:16,357 INFO    Thread-13 :34848 [dir_watcher.py:_on_file_modified():292] file/dir modified: /home/datassd/yilin/Codes/Hand/ConditionHOI/wandb/run-20221009_021341-18h8crjf/files/output.log
+2022-10-09 02:15:18,358 INFO    Thread-13 :34848 [dir_watcher.py:_on_file_modified():292] file/dir modified: /home/datassd/yilin/Codes/Hand/ConditionHOI/wandb/run-20221009_021341-18h8crjf/files/output.log
+2022-10-09 02:15:20,359 INFO    Thread-13 :34848 [dir_watcher.py:_on_file_modified():292] file/dir modified: /home/datassd/yilin/Codes/Hand/ConditionHOI/wandb/run-20221009_021341-18h8crjf/files/output.log
+2022-10-09 02:15:21,962 DEBUG   HandlerThread:34848 [handler.py:handle_request():138] handle_request: partial_history
+2022-10-09 02:15:21,963 DEBUG   SenderThread:34848 [sender.py:send():301] send: history
+2022-10-09 02:15:21,964 DEBUG   SenderThread:34848 [sender.py:send():301] send: summary
+2022-10-09 02:15:21,964 INFO    SenderThread:34848 [sender.py:_save_file():1155] saving file wandb-summary.json with policy end
+2022-10-09 02:15:22,360 INFO    Thread-13 :34848 [dir_watcher.py:_on_file_modified():292] file/dir modified: /home/datassd/yilin/Codes/Hand/ConditionHOI/wandb/run-20221009_021341-18h8crjf/files/wandb-summary.json
+2022-10-09 02:15:22,360 INFO    Thread-13 :34848 [dir_watcher.py:_on_file_modified():292] file/dir modified: /home/datassd/yilin/Codes/Hand/ConditionHOI/wandb/run-20221009_021341-18h8crjf/files/output.log
+2022-10-09 02:15:24,360 INFO    Thread-13 :34848 [dir_watcher.py:_on_file_modified():292] file/dir modified: /home/datassd/yilin/Codes/Hand/ConditionHOI/wandb/run-20221009_021341-18h8crjf/files/output.log
+2022-10-09 02:15:24,506 DEBUG   HandlerThread:34848 [handler.py:handle_request():138] handle_request: partial_history
+2022-10-09 02:15:24,507 DEBUG   SenderThread:34848 [sender.py:send():301] send: history
+2022-10-09 02:15:24,507 DEBUG   SenderThread:34848 [sender.py:send():301] send: summary
+2022-10-09 02:15:24,508 INFO    SenderThread:34848 [sender.py:_save_file():1155] saving file wandb-summary.json with policy end
+2022-10-09 02:15:25,361 INFO    Thread-13 :34848 [dir_watcher.py:_on_file_modified():292] file/dir modified: /home/datassd/yilin/Codes/Hand/ConditionHOI/wandb/run-20221009_021341-18h8crjf/files/wandb-summary.json
+2022-10-09 02:15:26,361 INFO    Thread-13 :34848 [dir_watcher.py:_on_file_modified():292] file/dir modified: /home/datassd/yilin/Codes/Hand/ConditionHOI/wandb/run-20221009_021341-18h8crjf/files/output.log
+2022-10-09 02:15:28,362 INFO    Thread-13 :34848 [dir_watcher.py:_on_file_modified():292] file/dir modified: /home/datassd/yilin/Codes/Hand/ConditionHOI/wandb/run-20221009_021341-18h8crjf/files/output.log
+2022-10-09 02:15:30,363 INFO    Thread-13 :34848 [dir_watcher.py:_on_file_modified():292] file/dir modified: /home/datassd/yilin/Codes/Hand/ConditionHOI/wandb/run-20221009_021341-18h8crjf/files/output.log
+2022-10-09 02:15:31,314 DEBUG   HandlerThread:34848 [handler.py:handle_request():138] handle_request: stop_status
+2022-10-09 02:15:31,314 DEBUG   SenderThread:34848 [sender.py:send_request():315] send_request: stop_status
+2022-10-09 02:15:32,363 INFO    Thread-13 :34848 [dir_watcher.py:_on_file_modified():292] file/dir modified: /home/datassd/yilin/Codes/Hand/ConditionHOI/wandb/run-20221009_021341-18h8crjf/files/output.log
+2022-10-09 02:15:34,364 INFO    Thread-13 :34848 [dir_watcher.py:_on_file_modified():292] file/dir modified: /home/datassd/yilin/Codes/Hand/ConditionHOI/wandb/run-20221009_021341-18h8crjf/files/output.log
+2022-10-09 02:15:35,522 DEBUG   HandlerThread:34848 [handler.py:handle_request():138] handle_request: partial_history
+2022-10-09 02:15:35,523 DEBUG   SenderThread:34848 [sender.py:send():301] send: history
+2022-10-09 02:15:35,523 DEBUG   SenderThread:34848 [sender.py:send():301] send: summary
+2022-10-09 02:15:35,524 INFO    SenderThread:34848 [sender.py:_save_file():1155] saving file wandb-summary.json with policy end
+2022-10-09 02:15:36,365 INFO    Thread-13 :34848 [dir_watcher.py:_on_file_modified():292] file/dir modified: /home/datassd/yilin/Codes/Hand/ConditionHOI/wandb/run-20221009_021341-18h8crjf/files/wandb-summary.json
+2022-10-09 02:15:36,365 INFO    Thread-13 :34848 [dir_watcher.py:_on_file_modified():292] file/dir modified: /home/datassd/yilin/Codes/Hand/ConditionHOI/wandb/run-20221009_021341-18h8crjf/files/output.log
+2022-10-09 02:15:38,085 DEBUG   HandlerThread:34848 [handler.py:handle_request():138] handle_request: partial_history
+2022-10-09 02:15:38,085 DEBUG   SenderThread:34848 [sender.py:send():301] send: history
+2022-10-09 02:15:38,085 DEBUG   SenderThread:34848 [sender.py:send():301] send: summary
+2022-10-09 02:15:38,086 INFO    SenderThread:34848 [sender.py:_save_file():1155] saving file wandb-summary.json with policy end
+2022-10-09 02:15:38,366 INFO    Thread-13 :34848 [dir_watcher.py:_on_file_modified():292] file/dir modified: /home/datassd/yilin/Codes/Hand/ConditionHOI/wandb/run-20221009_021341-18h8crjf/files/wandb-summary.json
+2022-10-09 02:15:38,366 INFO    Thread-13 :34848 [dir_watcher.py:_on_file_modified():292] file/dir modified: /home/datassd/yilin/Codes/Hand/ConditionHOI/wandb/run-20221009_021341-18h8crjf/files/output.log
+2022-10-09 02:15:40,367 INFO    Thread-13 :34848 [dir_watcher.py:_on_file_modified():292] file/dir modified: /home/datassd/yilin/Codes/Hand/ConditionHOI/wandb/run-20221009_021341-18h8crjf/files/output.log
+2022-10-09 02:15:42,368 INFO    Thread-13 :34848 [dir_watcher.py:_on_file_modified():292] file/dir modified: /home/datassd/yilin/Codes/Hand/ConditionHOI/wandb/run-20221009_021341-18h8crjf/files/output.log
+2022-10-09 02:15:42,508 DEBUG   SenderThread:34848 [sender.py:send():301] send: stats
+2022-10-09 02:15:44,368 INFO    Thread-13 :34848 [dir_watcher.py:_on_file_modified():292] file/dir modified: /home/datassd/yilin/Codes/Hand/ConditionHOI/wandb/run-20221009_021341-18h8crjf/files/output.log
+2022-10-09 02:15:46,369 INFO    Thread-13 :34848 [dir_watcher.py:_on_file_modified():292] file/dir modified: /home/datassd/yilin/Codes/Hand/ConditionHOI/wandb/run-20221009_021341-18h8crjf/files/output.log
+2022-10-09 02:15:46,447 DEBUG   HandlerThread:34848 [handler.py:handle_request():138] handle_request: stop_status
+2022-10-09 02:15:46,447 DEBUG   SenderThread:34848 [sender.py:send_request():315] send_request: stop_status
+2022-10-09 02:15:48,370 INFO    Thread-13 :34848 [dir_watcher.py:_on_file_modified():292] file/dir modified: /home/datassd/yilin/Codes/Hand/ConditionHOI/wandb/run-20221009_021341-18h8crjf/files/output.log
+2022-10-09 02:15:48,622 DEBUG   HandlerThread:34848 [handler.py:handle_request():138] handle_request: partial_history
+2022-10-09 02:15:48,623 DEBUG   SenderThread:34848 [sender.py:send():301] send: history
+2022-10-09 02:15:48,623 DEBUG   SenderThread:34848 [sender.py:send():301] send: summary
+2022-10-09 02:15:48,624 INFO    SenderThread:34848 [sender.py:_save_file():1155] saving file wandb-summary.json with policy end
+2022-10-09 02:15:49,370 INFO    Thread-13 :34848 [dir_watcher.py:_on_file_modified():292] file/dir modified: /home/datassd/yilin/Codes/Hand/ConditionHOI/wandb/run-20221009_021341-18h8crjf/files/wandb-summary.json
+2022-10-09 02:15:50,370 INFO    Thread-13 :34848 [dir_watcher.py:_on_file_modified():292] file/dir modified: /home/datassd/yilin/Codes/Hand/ConditionHOI/wandb/run-20221009_021341-18h8crjf/files/output.log
+2022-10-09 02:15:51,185 DEBUG   HandlerThread:34848 [handler.py:handle_request():138] handle_request: partial_history
+2022-10-09 02:15:51,185 DEBUG   SenderThread:34848 [sender.py:send():301] send: history
+2022-10-09 02:15:51,185 DEBUG   SenderThread:34848 [sender.py:send():301] send: summary
+2022-10-09 02:15:51,186 INFO    SenderThread:34848 [sender.py:_save_file():1155] saving file wandb-summary.json with policy end
+2022-10-09 02:15:51,371 INFO    Thread-13 :34848 [dir_watcher.py:_on_file_modified():292] file/dir modified: /home/datassd/yilin/Codes/Hand/ConditionHOI/wandb/run-20221009_021341-18h8crjf/files/wandb-summary.json
+2022-10-09 02:15:52,371 INFO    Thread-13 :34848 [dir_watcher.py:_on_file_modified():292] file/dir modified: /home/datassd/yilin/Codes/Hand/ConditionHOI/wandb/run-20221009_021341-18h8crjf/files/output.log
+2022-10-09 02:15:54,372 INFO    Thread-13 :34848 [dir_watcher.py:_on_file_modified():292] file/dir modified: /home/datassd/yilin/Codes/Hand/ConditionHOI/wandb/run-20221009_021341-18h8crjf/files/output.log
+2022-10-09 02:15:56,373 INFO    Thread-13 :34848 [dir_watcher.py:_on_file_modified():292] file/dir modified: /home/datassd/yilin/Codes/Hand/ConditionHOI/wandb/run-20221009_021341-18h8crjf/files/output.log
+2022-10-09 02:15:58,374 INFO    Thread-13 :34848 [dir_watcher.py:_on_file_modified():292] file/dir modified: /home/datassd/yilin/Codes/Hand/ConditionHOI/wandb/run-20221009_021341-18h8crjf/files/output.log
+2022-10-09 02:16:00,374 INFO    Thread-13 :34848 [dir_watcher.py:_on_file_modified():292] file/dir modified: /home/datassd/yilin/Codes/Hand/ConditionHOI/wandb/run-20221009_021341-18h8crjf/files/output.log
+2022-10-09 02:16:01,582 DEBUG   HandlerThread:34848 [handler.py:handle_request():138] handle_request: stop_status
+2022-10-09 02:16:01,582 DEBUG   SenderThread:34848 [sender.py:send_request():315] send_request: stop_status
+2022-10-09 02:16:02,279 DEBUG   HandlerThread:34848 [handler.py:handle_request():138] handle_request: partial_history
+2022-10-09 02:16:02,280 DEBUG   SenderThread:34848 [sender.py:send():301] send: history
+2022-10-09 02:16:02,280 DEBUG   SenderThread:34848 [sender.py:send():301] send: summary
+2022-10-09 02:16:02,281 INFO    SenderThread:34848 [sender.py:_save_file():1155] saving file wandb-summary.json with policy end
+2022-10-09 02:16:02,375 INFO    Thread-13 :34848 [dir_watcher.py:_on_file_modified():292] file/dir modified: /home/datassd/yilin/Codes/Hand/ConditionHOI/wandb/run-20221009_021341-18h8crjf/files/wandb-summary.json
+2022-10-09 02:16:02,376 INFO    Thread-13 :34848 [dir_watcher.py:_on_file_modified():292] file/dir modified: /home/datassd/yilin/Codes/Hand/ConditionHOI/wandb/run-20221009_021341-18h8crjf/files/output.log
+2022-10-09 02:16:04,376 INFO    Thread-13 :34848 [dir_watcher.py:_on_file_modified():292] file/dir modified: /home/datassd/yilin/Codes/Hand/ConditionHOI/wandb/run-20221009_021341-18h8crjf/files/output.log
+2022-10-09 02:16:04,849 DEBUG   HandlerThread:34848 [handler.py:handle_request():138] handle_request: partial_history
+2022-10-09 02:16:04,850 DEBUG   SenderThread:34848 [sender.py:send():301] send: history
+2022-10-09 02:16:04,850 DEBUG   SenderThread:34848 [sender.py:send():301] send: summary
+2022-10-09 02:16:04,850 INFO    SenderThread:34848 [sender.py:_save_file():1155] saving file wandb-summary.json with policy end
+2022-10-09 02:16:05,376 INFO    Thread-13 :34848 [dir_watcher.py:_on_file_modified():292] file/dir modified: /home/datassd/yilin/Codes/Hand/ConditionHOI/wandb/run-20221009_021341-18h8crjf/files/wandb-summary.json
+2022-10-09 02:16:06,376 INFO    Thread-13 :34848 [dir_watcher.py:_on_file_modified():292] file/dir modified: /home/datassd/yilin/Codes/Hand/ConditionHOI/wandb/run-20221009_021341-18h8crjf/files/output.log
+2022-10-09 02:16:08,377 INFO    Thread-13 :34848 [dir_watcher.py:_on_file_modified():292] file/dir modified: /home/datassd/yilin/Codes/Hand/ConditionHOI/wandb/run-20221009_021341-18h8crjf/files/output.log
+2022-10-09 02:16:10,378 INFO    Thread-13 :34848 [dir_watcher.py:_on_file_modified():292] file/dir modified: /home/datassd/yilin/Codes/Hand/ConditionHOI/wandb/run-20221009_021341-18h8crjf/files/output.log
+2022-10-09 02:16:12,379 INFO    Thread-13 :34848 [dir_watcher.py:_on_file_modified():292] file/dir modified: /home/datassd/yilin/Codes/Hand/ConditionHOI/wandb/run-20221009_021341-18h8crjf/files/output.log
+2022-10-09 02:16:12,986 DEBUG   SenderThread:34848 [sender.py:send():301] send: stats
+2022-10-09 02:16:14,380 INFO    Thread-13 :34848 [dir_watcher.py:_on_file_modified():292] file/dir modified: /home/datassd/yilin/Codes/Hand/ConditionHOI/wandb/run-20221009_021341-18h8crjf/files/output.log
+2022-10-09 02:16:15,443 DEBUG   HandlerThread:34848 [handler.py:handle_request():138] handle_request: partial_history
+2022-10-09 02:16:15,444 DEBUG   SenderThread:34848 [sender.py:send():301] send: history
+2022-10-09 02:16:15,444 DEBUG   SenderThread:34848 [sender.py:send():301] send: summary
+2022-10-09 02:16:15,445 INFO    SenderThread:34848 [sender.py:_save_file():1155] saving file wandb-summary.json with policy end
+2022-10-09 02:16:16,380 INFO    Thread-13 :34848 [dir_watcher.py:_on_file_modified():292] file/dir modified: /home/datassd/yilin/Codes/Hand/ConditionHOI/wandb/run-20221009_021341-18h8crjf/files/wandb-summary.json
+2022-10-09 02:16:16,381 INFO    Thread-13 :34848 [dir_watcher.py:_on_file_modified():292] file/dir modified: /home/datassd/yilin/Codes/Hand/ConditionHOI/wandb/run-20221009_021341-18h8crjf/files/output.log
+2022-10-09 02:16:16,722 DEBUG   HandlerThread:34848 [handler.py:handle_request():138] handle_request: stop_status
+2022-10-09 02:16:16,722 DEBUG   SenderThread:34848 [sender.py:send_request():315] send_request: stop_status
+2022-10-09 02:16:17,995 DEBUG   HandlerThread:34848 [handler.py:handle_request():138] handle_request: partial_history
+2022-10-09 02:16:17,995 DEBUG   SenderThread:34848 [sender.py:send():301] send: history
+2022-10-09 02:16:17,996 DEBUG   SenderThread:34848 [sender.py:send():301] send: summary
+2022-10-09 02:16:17,996 INFO    SenderThread:34848 [sender.py:_save_file():1155] saving file wandb-summary.json with policy end
+2022-10-09 02:16:18,381 INFO    Thread-13 :34848 [dir_watcher.py:_on_file_modified():292] file/dir modified: /home/datassd/yilin/Codes/Hand/ConditionHOI/wandb/run-20221009_021341-18h8crjf/files/wandb-summary.json
+2022-10-09 02:16:18,381 INFO    Thread-13 :34848 [dir_watcher.py:_on_file_modified():292] file/dir modified: /home/datassd/yilin/Codes/Hand/ConditionHOI/wandb/run-20221009_021341-18h8crjf/files/output.log
+2022-10-09 02:16:20,382 INFO    Thread-13 :34848 [dir_watcher.py:_on_file_modified():292] file/dir modified: /home/datassd/yilin/Codes/Hand/ConditionHOI/wandb/run-20221009_021341-18h8crjf/files/output.log
+2022-10-09 02:16:22,383 INFO    Thread-13 :34848 [dir_watcher.py:_on_file_modified():292] file/dir modified: /home/datassd/yilin/Codes/Hand/ConditionHOI/wandb/run-20221009_021341-18h8crjf/files/output.log
+2022-10-09 02:16:24,383 INFO    Thread-13 :34848 [dir_watcher.py:_on_file_modified():292] file/dir modified: /home/datassd/yilin/Codes/Hand/ConditionHOI/wandb/run-20221009_021341-18h8crjf/files/output.log
+2022-10-09 02:16:26,384 INFO    Thread-13 :34848 [dir_watcher.py:_on_file_modified():292] file/dir modified: /home/datassd/yilin/Codes/Hand/ConditionHOI/wandb/run-20221009_021341-18h8crjf/files/output.log
+2022-10-09 02:16:28,385 INFO    Thread-13 :34848 [dir_watcher.py:_on_file_modified():292] file/dir modified: /home/datassd/yilin/Codes/Hand/ConditionHOI/wandb/run-20221009_021341-18h8crjf/files/output.log
+2022-10-09 02:16:28,811 DEBUG   HandlerThread:34848 [handler.py:handle_request():138] handle_request: partial_history
+2022-10-09 02:16:28,811 DEBUG   SenderThread:34848 [sender.py:send():301] send: history
+2022-10-09 02:16:28,812 DEBUG   SenderThread:34848 [sender.py:send():301] send: summary
+2022-10-09 02:16:28,812 INFO    SenderThread:34848 [sender.py:_save_file():1155] saving file wandb-summary.json with policy end
+2022-10-09 02:16:29,385 INFO    Thread-13 :34848 [dir_watcher.py:_on_file_modified():292] file/dir modified: /home/datassd/yilin/Codes/Hand/ConditionHOI/wandb/run-20221009_021341-18h8crjf/files/wandb-summary.json
+2022-10-09 02:16:30,385 INFO    Thread-13 :34848 [dir_watcher.py:_on_file_modified():292] file/dir modified: /home/datassd/yilin/Codes/Hand/ConditionHOI/wandb/run-20221009_021341-18h8crjf/files/output.log
+2022-10-09 02:16:31,367 DEBUG   HandlerThread:34848 [handler.py:handle_request():138] handle_request: partial_history
+2022-10-09 02:16:31,367 DEBUG   SenderThread:34848 [sender.py:send():301] send: history
+2022-10-09 02:16:31,368 DEBUG   SenderThread:34848 [sender.py:send():301] send: summary
+2022-10-09 02:16:31,368 INFO    SenderThread:34848 [sender.py:_save_file():1155] saving file wandb-summary.json with policy end
+2022-10-09 02:16:31,386 INFO    Thread-13 :34848 [dir_watcher.py:_on_file_modified():292] file/dir modified: /home/datassd/yilin/Codes/Hand/ConditionHOI/wandb/run-20221009_021341-18h8crjf/files/wandb-summary.json
+2022-10-09 02:16:31,875 DEBUG   HandlerThread:34848 [handler.py:handle_request():138] handle_request: stop_status
+2022-10-09 02:16:31,875 DEBUG   SenderThread:34848 [sender.py:send_request():315] send_request: stop_status
+2022-10-09 02:16:32,386 INFO    Thread-13 :34848 [dir_watcher.py:_on_file_modified():292] file/dir modified: /home/datassd/yilin/Codes/Hand/ConditionHOI/wandb/run-20221009_021341-18h8crjf/files/output.log
+2022-10-09 02:16:34,386 INFO    Thread-13 :34848 [dir_watcher.py:_on_file_modified():292] file/dir modified: /home/datassd/yilin/Codes/Hand/ConditionHOI/wandb/run-20221009_021341-18h8crjf/files/output.log
+2022-10-09 02:16:36,387 INFO    Thread-13 :34848 [dir_watcher.py:_on_file_modified():292] file/dir modified: /home/datassd/yilin/Codes/Hand/ConditionHOI/wandb/run-20221009_021341-18h8crjf/files/output.log
+2022-10-09 02:16:38,388 INFO    Thread-13 :34848 [dir_watcher.py:_on_file_modified():292] file/dir modified: /home/datassd/yilin/Codes/Hand/ConditionHOI/wandb/run-20221009_021341-18h8crjf/files/output.log
+2022-10-09 02:16:40,389 INFO    Thread-13 :34848 [dir_watcher.py:_on_file_modified():292] file/dir modified: /home/datassd/yilin/Codes/Hand/ConditionHOI/wandb/run-20221009_021341-18h8crjf/files/output.log
+2022-10-09 02:16:41,958 DEBUG   HandlerThread:34848 [handler.py:handle_request():138] handle_request: partial_history
+2022-10-09 02:16:41,960 DEBUG   SenderThread:34848 [sender.py:send():301] send: history
+2022-10-09 02:16:41,960 DEBUG   SenderThread:34848 [sender.py:send():301] send: summary
+2022-10-09 02:16:41,961 INFO    SenderThread:34848 [sender.py:_save_file():1155] saving file wandb-summary.json with policy end
+2022-10-09 02:16:42,390 INFO    Thread-13 :34848 [dir_watcher.py:_on_file_modified():292] file/dir modified: /home/datassd/yilin/Codes/Hand/ConditionHOI/wandb/run-20221009_021341-18h8crjf/files/wandb-summary.json
+2022-10-09 02:16:42,390 INFO    Thread-13 :34848 [dir_watcher.py:_on_file_modified():292] file/dir modified: /home/datassd/yilin/Codes/Hand/ConditionHOI/wandb/run-20221009_021341-18h8crjf/files/output.log
+2022-10-09 02:16:43,456 DEBUG   SenderThread:34848 [sender.py:send():301] send: stats
+2022-10-09 02:16:44,390 INFO    Thread-13 :34848 [dir_watcher.py:_on_file_modified():292] file/dir modified: /home/datassd/yilin/Codes/Hand/ConditionHOI/wandb/run-20221009_021341-18h8crjf/files/output.log
+2022-10-09 02:16:44,516 DEBUG   HandlerThread:34848 [handler.py:handle_request():138] handle_request: partial_history
+2022-10-09 02:16:44,516 DEBUG   SenderThread:34848 [sender.py:send():301] send: history
+2022-10-09 02:16:44,516 DEBUG   SenderThread:34848 [sender.py:send():301] send: summary
+2022-10-09 02:16:44,517 INFO    SenderThread:34848 [sender.py:_save_file():1155] saving file wandb-summary.json with policy end
+2022-10-09 02:16:45,390 INFO    Thread-13 :34848 [dir_watcher.py:_on_file_modified():292] file/dir modified: /home/datassd/yilin/Codes/Hand/ConditionHOI/wandb/run-20221009_021341-18h8crjf/files/wandb-summary.json
+2022-10-09 02:16:46,391 INFO    Thread-13 :34848 [dir_watcher.py:_on_file_modified():292] file/dir modified: /home/datassd/yilin/Codes/Hand/ConditionHOI/wandb/run-20221009_021341-18h8crjf/files/output.log
+2022-10-09 02:16:47,009 DEBUG   HandlerThread:34848 [handler.py:handle_request():138] handle_request: stop_status
+2022-10-09 02:16:47,009 DEBUG   SenderThread:34848 [sender.py:send_request():315] send_request: stop_status
+2022-10-09 02:16:48,392 INFO    Thread-13 :34848 [dir_watcher.py:_on_file_modified():292] file/dir modified: /home/datassd/yilin/Codes/Hand/ConditionHOI/wandb/run-20221009_021341-18h8crjf/files/output.log
+2022-10-09 02:16:50,392 INFO    Thread-13 :34848 [dir_watcher.py:_on_file_modified():292] file/dir modified: /home/datassd/yilin/Codes/Hand/ConditionHOI/wandb/run-20221009_021341-18h8crjf/files/output.log
+2022-10-09 02:16:52,393 INFO    Thread-13 :34848 [dir_watcher.py:_on_file_modified():292] file/dir modified: /home/datassd/yilin/Codes/Hand/ConditionHOI/wandb/run-20221009_021341-18h8crjf/files/output.log
+2022-10-09 02:16:54,394 INFO    Thread-13 :34848 [dir_watcher.py:_on_file_modified():292] file/dir modified: /home/datassd/yilin/Codes/Hand/ConditionHOI/wandb/run-20221009_021341-18h8crjf/files/output.log
+2022-10-09 02:16:55,346 DEBUG   HandlerThread:34848 [handler.py:handle_request():138] handle_request: partial_history
+2022-10-09 02:16:55,347 DEBUG   SenderThread:34848 [sender.py:send():301] send: history
+2022-10-09 02:16:55,347 DEBUG   SenderThread:34848 [sender.py:send():301] send: summary
+2022-10-09 02:16:55,347 INFO    SenderThread:34848 [sender.py:_save_file():1155] saving file wandb-summary.json with policy end
+2022-10-09 02:16:55,394 INFO    Thread-13 :34848 [dir_watcher.py:_on_file_modified():292] file/dir modified: /home/datassd/yilin/Codes/Hand/ConditionHOI/wandb/run-20221009_021341-18h8crjf/files/wandb-summary.json
+2022-10-09 02:16:56,394 INFO    Thread-13 :34848 [dir_watcher.py:_on_file_modified():292] file/dir modified: /home/datassd/yilin/Codes/Hand/ConditionHOI/wandb/run-20221009_021341-18h8crjf/files/output.log
+2022-10-09 02:16:57,905 DEBUG   HandlerThread:34848 [handler.py:handle_request():138] handle_request: partial_history
+2022-10-09 02:16:57,907 DEBUG   SenderThread:34848 [sender.py:send():301] send: history
+2022-10-09 02:16:57,907 DEBUG   SenderThread:34848 [sender.py:send():301] send: summary
+2022-10-09 02:16:57,908 INFO    SenderThread:34848 [sender.py:_save_file():1155] saving file wandb-summary.json with policy end
+2022-10-09 02:16:58,395 INFO    Thread-13 :34848 [dir_watcher.py:_on_file_modified():292] file/dir modified: /home/datassd/yilin/Codes/Hand/ConditionHOI/wandb/run-20221009_021341-18h8crjf/files/wandb-summary.json
+2022-10-09 02:16:58,395 INFO    Thread-13 :34848 [dir_watcher.py:_on_file_modified():292] file/dir modified: /home/datassd/yilin/Codes/Hand/ConditionHOI/wandb/run-20221009_021341-18h8crjf/files/output.log
+2022-10-09 02:17:00,395 INFO    Thread-13 :34848 [dir_watcher.py:_on_file_modified():292] file/dir modified: /home/datassd/yilin/Codes/Hand/ConditionHOI/wandb/run-20221009_021341-18h8crjf/files/output.log
+2022-10-09 02:17:02,149 DEBUG   HandlerThread:34848 [handler.py:handle_request():138] handle_request: stop_status
+2022-10-09 02:17:02,149 DEBUG   SenderThread:34848 [sender.py:send_request():315] send_request: stop_status
+2022-10-09 02:17:02,396 INFO    Thread-13 :34848 [dir_watcher.py:_on_file_modified():292] file/dir modified: /home/datassd/yilin/Codes/Hand/ConditionHOI/wandb/run-20221009_021341-18h8crjf/files/output.log
+2022-10-09 02:17:04,397 INFO    Thread-13 :34848 [dir_watcher.py:_on_file_modified():292] file/dir modified: /home/datassd/yilin/Codes/Hand/ConditionHOI/wandb/run-20221009_021341-18h8crjf/files/output.log
+2022-10-09 02:17:06,397 INFO    Thread-13 :34848 [dir_watcher.py:_on_file_modified():292] file/dir modified: /home/datassd/yilin/Codes/Hand/ConditionHOI/wandb/run-20221009_021341-18h8crjf/files/output.log
+2022-10-09 02:17:08,398 INFO    Thread-13 :34848 [dir_watcher.py:_on_file_modified():292] file/dir modified: /home/datassd/yilin/Codes/Hand/ConditionHOI/wandb/run-20221009_021341-18h8crjf/files/output.log
+2022-10-09 02:17:08,497 DEBUG   HandlerThread:34848 [handler.py:handle_request():138] handle_request: partial_history
+2022-10-09 02:17:08,498 DEBUG   SenderThread:34848 [sender.py:send():301] send: history
+2022-10-09 02:17:08,498 DEBUG   SenderThread:34848 [sender.py:send():301] send: summary
+2022-10-09 02:17:08,499 INFO    SenderThread:34848 [sender.py:_save_file():1155] saving file wandb-summary.json with policy end
+2022-10-09 02:17:09,398 INFO    Thread-13 :34848 [dir_watcher.py:_on_file_modified():292] file/dir modified: /home/datassd/yilin/Codes/Hand/ConditionHOI/wandb/run-20221009_021341-18h8crjf/files/wandb-summary.json
+2022-10-09 02:17:10,399 INFO    Thread-13 :34848 [dir_watcher.py:_on_file_modified():292] file/dir modified: /home/datassd/yilin/Codes/Hand/ConditionHOI/wandb/run-20221009_021341-18h8crjf/files/output.log
+2022-10-09 02:17:11,058 DEBUG   HandlerThread:34848 [handler.py:handle_request():138] handle_request: partial_history
+2022-10-09 02:17:11,058 DEBUG   SenderThread:34848 [sender.py:send():301] send: history
+2022-10-09 02:17:11,059 DEBUG   SenderThread:34848 [sender.py:send():301] send: summary
+2022-10-09 02:17:11,059 INFO    SenderThread:34848 [sender.py:_save_file():1155] saving file wandb-summary.json with policy end
+2022-10-09 02:17:11,399 INFO    Thread-13 :34848 [dir_watcher.py:_on_file_modified():292] file/dir modified: /home/datassd/yilin/Codes/Hand/ConditionHOI/wandb/run-20221009_021341-18h8crjf/files/wandb-summary.json
+2022-10-09 02:17:12,399 INFO    Thread-13 :34848 [dir_watcher.py:_on_file_modified():292] file/dir modified: /home/datassd/yilin/Codes/Hand/ConditionHOI/wandb/run-20221009_021341-18h8crjf/files/output.log
+2022-10-09 02:17:13,955 DEBUG   SenderThread:34848 [sender.py:send():301] send: stats
+2022-10-09 02:17:14,400 INFO    Thread-13 :34848 [dir_watcher.py:_on_file_modified():292] file/dir modified: /home/datassd/yilin/Codes/Hand/ConditionHOI/wandb/run-20221009_021341-18h8crjf/files/output.log
+2022-10-09 02:17:16,401 INFO    Thread-13 :34848 [dir_watcher.py:_on_file_modified():292] file/dir modified: /home/datassd/yilin/Codes/Hand/ConditionHOI/wandb/run-20221009_021341-18h8crjf/files/output.log
+2022-10-09 02:17:16,550 DEBUG   SenderThread:34848 [sender.py:send():301] send: exit
+2022-10-09 02:17:16,551 INFO    SenderThread:34848 [sender.py:send_exit():437] handling exit code: 255
+2022-10-09 02:17:16,551 INFO    SenderThread:34848 [sender.py:send_exit():439] handling runtime: 214
+2022-10-09 02:17:16,551 DEBUG   HandlerThread:34848 [handler.py:handle_request():138] handle_request: poll_exit
+2022-10-09 02:17:16,551 INFO    SenderThread:34848 [sender.py:_save_file():1155] saving file wandb-summary.json with policy end
+2022-10-09 02:17:16,551 INFO    SenderThread:34848 [sender.py:send_exit():445] send defer
+2022-10-09 02:17:16,551 DEBUG   SenderThread:34848 [sender.py:send_request():315] send_request: poll_exit
+2022-10-09 02:17:16,552 DEBUG   HandlerThread:34848 [handler.py:handle_request():138] handle_request: defer
+2022-10-09 02:17:16,552 INFO    HandlerThread:34848 [handler.py:handle_request_defer():161] handle defer: 0
+2022-10-09 02:17:16,552 DEBUG   SenderThread:34848 [sender.py:send_request():315] send_request: defer
+2022-10-09 02:17:16,552 INFO    SenderThread:34848 [sender.py:send_request_defer():454] handle sender defer: 0
+2022-10-09 02:17:16,552 INFO    SenderThread:34848 [sender.py:transition_state():458] send defer: 1
+2022-10-09 02:17:16,552 DEBUG   HandlerThread:34848 [handler.py:handle_request():138] handle_request: defer
+2022-10-09 02:17:16,552 INFO    HandlerThread:34848 [handler.py:handle_request_defer():161] handle defer: 1
+2022-10-09 02:17:16,605 DEBUG   SenderThread:34848 [sender.py:send_request():315] send_request: defer
+2022-10-09 02:17:16,606 INFO    SenderThread:34848 [sender.py:send_request_defer():454] handle sender defer: 1
+2022-10-09 02:17:16,606 INFO    SenderThread:34848 [sender.py:transition_state():458] send defer: 2
+2022-10-09 02:17:16,606 DEBUG   SenderThread:34848 [sender.py:send():301] send: stats
+2022-10-09 02:17:16,607 DEBUG   HandlerThread:34848 [handler.py:handle_request():138] handle_request: defer
+2022-10-09 02:17:16,607 INFO    HandlerThread:34848 [handler.py:handle_request_defer():161] handle defer: 2
+2022-10-09 02:17:16,607 DEBUG   SenderThread:34848 [sender.py:send_request():315] send_request: defer
+2022-10-09 02:17:16,607 INFO    SenderThread:34848 [sender.py:send_request_defer():454] handle sender defer: 2
+2022-10-09 02:17:16,607 INFO    SenderThread:34848 [sender.py:transition_state():458] send defer: 3
+2022-10-09 02:17:16,608 DEBUG   HandlerThread:34848 [handler.py:handle_request():138] handle_request: defer
+2022-10-09 02:17:16,608 INFO    HandlerThread:34848 [handler.py:handle_request_defer():161] handle defer: 3
+2022-10-09 02:17:16,608 DEBUG   SenderThread:34848 [sender.py:send_request():315] send_request: defer
+2022-10-09 02:17:16,608 INFO    SenderThread:34848 [sender.py:send_request_defer():454] handle sender defer: 3
+2022-10-09 02:17:16,608 INFO    SenderThread:34848 [sender.py:transition_state():458] send defer: 4
+2022-10-09 02:17:16,608 DEBUG   HandlerThread:34848 [handler.py:handle_request():138] handle_request: defer
+2022-10-09 02:17:16,608 INFO    HandlerThread:34848 [handler.py:handle_request_defer():161] handle defer: 4
+2022-10-09 02:17:16,609 DEBUG   SenderThread:34848 [sender.py:send():301] send: summary
+2022-10-09 02:17:16,610 INFO    SenderThread:34848 [sender.py:_save_file():1155] saving file wandb-summary.json with policy end
+2022-10-09 02:17:16,610 DEBUG   SenderThread:34848 [sender.py:send_request():315] send_request: defer
+2022-10-09 02:17:16,610 INFO    SenderThread:34848 [sender.py:send_request_defer():454] handle sender defer: 4
+2022-10-09 02:17:16,610 INFO    SenderThread:34848 [sender.py:transition_state():458] send defer: 5
+2022-10-09 02:17:16,611 DEBUG   HandlerThread:34848 [handler.py:handle_request():138] handle_request: defer
+2022-10-09 02:17:16,611 INFO    HandlerThread:34848 [handler.py:handle_request_defer():161] handle defer: 5
+2022-10-09 02:17:16,611 DEBUG   SenderThread:34848 [sender.py:send_request():315] send_request: defer
+2022-10-09 02:17:16,611 INFO    SenderThread:34848 [sender.py:send_request_defer():454] handle sender defer: 5
+2022-10-09 02:17:16,611 INFO    SenderThread:34848 [sender.py:transition_state():458] send defer: 6
+2022-10-09 02:17:16,611 DEBUG   HandlerThread:34848 [handler.py:handle_request():138] handle_request: defer
+2022-10-09 02:17:16,612 INFO    HandlerThread:34848 [handler.py:handle_request_defer():161] handle defer: 6
+2022-10-09 02:17:16,612 DEBUG   SenderThread:34848 [sender.py:send_request():315] send_request: defer
+2022-10-09 02:17:16,612 INFO    SenderThread:34848 [sender.py:send_request_defer():454] handle sender defer: 6
+2022-10-09 02:17:16,653 DEBUG   HandlerThread:34848 [handler.py:handle_request():138] handle_request: poll_exit
+2022-10-09 02:17:17,402 INFO    Thread-13 :34848 [dir_watcher.py:_on_file_modified():292] file/dir modified: /home/datassd/yilin/Codes/Hand/ConditionHOI/wandb/run-20221009_021341-18h8crjf/files/wandb-summary.json
+2022-10-09 02:17:18,255 INFO    SenderThread:34848 [sender.py:transition_state():458] send defer: 7
+2022-10-09 02:17:18,255 DEBUG   SenderThread:34848 [sender.py:send_request():315] send_request: poll_exit
+2022-10-09 02:17:18,256 DEBUG   HandlerThread:34848 [handler.py:handle_request():138] handle_request: defer
+2022-10-09 02:17:18,256 INFO    HandlerThread:34848 [handler.py:handle_request_defer():161] handle defer: 7
+2022-10-09 02:17:18,257 DEBUG   SenderThread:34848 [sender.py:send_request():315] send_request: defer
+2022-10-09 02:17:18,257 INFO    SenderThread:34848 [sender.py:send_request_defer():454] handle sender defer: 7
+2022-10-09 02:17:18,258 INFO    SenderThread:34848 [dir_watcher.py:finish():362] shutting down directory watcher
+2022-10-09 02:17:18,359 DEBUG   HandlerThread:34848 [handler.py:handle_request():138] handle_request: poll_exit
+2022-10-09 02:17:18,403 INFO    Thread-13 :34848 [dir_watcher.py:_on_file_modified():292] file/dir modified: /home/datassd/yilin/Codes/Hand/ConditionHOI/wandb/run-20221009_021341-18h8crjf/files/output.log
+2022-10-09 02:17:18,404 INFO    SenderThread:34848 [dir_watcher.py:finish():392] scan: /home/datassd/yilin/Codes/Hand/ConditionHOI/wandb/run-20221009_021341-18h8crjf/files
+2022-10-09 02:17:18,404 INFO    SenderThread:34848 [dir_watcher.py:finish():406] scan save: /home/datassd/yilin/Codes/Hand/ConditionHOI/wandb/run-20221009_021341-18h8crjf/files/config.yaml config.yaml
+2022-10-09 02:17:18,404 INFO    SenderThread:34848 [dir_watcher.py:finish():406] scan save: /home/datassd/yilin/Codes/Hand/ConditionHOI/wandb/run-20221009_021341-18h8crjf/files/wandb-metadata.json wandb-metadata.json
+2022-10-09 02:17:18,404 INFO    SenderThread:34848 [dir_watcher.py:finish():406] scan save: /home/datassd/yilin/Codes/Hand/ConditionHOI/wandb/run-20221009_021341-18h8crjf/files/conda-environment.yaml conda-environment.yaml
+2022-10-09 02:17:18,405 INFO    SenderThread:34848 [dir_watcher.py:finish():406] scan save: /home/datassd/yilin/Codes/Hand/ConditionHOI/wandb/run-20221009_021341-18h8crjf/files/requirements.txt requirements.txt
+2022-10-09 02:17:18,411 INFO    SenderThread:34848 [dir_watcher.py:finish():406] scan save: /home/datassd/yilin/Codes/Hand/ConditionHOI/wandb/run-20221009_021341-18h8crjf/files/wandb-summary.json wandb-summary.json
+2022-10-09 02:17:18,423 INFO    SenderThread:34848 [dir_watcher.py:finish():406] scan save: /home/datassd/yilin/Codes/Hand/ConditionHOI/wandb/run-20221009_021341-18h8crjf/files/output.log output.log
+2022-10-09 02:17:18,429 INFO    SenderThread:34848 [sender.py:transition_state():458] send defer: 8
+2022-10-09 02:17:18,429 DEBUG   SenderThread:34848 [sender.py:send_request():315] send_request: poll_exit
+2022-10-09 02:17:18,430 DEBUG   HandlerThread:34848 [handler.py:handle_request():138] handle_request: defer
+2022-10-09 02:17:18,431 INFO    HandlerThread:34848 [handler.py:handle_request_defer():161] handle defer: 8
+2022-10-09 02:17:18,437 DEBUG   SenderThread:34848 [sender.py:send_request():315] send_request: defer
+2022-10-09 02:17:18,437 INFO    SenderThread:34848 [sender.py:send_request_defer():454] handle sender defer: 8
+2022-10-09 02:17:18,437 INFO    SenderThread:34848 [file_pusher.py:finish():168] shutting down file pusher
+2022-10-09 02:17:18,538 DEBUG   HandlerThread:34848 [handler.py:handle_request():138] handle_request: poll_exit
+2022-10-09 02:17:18,538 DEBUG   SenderThread:34848 [sender.py:send_request():315] send_request: poll_exit
+2022-10-09 02:17:18,641 DEBUG   HandlerThread:34848 [handler.py:handle_request():138] handle_request: poll_exit
+2022-10-09 02:17:18,641 DEBUG   SenderThread:34848 [sender.py:send_request():315] send_request: poll_exit
+2022-10-09 02:17:18,743 DEBUG   HandlerThread:34848 [handler.py:handle_request():138] handle_request: poll_exit
+2022-10-09 02:17:18,743 DEBUG   SenderThread:34848 [sender.py:send_request():315] send_request: poll_exit
+2022-10-09 02:17:18,845 DEBUG   HandlerThread:34848 [handler.py:handle_request():138] handle_request: poll_exit
+2022-10-09 02:17:18,846 DEBUG   SenderThread:34848 [sender.py:send_request():315] send_request: poll_exit
+2022-10-09 02:17:18,939 INFO    Thread-18 :34848 [upload_job.py:push():139] Uploaded file /home/datassd/yilin/Codes/Hand/ConditionHOI/wandb/run-20221009_021341-18h8crjf/files/config.yaml
+2022-10-09 02:17:18,948 DEBUG   HandlerThread:34848 [handler.py:handle_request():138] handle_request: poll_exit
+2022-10-09 02:17:18,948 DEBUG   SenderThread:34848 [sender.py:send_request():315] send_request: poll_exit
+2022-10-09 02:17:18,953 INFO    Thread-19 :34848 [upload_job.py:push():139] Uploaded file /home/datassd/yilin/Codes/Hand/ConditionHOI/wandb/run-20221009_021341-18h8crjf/files/conda-environment.yaml
+2022-10-09 02:17:18,958 INFO    Thread-22 :34848 [upload_job.py:push():139] Uploaded file /home/datassd/yilin/Codes/Hand/ConditionHOI/wandb/run-20221009_021341-18h8crjf/files/output.log
+2022-10-09 02:17:18,969 INFO    Thread-20 :34848 [upload_job.py:push():139] Uploaded file /home/datassd/yilin/Codes/Hand/ConditionHOI/wandb/run-20221009_021341-18h8crjf/files/requirements.txt
+2022-10-09 02:17:19,050 DEBUG   HandlerThread:34848 [handler.py:handle_request():138] handle_request: poll_exit
+2022-10-09 02:17:19,050 DEBUG   SenderThread:34848 [sender.py:send_request():315] send_request: poll_exit
+2022-10-09 02:17:19,097 INFO    Thread-21 :34848 [upload_job.py:push():139] Uploaded file /home/datassd/yilin/Codes/Hand/ConditionHOI/wandb/run-20221009_021341-18h8crjf/files/wandb-summary.json
+2022-10-09 02:17:19,152 DEBUG   HandlerThread:34848 [handler.py:handle_request():138] handle_request: poll_exit
+2022-10-09 02:17:19,153 DEBUG   SenderThread:34848 [sender.py:send_request():315] send_request: poll_exit
+2022-10-09 02:17:19,254 DEBUG   HandlerThread:34848 [handler.py:handle_request():138] handle_request: poll_exit
+2022-10-09 02:17:19,255 DEBUG   SenderThread:34848 [sender.py:send_request():315] send_request: poll_exit
+2022-10-09 02:17:19,299 INFO    Thread-12 :34848 [sender.py:transition_state():458] send defer: 9
+2022-10-09 02:17:19,299 DEBUG   HandlerThread:34848 [handler.py:handle_request():138] handle_request: defer
+2022-10-09 02:17:19,300 INFO    HandlerThread:34848 [handler.py:handle_request_defer():161] handle defer: 9
+2022-10-09 02:17:19,300 DEBUG   SenderThread:34848 [sender.py:send_request():315] send_request: defer
+2022-10-09 02:17:19,300 INFO    SenderThread:34848 [sender.py:send_request_defer():454] handle sender defer: 9
+2022-10-09 02:17:19,357 DEBUG   HandlerThread:34848 [handler.py:handle_request():138] handle_request: poll_exit
+2022-10-09 02:17:19,579 INFO    SenderThread:34848 [sender.py:transition_state():458] send defer: 10
+2022-10-09 02:17:19,579 DEBUG   SenderThread:34848 [sender.py:send_request():315] send_request: poll_exit
+2022-10-09 02:17:19,580 DEBUG   HandlerThread:34848 [handler.py:handle_request():138] handle_request: defer
+2022-10-09 02:17:19,581 INFO    HandlerThread:34848 [handler.py:handle_request_defer():161] handle defer: 10
+2022-10-09 02:17:19,581 DEBUG   SenderThread:34848 [sender.py:send_request():315] send_request: defer
+2022-10-09 02:17:19,581 INFO    SenderThread:34848 [sender.py:send_request_defer():454] handle sender defer: 10
+2022-10-09 02:17:19,582 INFO    SenderThread:34848 [sender.py:transition_state():458] send defer: 11
+2022-10-09 02:17:19,583 DEBUG   HandlerThread:34848 [handler.py:handle_request():138] handle_request: defer
+2022-10-09 02:17:19,583 DEBUG   SenderThread:34848 [sender.py:send():301] send: final
+2022-10-09 02:17:19,583 INFO    HandlerThread:34848 [handler.py:handle_request_defer():161] handle defer: 11
+2022-10-09 02:17:19,583 DEBUG   SenderThread:34848 [sender.py:send():301] send: footer
+2022-10-09 02:17:19,584 DEBUG   SenderThread:34848 [sender.py:send_request():315] send_request: defer
+2022-10-09 02:17:19,584 INFO    SenderThread:34848 [sender.py:send_request_defer():454] handle sender defer: 11
+2022-10-09 02:17:19,682 DEBUG   HandlerThread:34848 [handler.py:handle_request():138] handle_request: poll_exit
+2022-10-09 02:17:19,683 DEBUG   SenderThread:34848 [sender.py:send_request():315] send_request: poll_exit
+2022-10-09 02:17:19,683 INFO    SenderThread:34848 [file_pusher.py:join():173] waiting for file pusher
+2022-10-09 02:17:20,065 DEBUG   HandlerThread:34848 [handler.py:handle_request():138] handle_request: sampled_history
+2022-10-09 02:17:20,068 DEBUG   HandlerThread:34848 [handler.py:handle_request():138] handle_request: get_summary
+2022-10-09 02:17:20,070 INFO    MainThread:34848 [wandb_run.py:_footer_history_summary_info():3321] rendering history
+2022-10-09 02:17:20,071 INFO    MainThread:34848 [wandb_run.py:_footer_history_summary_info():3353] rendering summary
+2022-10-09 02:17:20,071 INFO    MainThread:34848 [wandb_run.py:_footer_sync_info():3277] logging synced files
+2022-10-09 02:17:20,072 DEBUG   HandlerThread:34848 [handler.py:handle_request():138] handle_request: shutdown
+2022-10-09 02:17:20,072 INFO    HandlerThread:34848 [handler.py:finish():807] shutting down handler
+2022-10-09 02:17:20,583 INFO    WriterThread:34848 [datastore.py:close():279] close: /home/datassd/yilin/Codes/Hand/ConditionHOI/wandb/run-20221009_021341-18h8crjf/run-18h8crjf.wandb
+2022-10-09 02:17:20,964 INFO    SenderThread:34848 [sender.py:finish():1315] shutting down sender
+2022-10-09 02:17:20,964 INFO    SenderThread:34848 [file_pusher.py:finish():168] shutting down file pusher
+2022-10-09 02:17:20,964 INFO    SenderThread:34848 [file_pusher.py:join():173] waiting for file pusher
+2022-10-09 02:17:21,076 INFO    MainThread:34848 [internal.py:handle_exit():78] Internal process exited

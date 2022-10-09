@@ -6,6 +6,7 @@ import torch.nn as nn
 import torch.nn.functional as F
 from option import MyOptions as cfg
 from models.pointnet_encoder import PointNetEncoder
+from utils.utils import func_timer
 
 class ConditionNet(nn.Module):
     def __init__(self, input_channel_obj, input_channel_hand):
@@ -16,33 +17,36 @@ class ConditionNet(nn.Module):
         self.obj_encoder = PointNetEncoder(global_feat=False, feature_transform=False, channel=self.in_channel_obj)
         self.obj_masked_encoder = PointNetEncoder(global_feat=False, feature_transform=False, channel=self.in_channel_obj)
         self.hand_encoder = PointNetEncoder(global_feat=False, feature_transform=False, channel=self.in_channel_hand)
-        self.mapnet = SDmapNet(input_dim=cfg.SDmapNet.input_dim, layer_dims=cfg.SDmapNet.layer_dims,output_dim=cfg.SDmapNet.output_dim)
+        self.mapnet = SDmapNet(input_dim=cfg.SDmap_input_dim, layer_dims=cfg.SDmap_layer_dims, output_dim=cfg.SDmap_output_dim)
         self.convfuse = nn.Conv1d(3778, 3000, 1)
-        self.convfuse_m1 = nn.Conv1d(6000, 4096, 1)
-        self.convfuse_m2 = nn.Conv1d(4096, 3000, 1)
+        self.convfuse_m1 = nn.Conv1d(6000, 3000, 1)
+        # self.convfuse_m2 = nn.Conv1d(4096, 3000, 1)
         self.bnfuse = nn.BatchNorm1d(3000)
-        self.bnfuse_m1 = nn.BatchNorm1d(4096)
-        self.bnfuse_m2 = nn.BatchNorm1d(3000)
+        self.bnfuse_m1 = nn.BatchNorm1d(3000)
+        # self.bnfuse_m2 = nn.BatchNorm1d(3000)
 
     def mask_obj_pts(self, x, mask):
+        # import pdb; pdb.set_trace()
         x = x * (1 - mask) # multiplied by negate mask
         return x
 
+    # @func_timer
     def feat_hand_fusion(self, x, hand):
         x = torch.cat((x, hand), dim=2).permute(0, 2, 1).contiguous()
         x = F.relu(self.bnfuse(self.convfuse(x)))
         x = x.permute(0, 2, 1).contiguous()
         return x
 
+    # @func_timer
     def feat_om_fusion(self, x, feat_om):
         x = torch.cat((x, feat_om), dim=2).permute(0, 2, 1).contiguous()
         x = F.relu(self.bnfuse_m1(self.convfuse_m1(x)))
-        x = F.relu(self.bnfuse_m2(self.convfuse_m2(x)))
+        # x = F.relu(self.bnfuse_m2(self.convfuse_m2(x)))
         x = x.permute(0, 2, 1).contiguous()
         return x
 
     
-    def forward(self, obj_pc, region_mask, hand_xyz):
+    def forward(self, obj_pc, hand_xyz, region_mask):
         """
         :param obj_pc: [B, 3, N]
         :param region_mask: [B, 1, N]
@@ -102,8 +106,9 @@ class SDmapNet(nn.Module):
         self.bn1 = nn.BatchNorm1d(dim1)
         self.bn2 = nn.BatchNorm1d(dim2)
         self.bn3 = nn.BatchNorm1d(dim3)
-        self.activate = nn.LeakyReLU(negative_slope=cfg.SDmapNet.leaky_slope)
+        self.activate = nn.LeakyReLU(negative_slope=cfg.SDmap_leaky_slope)
 
+    # @func_timer
     def forward(self, x, N):
         """
         :param x: fused feature vector
@@ -111,7 +116,8 @@ class SDmapNet(nn.Module):
 
         :return 
         """
-        batch_size = cfg.batch_size
+        # batch_size = cfg.batch_size
+        batch_size = x.shape[0]
         x = self.activate(self.bn1(self.conv1(x)))
         x = self.activate(self.bn2(self.conv2(x)))
         x = self.activate(self.bn3(self.conv3(x)))

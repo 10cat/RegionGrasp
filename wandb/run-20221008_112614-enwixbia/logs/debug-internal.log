@@ -1,0 +1,159 @@
+2022-10-08 11:26:14,026 INFO    StreamThr :13680 [internal.py:wandb_internal():88] W&B internal server running at pid: 13680, started at: 2022-10-08 11:26:14.025750
+2022-10-08 11:26:14,031 DEBUG   HandlerThread:13680 [handler.py:handle_request():138] handle_request: status
+2022-10-08 11:26:14,033 DEBUG   SenderThread:13680 [sender.py:send_request():315] send_request: status
+2022-10-08 11:26:14,035 DEBUG   SenderThread:13680 [sender.py:send():301] send: header
+2022-10-08 11:26:14,036 INFO    WriterThread:13680 [datastore.py:open_for_write():75] open: /home/datassd/yilin/Codes/Hand/ConditionHOI/wandb/run-20221008_112614-enwixbia/run-enwixbia.wandb
+2022-10-08 11:26:14,051 DEBUG   SenderThread:13680 [sender.py:send():301] send: run
+2022-10-08 11:26:14,395 DEBUG   HandlerThread:13680 [handler.py:handle_request():138] handle_request: check_version
+2022-10-08 11:26:14,401 INFO    SenderThread:13680 [dir_watcher.py:__init__():216] watching files in: /home/datassd/yilin/Codes/Hand/ConditionHOI/wandb/run-20221008_112614-enwixbia/files
+2022-10-08 11:26:14,402 INFO    SenderThread:13680 [sender.py:_start_run_threads():912] run started: enwixbia with start time 1665249974.017721
+2022-10-08 11:26:14,402 DEBUG   SenderThread:13680 [sender.py:send():301] send: summary
+2022-10-08 11:26:14,402 INFO    SenderThread:13680 [sender.py:_save_file():1155] saving file wandb-summary.json with policy end
+2022-10-08 11:26:14,403 DEBUG   SenderThread:13680 [sender.py:send_request():315] send_request: check_version
+2022-10-08 11:26:14,565 DEBUG   HandlerThread:13680 [handler.py:handle_request():138] handle_request: run_start
+2022-10-08 11:26:14,572 DEBUG   HandlerThread:13680 [meta.py:__init__():34] meta init
+2022-10-08 11:26:14,572 DEBUG   HandlerThread:13680 [meta.py:__init__():49] meta init done
+2022-10-08 11:26:14,572 DEBUG   HandlerThread:13680 [meta.py:probe():215] probe
+2022-10-08 11:26:14,579 DEBUG   HandlerThread:13680 [meta.py:_setup_git():205] setup git
+2022-10-08 11:26:14,605 DEBUG   HandlerThread:13680 [meta.py:_setup_git():212] setup git done
+2022-10-08 11:26:14,605 DEBUG   HandlerThread:13680 [meta.py:_save_pip():53] save pip
+2022-10-08 11:26:14,606 DEBUG   HandlerThread:13680 [meta.py:_save_pip():67] save pip done
+2022-10-08 11:26:14,607 DEBUG   HandlerThread:13680 [meta.py:_save_conda():74] save conda
+2022-10-08 11:26:15,405 INFO    Thread-13 :13680 [dir_watcher.py:_on_file_created():275] file/dir created: /home/datassd/yilin/Codes/Hand/ConditionHOI/wandb/run-20221008_112614-enwixbia/files/wandb-summary.json
+2022-10-08 11:26:15,406 INFO    Thread-13 :13680 [dir_watcher.py:_on_file_created():275] file/dir created: /home/datassd/yilin/Codes/Hand/ConditionHOI/wandb/run-20221008_112614-enwixbia/files/conda-environment.yaml
+2022-10-08 11:26:15,406 INFO    Thread-13 :13680 [dir_watcher.py:_on_file_created():275] file/dir created: /home/datassd/yilin/Codes/Hand/ConditionHOI/wandb/run-20221008_112614-enwixbia/files/requirements.txt
+2022-10-08 11:26:17,395 DEBUG   HandlerThread:13680 [meta.py:_save_conda():84] save conda done
+2022-10-08 11:26:17,395 DEBUG   HandlerThread:13680 [meta.py:probe():253] probe done
+2022-10-08 11:26:17,400 DEBUG   SenderThread:13680 [sender.py:send():301] send: files
+2022-10-08 11:26:17,401 INFO    SenderThread:13680 [sender.py:_save_file():1155] saving file wandb-metadata.json with policy now
+2022-10-08 11:26:17,410 DEBUG   HandlerThread:13680 [handler.py:handle_request():138] handle_request: stop_status
+2022-10-08 11:26:17,410 DEBUG   SenderThread:13680 [sender.py:send_request():315] send_request: stop_status
+2022-10-08 11:26:17,416 INFO    Thread-13 :13680 [dir_watcher.py:_on_file_modified():292] file/dir modified: /home/datassd/yilin/Codes/Hand/ConditionHOI/wandb/run-20221008_112614-enwixbia/files/conda-environment.yaml
+2022-10-08 11:26:17,416 INFO    Thread-13 :13680 [dir_watcher.py:_on_file_created():275] file/dir created: /home/datassd/yilin/Codes/Hand/ConditionHOI/wandb/run-20221008_112614-enwixbia/files/wandb-metadata.json
+2022-10-08 11:26:17,576 DEBUG   SenderThread:13680 [sender.py:send():301] send: telemetry
+2022-10-08 11:26:17,904 INFO    Thread-17 :13680 [upload_job.py:push():139] Uploaded file /tmp/tmpcrmo2luawandb/1lgbfk1d-wandb-metadata.json
+2022-10-08 11:26:18,416 INFO    Thread-13 :13680 [dir_watcher.py:_on_file_created():275] file/dir created: /home/datassd/yilin/Codes/Hand/ConditionHOI/wandb/run-20221008_112614-enwixbia/files/output.log
+2022-10-08 11:26:19,617 DEBUG   SenderThread:13680 [sender.py:send():301] send: exit
+2022-10-08 11:26:19,618 INFO    SenderThread:13680 [sender.py:send_exit():437] handling exit code: 1
+2022-10-08 11:26:19,618 INFO    SenderThread:13680 [sender.py:send_exit():439] handling runtime: 5
+2022-10-08 11:26:19,619 DEBUG   HandlerThread:13680 [handler.py:handle_request():138] handle_request: poll_exit
+2022-10-08 11:26:19,619 INFO    SenderThread:13680 [sender.py:_save_file():1155] saving file wandb-summary.json with policy end
+2022-10-08 11:26:19,620 INFO    SenderThread:13680 [sender.py:send_exit():445] send defer
+2022-10-08 11:26:19,620 DEBUG   SenderThread:13680 [sender.py:send_request():315] send_request: poll_exit
+2022-10-08 11:26:19,620 DEBUG   HandlerThread:13680 [handler.py:handle_request():138] handle_request: defer
+2022-10-08 11:26:19,621 INFO    HandlerThread:13680 [handler.py:handle_request_defer():161] handle defer: 0
+2022-10-08 11:26:19,621 DEBUG   SenderThread:13680 [sender.py:send_request():315] send_request: defer
+2022-10-08 11:26:19,621 INFO    SenderThread:13680 [sender.py:send_request_defer():454] handle sender defer: 0
+2022-10-08 11:26:19,622 INFO    SenderThread:13680 [sender.py:transition_state():458] send defer: 1
+2022-10-08 11:26:19,622 DEBUG   HandlerThread:13680 [handler.py:handle_request():138] handle_request: defer
+2022-10-08 11:26:19,622 INFO    HandlerThread:13680 [handler.py:handle_request_defer():161] handle defer: 1
+2022-10-08 11:26:19,659 DEBUG   SenderThread:13680 [sender.py:send_request():315] send_request: defer
+2022-10-08 11:26:19,659 INFO    SenderThread:13680 [sender.py:send_request_defer():454] handle sender defer: 1
+2022-10-08 11:26:19,659 INFO    SenderThread:13680 [sender.py:transition_state():458] send defer: 2
+2022-10-08 11:26:19,659 DEBUG   SenderThread:13680 [sender.py:send():301] send: stats
+2022-10-08 11:26:19,660 DEBUG   HandlerThread:13680 [handler.py:handle_request():138] handle_request: defer
+2022-10-08 11:26:19,660 INFO    HandlerThread:13680 [handler.py:handle_request_defer():161] handle defer: 2
+2022-10-08 11:26:19,660 DEBUG   SenderThread:13680 [sender.py:send_request():315] send_request: defer
+2022-10-08 11:26:19,660 INFO    SenderThread:13680 [sender.py:send_request_defer():454] handle sender defer: 2
+2022-10-08 11:26:19,660 INFO    SenderThread:13680 [sender.py:transition_state():458] send defer: 3
+2022-10-08 11:26:19,661 DEBUG   HandlerThread:13680 [handler.py:handle_request():138] handle_request: defer
+2022-10-08 11:26:19,661 INFO    HandlerThread:13680 [handler.py:handle_request_defer():161] handle defer: 3
+2022-10-08 11:26:19,661 DEBUG   SenderThread:13680 [sender.py:send_request():315] send_request: defer
+2022-10-08 11:26:19,661 INFO    SenderThread:13680 [sender.py:send_request_defer():454] handle sender defer: 3
+2022-10-08 11:26:19,661 INFO    SenderThread:13680 [sender.py:transition_state():458] send defer: 4
+2022-10-08 11:26:19,661 DEBUG   HandlerThread:13680 [handler.py:handle_request():138] handle_request: defer
+2022-10-08 11:26:19,661 INFO    HandlerThread:13680 [handler.py:handle_request_defer():161] handle defer: 4
+2022-10-08 11:26:19,661 DEBUG   SenderThread:13680 [sender.py:send():301] send: summary
+2022-10-08 11:26:19,662 INFO    SenderThread:13680 [sender.py:_save_file():1155] saving file wandb-summary.json with policy end
+2022-10-08 11:26:19,662 DEBUG   SenderThread:13680 [sender.py:send_request():315] send_request: defer
+2022-10-08 11:26:19,662 INFO    SenderThread:13680 [sender.py:send_request_defer():454] handle sender defer: 4
+2022-10-08 11:26:19,662 INFO    SenderThread:13680 [sender.py:transition_state():458] send defer: 5
+2022-10-08 11:26:19,662 DEBUG   HandlerThread:13680 [handler.py:handle_request():138] handle_request: defer
+2022-10-08 11:26:19,662 INFO    HandlerThread:13680 [handler.py:handle_request_defer():161] handle defer: 5
+2022-10-08 11:26:19,662 DEBUG   SenderThread:13680 [sender.py:send_request():315] send_request: defer
+2022-10-08 11:26:19,663 INFO    SenderThread:13680 [sender.py:send_request_defer():454] handle sender defer: 5
+2022-10-08 11:26:19,722 DEBUG   HandlerThread:13680 [handler.py:handle_request():138] handle_request: poll_exit
+2022-10-08 11:26:19,833 INFO    SenderThread:13680 [sender.py:transition_state():458] send defer: 6
+2022-10-08 11:26:19,833 DEBUG   SenderThread:13680 [sender.py:send_request():315] send_request: poll_exit
+2022-10-08 11:26:19,834 DEBUG   HandlerThread:13680 [handler.py:handle_request():138] handle_request: defer
+2022-10-08 11:26:19,835 INFO    HandlerThread:13680 [handler.py:handle_request_defer():161] handle defer: 6
+2022-10-08 11:26:19,835 DEBUG   SenderThread:13680 [sender.py:send_request():315] send_request: defer
+2022-10-08 11:26:19,835 INFO    SenderThread:13680 [sender.py:send_request_defer():454] handle sender defer: 6
+2022-10-08 11:26:19,936 DEBUG   HandlerThread:13680 [handler.py:handle_request():138] handle_request: poll_exit
+2022-10-08 11:26:20,417 INFO    Thread-13 :13680 [dir_watcher.py:_on_file_modified():292] file/dir modified: /home/datassd/yilin/Codes/Hand/ConditionHOI/wandb/run-20221008_112614-enwixbia/files/wandb-summary.json
+2022-10-08 11:26:20,418 INFO    Thread-13 :13680 [dir_watcher.py:_on_file_modified():292] file/dir modified: /home/datassd/yilin/Codes/Hand/ConditionHOI/wandb/run-20221008_112614-enwixbia/files/config.yaml
+2022-10-08 11:26:20,418 INFO    Thread-13 :13680 [dir_watcher.py:_on_file_modified():292] file/dir modified: /home/datassd/yilin/Codes/Hand/ConditionHOI/wandb/run-20221008_112614-enwixbia/files/output.log
+2022-10-08 11:26:21,633 INFO    SenderThread:13680 [sender.py:transition_state():458] send defer: 7
+2022-10-08 11:26:21,633 DEBUG   SenderThread:13680 [sender.py:send_request():315] send_request: poll_exit
+2022-10-08 11:26:21,634 DEBUG   HandlerThread:13680 [handler.py:handle_request():138] handle_request: defer
+2022-10-08 11:26:21,635 INFO    HandlerThread:13680 [handler.py:handle_request_defer():161] handle defer: 7
+2022-10-08 11:26:21,635 DEBUG   SenderThread:13680 [sender.py:send_request():315] send_request: defer
+2022-10-08 11:26:21,635 INFO    SenderThread:13680 [sender.py:send_request_defer():454] handle sender defer: 7
+2022-10-08 11:26:21,636 INFO    SenderThread:13680 [dir_watcher.py:finish():362] shutting down directory watcher
+2022-10-08 11:26:21,736 DEBUG   HandlerThread:13680 [handler.py:handle_request():138] handle_request: poll_exit
+2022-10-08 11:26:22,419 INFO    Thread-13 :13680 [dir_watcher.py:_on_file_modified():292] file/dir modified: /home/datassd/yilin/Codes/Hand/ConditionHOI/wandb/run-20221008_112614-enwixbia/files/output.log
+2022-10-08 11:26:22,420 INFO    SenderThread:13680 [dir_watcher.py:finish():392] scan: /home/datassd/yilin/Codes/Hand/ConditionHOI/wandb/run-20221008_112614-enwixbia/files
+2022-10-08 11:26:22,420 INFO    SenderThread:13680 [dir_watcher.py:finish():406] scan save: /home/datassd/yilin/Codes/Hand/ConditionHOI/wandb/run-20221008_112614-enwixbia/files/config.yaml config.yaml
+2022-10-08 11:26:22,420 INFO    SenderThread:13680 [dir_watcher.py:finish():406] scan save: /home/datassd/yilin/Codes/Hand/ConditionHOI/wandb/run-20221008_112614-enwixbia/files/wandb-metadata.json wandb-metadata.json
+2022-10-08 11:26:22,420 INFO    SenderThread:13680 [dir_watcher.py:finish():406] scan save: /home/datassd/yilin/Codes/Hand/ConditionHOI/wandb/run-20221008_112614-enwixbia/files/conda-environment.yaml conda-environment.yaml
+2022-10-08 11:26:22,421 INFO    SenderThread:13680 [dir_watcher.py:finish():406] scan save: /home/datassd/yilin/Codes/Hand/ConditionHOI/wandb/run-20221008_112614-enwixbia/files/requirements.txt requirements.txt
+2022-10-08 11:26:22,427 INFO    SenderThread:13680 [dir_watcher.py:finish():406] scan save: /home/datassd/yilin/Codes/Hand/ConditionHOI/wandb/run-20221008_112614-enwixbia/files/wandb-summary.json wandb-summary.json
+2022-10-08 11:26:22,439 INFO    SenderThread:13680 [dir_watcher.py:finish():406] scan save: /home/datassd/yilin/Codes/Hand/ConditionHOI/wandb/run-20221008_112614-enwixbia/files/output.log output.log
+2022-10-08 11:26:22,445 INFO    SenderThread:13680 [sender.py:transition_state():458] send defer: 8
+2022-10-08 11:26:22,446 DEBUG   SenderThread:13680 [sender.py:send_request():315] send_request: poll_exit
+2022-10-08 11:26:22,452 DEBUG   HandlerThread:13680 [handler.py:handle_request():138] handle_request: defer
+2022-10-08 11:26:22,453 INFO    HandlerThread:13680 [handler.py:handle_request_defer():161] handle defer: 8
+2022-10-08 11:26:22,454 DEBUG   SenderThread:13680 [sender.py:send_request():315] send_request: defer
+2022-10-08 11:26:22,454 INFO    SenderThread:13680 [sender.py:send_request_defer():454] handle sender defer: 8
+2022-10-08 11:26:22,454 INFO    SenderThread:13680 [file_pusher.py:finish():168] shutting down file pusher
+2022-10-08 11:26:22,555 DEBUG   HandlerThread:13680 [handler.py:handle_request():138] handle_request: poll_exit
+2022-10-08 11:26:22,555 DEBUG   SenderThread:13680 [sender.py:send_request():315] send_request: poll_exit
+2022-10-08 11:26:22,657 DEBUG   HandlerThread:13680 [handler.py:handle_request():138] handle_request: poll_exit
+2022-10-08 11:26:22,658 DEBUG   SenderThread:13680 [sender.py:send_request():315] send_request: poll_exit
+2022-10-08 11:26:22,760 DEBUG   HandlerThread:13680 [handler.py:handle_request():138] handle_request: poll_exit
+2022-10-08 11:26:22,760 DEBUG   SenderThread:13680 [sender.py:send_request():315] send_request: poll_exit
+2022-10-08 11:26:22,862 DEBUG   HandlerThread:13680 [handler.py:handle_request():138] handle_request: poll_exit
+2022-10-08 11:26:22,862 DEBUG   SenderThread:13680 [sender.py:send_request():315] send_request: poll_exit
+2022-10-08 11:26:22,944 INFO    Thread-19 :13680 [upload_job.py:push():139] Uploaded file /home/datassd/yilin/Codes/Hand/ConditionHOI/wandb/run-20221008_112614-enwixbia/files/conda-environment.yaml
+2022-10-08 11:26:22,955 INFO    Thread-18 :13680 [upload_job.py:push():139] Uploaded file /home/datassd/yilin/Codes/Hand/ConditionHOI/wandb/run-20221008_112614-enwixbia/files/config.yaml
+2022-10-08 11:26:22,965 DEBUG   HandlerThread:13680 [handler.py:handle_request():138] handle_request: poll_exit
+2022-10-08 11:26:22,965 DEBUG   SenderThread:13680 [sender.py:send_request():315] send_request: poll_exit
+2022-10-08 11:26:22,971 INFO    Thread-21 :13680 [upload_job.py:push():139] Uploaded file /home/datassd/yilin/Codes/Hand/ConditionHOI/wandb/run-20221008_112614-enwixbia/files/wandb-summary.json
+2022-10-08 11:26:22,974 INFO    Thread-20 :13680 [upload_job.py:push():139] Uploaded file /home/datassd/yilin/Codes/Hand/ConditionHOI/wandb/run-20221008_112614-enwixbia/files/requirements.txt
+2022-10-08 11:26:22,981 INFO    Thread-22 :13680 [upload_job.py:push():139] Uploaded file /home/datassd/yilin/Codes/Hand/ConditionHOI/wandb/run-20221008_112614-enwixbia/files/output.log
+2022-10-08 11:26:23,067 DEBUG   HandlerThread:13680 [handler.py:handle_request():138] handle_request: poll_exit
+2022-10-08 11:26:23,067 DEBUG   SenderThread:13680 [sender.py:send_request():315] send_request: poll_exit
+2022-10-08 11:26:23,169 DEBUG   HandlerThread:13680 [handler.py:handle_request():138] handle_request: poll_exit
+2022-10-08 11:26:23,170 DEBUG   SenderThread:13680 [sender.py:send_request():315] send_request: poll_exit
+2022-10-08 11:26:23,182 INFO    Thread-12 :13680 [sender.py:transition_state():458] send defer: 9
+2022-10-08 11:26:23,183 DEBUG   HandlerThread:13680 [handler.py:handle_request():138] handle_request: defer
+2022-10-08 11:26:23,183 INFO    HandlerThread:13680 [handler.py:handle_request_defer():161] handle defer: 9
+2022-10-08 11:26:23,183 DEBUG   SenderThread:13680 [sender.py:send_request():315] send_request: defer
+2022-10-08 11:26:23,183 INFO    SenderThread:13680 [sender.py:send_request_defer():454] handle sender defer: 9
+2022-10-08 11:26:23,257 INFO    SenderThread:13680 [sender.py:transition_state():458] send defer: 10
+2022-10-08 11:26:23,258 DEBUG   HandlerThread:13680 [handler.py:handle_request():138] handle_request: defer
+2022-10-08 11:26:23,258 INFO    HandlerThread:13680 [handler.py:handle_request_defer():161] handle defer: 10
+2022-10-08 11:26:23,259 DEBUG   SenderThread:13680 [sender.py:send_request():315] send_request: defer
+2022-10-08 11:26:23,259 INFO    SenderThread:13680 [sender.py:send_request_defer():454] handle sender defer: 10
+2022-10-08 11:26:23,259 INFO    SenderThread:13680 [sender.py:transition_state():458] send defer: 11
+2022-10-08 11:26:23,260 DEBUG   SenderThread:13680 [sender.py:send():301] send: final
+2022-10-08 11:26:23,260 DEBUG   HandlerThread:13680 [handler.py:handle_request():138] handle_request: defer
+2022-10-08 11:26:23,260 DEBUG   SenderThread:13680 [sender.py:send():301] send: footer
+2022-10-08 11:26:23,261 INFO    HandlerThread:13680 [handler.py:handle_request_defer():161] handle defer: 11
+2022-10-08 11:26:23,261 DEBUG   SenderThread:13680 [sender.py:send_request():315] send_request: defer
+2022-10-08 11:26:23,261 INFO    SenderThread:13680 [sender.py:send_request_defer():454] handle sender defer: 11
+2022-10-08 11:26:23,272 DEBUG   HandlerThread:13680 [handler.py:handle_request():138] handle_request: poll_exit
+2022-10-08 11:26:23,272 DEBUG   SenderThread:13680 [sender.py:send_request():315] send_request: poll_exit
+2022-10-08 11:26:23,272 INFO    SenderThread:13680 [file_pusher.py:join():173] waiting for file pusher
+2022-10-08 11:26:23,654 DEBUG   HandlerThread:13680 [handler.py:handle_request():138] handle_request: sampled_history
+2022-10-08 11:26:23,656 DEBUG   HandlerThread:13680 [handler.py:handle_request():138] handle_request: get_summary
+2022-10-08 11:26:23,657 INFO    MainThread:13680 [wandb_run.py:_footer_history_summary_info():3321] rendering history
+2022-10-08 11:26:23,657 INFO    MainThread:13680 [wandb_run.py:_footer_history_summary_info():3353] rendering summary
+2022-10-08 11:26:23,657 INFO    MainThread:13680 [wandb_run.py:_footer_sync_info():3277] logging synced files
+2022-10-08 11:26:23,658 DEBUG   HandlerThread:13680 [handler.py:handle_request():138] handle_request: shutdown
+2022-10-08 11:26:23,658 INFO    HandlerThread:13680 [handler.py:finish():807] shutting down handler
+2022-10-08 11:26:24,261 INFO    WriterThread:13680 [datastore.py:close():279] close: /home/datassd/yilin/Codes/Hand/ConditionHOI/wandb/run-20221008_112614-enwixbia/run-enwixbia.wandb
+2022-10-08 11:26:24,552 INFO    SenderThread:13680 [sender.py:finish():1315] shutting down sender
+2022-10-08 11:26:24,553 INFO    SenderThread:13680 [file_pusher.py:finish():168] shutting down file pusher
+2022-10-08 11:26:24,553 INFO    SenderThread:13680 [file_pusher.py:join():173] waiting for file pusher
+2022-10-08 11:26:24,662 INFO    MainThread:13680 [internal.py:handle_exit():78] Internal process exited

@@ -1,0 +1,214 @@
+train epoch:1:   0%|                                                                                                                                                                  | 0/20227 [00:00<?, ?it/s]/home/yilin/anaconda3/envs/pytorch3d/lib/python3.8/site-packages/torch/nn/modules/loss.py:97: UserWarning: Using a target size (torch.Size([16, 1, 3000])) that is different to the input size (torch.Size([16, 3000])). This will likely lead to incorrect results due to broadcasting. Please ensure they have the same size.
+  return F.l1_loss(input, target, reduction=self.reduction)
+[Function: model_forward start...]
+[Function: forward start...]
+[Function: forward finished, spent time: 0.16975212s]
+[Function: forward start...]
+[Function: forward finished, spent time: 0.04699612s]
+[Function: forward start...]
+[Function: forward finished, spent time: 0.16148877s]
+[Function: feat_hand_fusion start...]
+[Function: feat_hand_fusion finished, spent time: 0.29659677s]
+[Function: feat_om_fusion start...]
+[Function: feat_om_fusion finished, spent time: 0.42762947s]
+[Function: model_forward finished, spent time: 1.31980491s]
+[Function: model_update start...]
+train epoch:1:   0%|                                                                                                                                                       | 1/20227 [00:03<22:23:10,  3.98s/it]
+[Function: model_update finished, spent time: 2.57164335s]
+[Function: model_forward start...]
+[Function: forward start...]
+[Function: forward finished, spent time: 0.17224026s]
+[Function: forward start...]
+[Function: forward finished, spent time: 0.04456234s]
+[Function: forward start...]
+[Function: forward finished, spent time: 0.16493559s]
+[Function: feat_hand_fusion start...]
+[Function: feat_hand_fusion finished, spent time: 0.29779625s]
+[Function: feat_om_fusion start...]
+[Function: feat_om_fusion finished, spent time: 0.42022252s]
+[Function: model_forward finished, spent time: 1.32159257s]
+
+train epoch:1:   0%|                                                                                                                                                       | 2/20227 [00:07<22:23:09,  3.98s/it]
+[Function: model_update finished, spent time: 2.58911872s]
+[Function: model_forward start...]
+[Function: forward start...]
+[Function: forward finished, spent time: 0.16260624s]
+[Function: forward start...]
+[Function: forward finished, spent time: 0.04489112s]
+[Function: forward start...]
+[Function: forward finished, spent time: 0.15875816s]
+[Function: feat_hand_fusion start...]
+[Function: feat_hand_fusion finished, spent time: 0.29574633s]
+[Function: feat_om_fusion start...]
+[Function: feat_om_fusion finished, spent time: 0.48457050s]
+[Function: model_forward finished, spent time: 1.38073587s]
+
+train epoch:1:   0%|                                                                                                                                                       | 3/20227 [00:11<22:28:55,  4.00s/it]
+[Function: model_update finished, spent time: 2.57066655s]
+[Function: model_forward start...]
+[Function: forward start...]
+[Function: forward finished, spent time: 0.16007996s]
+[Function: forward start...]
+[Function: forward finished, spent time: 0.04413342s]
+[Function: forward start...]
+[Function: forward finished, spent time: 0.15917039s]
+[Function: feat_hand_fusion start...]
+[Function: feat_hand_fusion finished, spent time: 0.29556108s]
+[Function: feat_om_fusion start...]
+[Function: feat_om_fusion finished, spent time: 0.42248631s]
+[Function: model_forward finished, spent time: 1.29647994s]
+
+train epoch:1:   0%|                                                                                                                                                       | 4/20227 [00:16<22:50:35,  4.07s/it]
+[Function: model_update finished, spent time: 2.79696202s]
+[Function: model_forward start...]
+[Function: forward start...]
+[Function: forward finished, spent time: 0.18772411s]
+[Function: forward start...]
+[Function: forward finished, spent time: 0.04885650s]
+[Function: forward start...]
+[Function: forward finished, spent time: 0.16150236s]
+[Function: feat_hand_fusion start...]
+[Function: feat_hand_fusion finished, spent time: 0.29547548s]
+[Function: feat_om_fusion start...]
+[Function: feat_om_fusion finished, spent time: 0.41887021s]
+[Function: model_forward finished, spent time: 1.33398557s]
+
+train epoch:1:   0%|                                                                                                                                                       | 5/20227 [00:20<22:37:20,  4.03s/it]
+[Function: model_update finished, spent time: 2.55333114s]
+[Function: model_forward start...]
+[Function: forward start...]
+[Function: forward finished, spent time: 0.15988207s]
+[Function: forward start...]
+[Function: forward finished, spent time: 0.04426622s]
+[Function: forward start...]
+[Function: forward finished, spent time: 0.15915942s]
+[Function: feat_hand_fusion start...]
+[Function: feat_hand_fusion finished, spent time: 0.29550362s]
+[Function: feat_om_fusion start...]
+[Function: feat_om_fusion finished, spent time: 0.45850873s]
+[Function: model_forward finished, spent time: 1.33268642s]
+
+train epoch:1:   0%|                                                                                                                                                       | 6/20227 [00:24<22:37:43,  4.03s/it]
+[Function: model_update finished, spent time: 2.62381601s]
+[Function: model_forward start...]
+[Function: forward start...]
+[Function: forward finished, spent time: 0.15998673s]
+[Function: forward start...]
+[Function: forward finished, spent time: 0.04440069s]
+[Function: forward start...]
+[Function: forward finished, spent time: 0.15884614s]
+[Function: feat_hand_fusion start...]
+[Function: feat_hand_fusion finished, spent time: 0.29493237s]
+[Function: feat_om_fusion start...]
+[Function: feat_om_fusion finished, spent time: 0.42262816s]
+[Function: model_forward finished, spent time: 1.29561234s]
+
+train epoch:1:   0%|                                                                                                                                                       | 7/20227 [00:28<22:27:10,  4.00s/it]
+[Function: model_update finished, spent time: 2.56675625s]
+[Function: model_forward start...]
+[Function: forward start...]
+[Function: forward finished, spent time: 0.17174292s]
+[Function: forward start...]
+[Function: forward finished, spent time: 0.04517841s]
+[Function: forward start...]
+[Function: forward finished, spent time: 0.16519356s]
+[Function: feat_hand_fusion start...]
+[Function: feat_hand_fusion finished, spent time: 0.29535484s]
+[Function: feat_om_fusion start...]
+[Function: feat_om_fusion finished, spent time: 0.42211103s]
+[Function: model_forward finished, spent time: 1.31450105s]
+
+train epoch:1:   0%|                                                                                                                                                       | 8/20227 [00:32<22:25:06,  3.99s/it]
+[Function: model_update finished, spent time: 2.58721137s]
+[Function: model_forward start...]
+[Function: forward start...]
+[Function: forward finished, spent time: 0.19393420s]
+[Function: forward start...]
+[Function: forward finished, spent time: 0.05189180s]
+[Function: forward start...]
+[Function: forward finished, spent time: 0.17956686s]
+[Function: feat_hand_fusion start...]
+[Function: feat_hand_fusion finished, spent time: 0.29446173s]
+[Function: feat_om_fusion start...]
+[Function: feat_om_fusion finished, spent time: 0.49065709s]
+[Function: model_forward finished, spent time: 1.42882490s]
+
+train epoch:1:   0%|                                                                                                                                                       | 9/20227 [00:36<22:32:21,  4.01s/it]
+[Function: model_update finished, spent time: 2.56016994s]
+[Function: model_forward start...]
+[Function: forward start...]
+[Function: forward finished, spent time: 0.16007662s]
+[Function: forward start...]
+[Function: forward finished, spent time: 0.04406261s]
+[Function: forward start...]
+[Function: forward finished, spent time: 0.15792894s]
+[Function: feat_hand_fusion start...]
+[Function: feat_hand_fusion finished, spent time: 0.29480171s]
+[Function: feat_om_fusion start...]
+[Function: feat_om_fusion finished, spent time: 0.42158961s]
+[Function: model_forward finished, spent time: 1.29358935s]
+
+train epoch:1:   0%|                                                                                                                                                      | 10/20227 [00:40<22:26:32,  4.00s/it]
+[Function: model_update finished, spent time: 2.58974624s]
+[Function: model_forward start...]
+[Function: forward start...]
+[Function: forward finished, spent time: 0.17535710s]
+[Function: forward start...]
+[Function: forward finished, spent time: 0.04703069s]
+[Function: forward start...]
+[Function: forward finished, spent time: 0.15906310s]
+[Function: feat_hand_fusion start...]
+[Function: feat_hand_fusion finished, spent time: 0.29793549s]
+[Function: feat_om_fusion start...]
+[Function: feat_om_fusion finished, spent time: 0.42058229s]
+[Function: model_forward finished, spent time: 1.31459188s]
+
+train epoch:1:   0%|                                                                                                                                                      | 11/20227 [00:44<22:22:59,  3.99s/it]
+[Function: model_update finished, spent time: 2.57513785s]
+[Function: model_forward start...]
+[Function: forward start...]
+[Function: forward finished, spent time: 0.16344404s]
+[Function: forward start...]
+[Function: forward finished, spent time: 0.04457569s]
+[Function: forward start...]
+[Function: forward finished, spent time: 0.15793443s]
+[Function: feat_hand_fusion start...]
+[Function: feat_hand_fusion finished, spent time: 0.29667521s]
+[Function: feat_om_fusion start...]
+[Function: feat_om_fusion finished, spent time: 0.45041680s]
+[Function: model_forward finished, spent time: 1.33068275s]
+
+train epoch:1:   0%|                                                                                                                                                      | 12/20227 [00:48<22:32:56,  4.02s/it]
+Traceback (most recent call last):
+  File "traineval.py", line 63, in <module>
+    train_val(trainloader, valloader, testloader)
+  File "traineval.py", line 24, in train_val
+    checkpoints = trainer.epoch(epoch + 1)
+  File "/home/datassd/yilin/Codes/Hand/ConditionHOI/epochbase.py", line 243, in epoch
+    self.one_batch(sample)
+  File "/home/datassd/yilin/Codes/Hand/ConditionHOI/epochbase.py", line 194, in one_batch
+    outputs = self.model_forward(data_elements)
+  File "/home/datassd/yilin/Codes/Hand/ConditionHOI/utils/utils.py", line 25, in function_timer
+    result = function(*args, **kwargs)
+  File "/home/datassd/yilin/Codes/Hand/ConditionHOI/epochbase.py", line 94, in model_forward
+    feats, SD_maps = self.ConditionNet(obj_vs, rhand_vs, region) # cSDF_maps = [pred_map_obj, pred_map_obj_masked]
+  File "/home/yilin/anaconda3/envs/pytorch3d/lib/python3.8/site-packages/torch/nn/modules/module.py", line 1051, in _call_impl
+    return forward_call(*input, **kwargs)
+  File "/home/datassd/yilin/Codes/Hand/ConditionHOI/models/ConditionNet.py", line 64, in forward
+    feat_o, trans, trans_feat = self.obj_encoder(obj_pc)
+  File "/home/yilin/anaconda3/envs/pytorch3d/lib/python3.8/site-packages/torch/nn/modules/module.py", line 1051, in _call_impl
+    return forward_call(*input, **kwargs)
+  File "/home/datassd/yilin/Codes/Hand/ConditionHOI/utils/utils.py", line 25, in function_timer
+    result = function(*args, **kwargs)
+  File "/home/datassd/yilin/Codes/Hand/ConditionHOI/models/pointnet_encoder.py", line 141, in forward
+    x = self.bn3(self.conv3(x))
+  File "/home/yilin/anaconda3/envs/pytorch3d/lib/python3.8/site-packages/torch/nn/modules/module.py", line 1051, in _call_impl
+    return forward_call(*input, **kwargs)
+  File "/home/yilin/anaconda3/envs/pytorch3d/lib/python3.8/site-packages/torch/nn/modules/batchnorm.py", line 167, in forward
+    return F.batch_norm(
+  File "/home/yilin/anaconda3/envs/pytorch3d/lib/python3.8/site-packages/torch/nn/functional.py", line 2281, in batch_norm
+    return torch.batch_norm(
+KeyboardInterrupt
+[Function: model_update finished, spent time: 2.56489038s]
+[Function: model_forward start...]
+[Function: forward start...]

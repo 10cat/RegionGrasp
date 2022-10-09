@@ -1,0 +1,62 @@
+train epoch:1:   0%|                                                                                                                                                                  | 0/20227 [00:00<?, ?it/s]/home/yilin/anaconda3/envs/pytorch3d/lib/python3.8/site-packages/torch/nn/modules/loss.py:97: UserWarning: Using a target size (torch.Size([16, 1, 3000])) that is different to the input size (torch.Size([16, 3000])). This will likely lead to incorrect results due to broadcasting. Please ensure they have the same size.
+  return F.l1_loss(input, target, reduction=self.reduction)
+train epoch:1:   0%|                                                                                                                                                                  | 0/20227 [00:00<?, ?it/s]
+val epoch:1:   0%|                                                                                                                                                                     | 0/1940 [00:00<?, ?it/s]
+train epoch:2:   0%|                                                                                                                                                                  | 0/20227 [00:00<?, ?it/s]
+Average loss for epoch 1: train_total_loss_cond:0.6296532154083252; train_total_loss:0.6296532154083252; train_loss_map_hand:0.30844759941101074; train_loss_map_om:0.3205547630786896; train_loss_feat:0.6508910059928894;
+ Average metrics for epoch 1: train_metric_cond:0.30844759941101074;
+Average loss for epoch 1: val_total_loss_cond:0.13251538574695587; val_total_loss:0.13251538574695587; val_loss_map_hand:0.0; val_loss_map_om:0.13251538574695587; val_loss_feat:0.0;
+ Average metrics for epoch 1: val_metric_cond:0.13251538574695587;
+Average loss for epoch 2: train_total_loss_cond:1.4289990663528442; train_total_loss:1.4289990663528442; train_loss_map_hand:0.7057309746742249; train_loss_map_om:0.722621500492096; train_loss_feat:0.6466280817985535;
+ Average metrics for epoch 2: train_metric_cond:0.7057309746742249;
+Average loss for epoch 2: val_total_loss_cond:0.08926928788423538; val_total_loss:0.08926928788423538; val_loss_map_hand:0.0; val_loss_map_om:0.08926928788423538; val_loss_feat:0.0;
+ Average metrics for epoch 2: val_metric_cond:0.08926929533481598;
+val epoch:2:   0%|                                                                                                                                                                     | 0/1940 [00:00<?, ?it/s]
+train epoch:3:   0%|                                                                                                                                                                  | 0/20227 [00:00<?, ?it/s]
+val epoch:3:   0%|                                                                                                                                                                     | 0/1940 [00:00<?, ?it/s]
+train epoch:4:   0%|                                                                                                                                                                  | 0/20227 [00:00<?, ?it/s]
+val epoch:4:   0%|                                                                                                                                                                     | 0/1940 [00:00<?, ?it/s]
+Average loss for epoch 3: train_total_loss_cond:0.42713111639022827; train_total_loss:0.42713111639022827; train_loss_map_hand:0.20919384062290192; train_loss_map_om:0.21731340885162354; train_loss_feat:0.6238881349563599;
+ Average metrics for epoch 3: train_metric_cond:0.2091938704252243;
+Average loss for epoch 3: val_total_loss_cond:0.03686830773949623; val_total_loss:0.03686830773949623; val_loss_map_hand:0.0; val_loss_map_om:0.03686830773949623; val_loss_feat:0.0;
+ Average metrics for epoch 3: val_metric_cond:0.03686830773949623;
+Average loss for epoch 4: train_total_loss_cond:0.5713648200035095; train_total_loss:0.5713648200035095; train_loss_map_hand:0.2834775149822235; train_loss_map_om:0.28728359937667847; train_loss_feat:0.6037101149559021;
+ Average metrics for epoch 4: train_metric_cond:0.2834774851799011;
+Average loss for epoch 4: val_total_loss_cond:0.025283055379986763; val_total_loss:0.025283055379986763; val_loss_map_hand:0.0; val_loss_map_om:0.025283055379986763; val_loss_feat:0.0;
+ Average metrics for epoch 4: val_metric_cond:0.025283057242631912;
+train epoch:5:   0%|                                                                                                                                                                  | 0/20227 [00:00<?, ?it/s]
+val epoch:5:   0%|                                                                                                                                                                     | 0/1940 [00:00<?, ?it/s]
+train epoch:6:   0%|                                                                                                                                                                  | 0/20227 [00:00<?, ?it/s]
+val epoch:6:   0%|                                                                                                                                                                     | 0/1940 [00:00<?, ?it/s]
+train epoch:7:   0%|                                                                                                                                                                  | 0/20227 [00:00<?, ?it/s]
+Average loss for epoch 5: train_total_loss_cond:0.27832943201065063; train_total_loss:0.27832943201065063; train_loss_map_hand:0.14056217670440674; train_loss_map_om:0.13717108964920044; train_loss_feat:0.5961565971374512;
+ Average metrics for epoch 5: train_metric_cond:0.14056219160556793;
+Average loss for epoch 5: val_total_loss_cond:0.024445082992315292; val_total_loss:0.024445082992315292; val_loss_map_hand:0.0; val_loss_map_om:0.024445082992315292; val_loss_feat:0.0;
+ Average metrics for epoch 5: val_metric_cond:0.024445082992315292;
+Average loss for epoch 6: train_total_loss_cond:0.3660917580127716; train_total_loss:0.3660917580127716; train_loss_map_hand:0.18024946749210358; train_loss_map_om:0.1852426677942276; train_loss_feat:0.5996155142784119;
+ Average metrics for epoch 6: train_metric_cond:0.18024949729442596;
+Average loss for epoch 6: val_total_loss_cond:0.0605168417096138; val_total_loss:0.0605168417096138; val_loss_map_hand:0.0; val_loss_map_om:0.0605168417096138; val_loss_feat:0.0;
+ Average metrics for epoch 6: val_metric_cond:0.0605168417096138;
+Average loss for epoch 7: train_total_loss_cond:0.25905725359916687; train_total_loss:0.25905725359916687; train_loss_map_hand:0.12305530905723572; train_loss_map_om:0.13540154695510864; train_loss_feat:0.6003981828689575;
+ Average metrics for epoch 7: train_metric_cond:0.12305531650781631;
+Average loss for epoch 7: val_total_loss_cond:0.06370106339454651; val_total_loss:0.06370106339454651; val_loss_map_hand:0.0; val_loss_map_om:0.06370106339454651; val_loss_feat:0.0;
+ Average metrics for epoch 7: val_metric_cond:0.06370106339454651;
+val epoch:7:   0%|                                                                                                                                                                     | 0/1940 [00:00<?, ?it/s]
+train epoch:8:   0%|                                                                                                                                                                  | 0/20227 [00:00<?, ?it/s]
+val epoch:8:   0%|                                                                                                                                                                     | 0/1940 [00:00<?, ?it/s]
+train epoch:9:   0%|                                                                                                                                                                  | 0/20227 [00:00<?, ?it/s]
+val epoch:9:   0%|                                                                                                                                                                     | 0/1940 [00:00<?, ?it/s]
+Average loss for epoch 8: train_total_loss_cond:0.24359269440174103; train_total_loss:0.24359269440174103; train_loss_map_hand:0.107374407351017; train_loss_map_om:0.1356005072593689; train_loss_feat:0.6177827715873718;
+ Average metrics for epoch 8: train_metric_cond:0.107374407351017;
+Average loss for epoch 8: val_total_loss_cond:0.06236562132835388; val_total_loss:0.06236562132835388; val_loss_map_hand:0.0; val_loss_map_om:0.06236562132835388; val_loss_feat:0.0;
+ Average metrics for epoch 8: val_metric_cond:0.06236562505364418;
+Average loss for epoch 9: train_total_loss_cond:0.19132012128829956; train_total_loss:0.19132012128829956; train_loss_map_hand:0.0940178856253624; train_loss_map_om:0.09668199717998505; train_loss_feat:0.6202448606491089;
+ Average metrics for epoch 9: train_metric_cond:0.0940178856253624;
+Average loss for epoch 9: val_total_loss_cond:0.10854390263557434; val_total_loss:0.10854390263557434; val_loss_map_hand:0.0; val_loss_map_om:0.10854390263557434; val_loss_feat:0.0;
+ Average metrics for epoch 9: val_metric_cond:0.10854390263557434;
+train epoch:10:   0%|                                                                                                                                                                 | 0/20227 [00:00<?, ?it/s]
+val epoch:10:   0%|                                                                                                                                                                    | 0/1940 [00:00<?, ?it/s]
+Average loss for epoch 10: train_total_loss_cond:0.17771326005458832; train_total_loss:0.17771326005458832; train_loss_map_hand:0.07597655057907104; train_loss_map_om:0.10113026946783066; train_loss_feat:0.6064296364784241;
+ Average metrics for epoch 10: train_metric_cond:0.07597654312849045;
+Average loss for epoch 10: val_total_loss_cond:0.16342519223690033; val_total_loss:0.16342519223690033; val_loss_map_hand:0.0; val_loss_map_om:0.16342519223690033; val_loss_feat:0.0;
+ Average metrics for epoch 10: val_metric_cond:0.16342520713806152;

@@ -42,7 +42,7 @@ class cGraspvae(nn.Module):
         :return: reconstructed hand vertex
         """
 
-        B = obj_pc.size(0)
+        B = obj_pc.shape[0]
         obj_glb_feature, _, _ = self.obj_encoder(obj_pc) # [B, 1024]
         hand_glb_feature, _, _ = self.hand_encoder(hand_xyz) # [B, 1024]
         recon, means, log_var, z = self.cvae(x=hand_glb_feature, c=obj_glb_feature)

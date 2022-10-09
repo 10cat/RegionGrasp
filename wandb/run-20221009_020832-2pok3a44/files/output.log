@@ -1,0 +1,63 @@
+train epoch:1:   0%|                                                                                                                                                                  | 0/20227 [00:00<?, ?it/s]/home/yilin/anaconda3/envs/pytorch3d/lib/python3.8/site-packages/torch/nn/modules/loss.py:97: UserWarning: Using a target size (torch.Size([16, 1, 3000])) that is different to the input size (torch.Size([16, 3000])). This will likely lead to incorrect results due to broadcasting. Please ensure they have the same size.
+  return F.l1_loss(input, target, reduction=self.reduction)
+train epoch:1:   0%|                                                                                                                                                        | 3/20227 [00:01<2:38:18,  2.13it/s]
+[Function: model_update start...]
+[Function: model_update finished, spent time: 0.40815282s]
+[Function: model_update start...]
+[Function: model_update finished, spent time: 0.38919878s]
+[Function: model_update start...]
+[Function: model_update finished, spent time: 0.39036393s]
+
+train epoch:1:   0%|                                                                                                                                                        | 7/20227 [00:03<2:36:25,  2.15it/s]
+[Function: model_update finished, spent time: 0.39137578s]
+[Function: model_update start...]
+[Function: model_update finished, spent time: 0.39363194s]
+[Function: model_update start...]
+[Function: model_update finished, spent time: 0.39143729s]
+[Function: model_update start...]
+[Function: model_update finished, spent time: 0.39396715s]
+
+train epoch:1:   0%|                                                                                                                                                       | 11/20227 [00:05<2:36:45,  2.15it/s]
+[Function: model_update finished, spent time: 0.39217186s]
+[Function: model_update start...]
+[Function: model_update finished, spent time: 0.39610958s]
+[Function: model_update start...]
+[Function: model_update finished, spent time: 0.39380813s]
+[Function: model_update start...]
+[Function: model_update finished, spent time: 0.39297175s]
+[Function: model_update start...]
+train epoch:1:   0%|                                                                                                                                                       | 15/20227 [00:06<2:37:00,  2.15it/s]
+Traceback (most recent call last):
+  File "traineval.py", line 63, in <module>
+    train_val(trainloader, valloader, testloader)
+  File "traineval.py", line 24, in train_val
+    checkpoints = trainer.epoch(epoch + 1)
+  File "/home/datassd/yilin/Codes/Hand/ConditionHOI/epochbase.py", line 242, in epoch
+    for idx, sample in enumerate(tqdm(self.dataloader, desc=f'{self.mode} epoch:{epoch}')):
+  File "/home/yilin/anaconda3/envs/pytorch3d/lib/python3.8/site-packages/tqdm/std.py", line 1195, in __iter__
+    for obj in iterable:
+  File "/home/yilin/anaconda3/envs/pytorch3d/lib/python3.8/site-packages/torch/utils/data/dataloader.py", line 521, in __next__
+    data = self._next_data()
+  File "/home/yilin/anaconda3/envs/pytorch3d/lib/python3.8/site-packages/torch/utils/data/dataloader.py", line 561, in _next_data
+    data = self._dataset_fetcher.fetch(index)  # may raise StopIteration
+  File "/home/yilin/anaconda3/envs/pytorch3d/lib/python3.8/site-packages/torch/utils/data/_utils/fetch.py", line 44, in fetch
+    data = [self.dataset[idx] for idx in possibly_batched_index]
+  File "/home/yilin/anaconda3/envs/pytorch3d/lib/python3.8/site-packages/torch/utils/data/_utils/fetch.py", line 44, in <listcomp>
+    data = [self.dataset[idx] for idx in possibly_batched_index]
+  File "/home/datassd/yilin/Codes/Hand/ConditionHOI/dataset/Dataset.py", line 246, in __getitem__
+    data, data_sdf = self.load_disk(idx)
+  File "/home/datassd/yilin/Codes/Hand/ConditionHOI/dataset/Dataset.py", line 144, in load_disk
+    data_sdf = self._data_sdf(self.frame_names_sdf[idx])
+  File "/home/datassd/yilin/Codes/Hand/ConditionHOI/dataset/Dataset.py", line 126, in _data_sdf
+    data = np.load(ds_path, allow_pickle=True)
+  File "/home/yilin/anaconda3/envs/pytorch3d/lib/python3.8/site-packages/numpy/lib/npyio.py", line 413, in load
+    return format.read_array(fid, allow_pickle=allow_pickle,
+  File "/home/yilin/anaconda3/envs/pytorch3d/lib/python3.8/site-packages/numpy/lib/format.py", line 746, in read_array
+    array = pickle.load(fp, **pickle_kwargs)
+KeyboardInterrupt
+[Function: model_update start...]
+[Function: model_update finished, spent time: 0.39329243s]
+[Function: model_update start...]
+[Function: model_update finished, spent time: 0.39384222s]
+[Function: model_update start...]
+[Function: model_update finished, spent time: 0.39375973s]

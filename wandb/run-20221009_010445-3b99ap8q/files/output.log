@@ -1,0 +1,18 @@
+train epoch:1:   0%|                                                                                                                                                                  | 0/20227 [00:00<?, ?it/s]/home/yilin/anaconda3/envs/pytorch3d/lib/python3.8/site-packages/torch/nn/modules/loss.py:97: UserWarning: Using a target size (torch.Size([16, 1, 3000])) that is different to the input size (torch.Size([16, 3000])). This will likely lead to incorrect results due to broadcasting. Please ensure they have the same size.
+  return F.l1_loss(input, target, reduction=self.reduction)
+train epoch:1:   0%|                                                                                                                                                                  | 0/20227 [00:04<?, ?it/s]
+Traceback (most recent call last):
+  File "traineval.py", line 63, in <module>
+    train_val(trainloader, valloader, testloader)
+  File "traineval.py", line 25, in train_val
+    valer.epoch(epoch + 1, best_val=best_val, checkpoints=checkpoints)
+  File "/home/datassd/yilin/Codes/Hand/ConditionHOI/epochbase.py", line 235, in epoch
+    self.load_checkpoints(checkpoints)
+  File "/home/datassd/yilin/Codes/Hand/ConditionHOI/epochbase.py", line 61, in load_checkpoints
+    self.cGraspVAE.load_state_dict(checkpoints[1])
+  File "/home/yilin/anaconda3/envs/pytorch3d/lib/python3.8/site-packages/torch/nn/modules/module.py", line 1406, in load_state_dict
+    raise RuntimeError('Error(s) in loading state_dict for {}:\n\t{}'.format(
+RuntimeError: Error(s) in loading state_dict for cGraspvae:
+	size mismatch for cvae.encoder.MLP.L0.weight: copying a param with shape torch.Size([512, 2048]) from checkpoint, the shape in current model is torch.Size([512, 3072]).
+Average loss for epoch 1: train_total_loss_cond:0.6476138830184937; train_total_loss:0.6476138830184937; train_loss_map_hand:0.31764858961105347; train_loss_map_om:0.329312264919281; train_loss_feat:0.6530535221099854;
+ Average metrics for epoch 1: train_metric_cond:0.31764858961105347;

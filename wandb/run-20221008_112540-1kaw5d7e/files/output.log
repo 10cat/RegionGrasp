@@ -1,0 +1,14 @@
+
+[Function: __init__ start...]
+Traceback (most recent call last):
+  File "traineval.py", line 50, in <module>
+    traindataset = GrabNetDataset(config.dataset_dir, 'train', num_mask=cfg.num_mask)
+  File "/home/datassd/yilin/Codes/Hand/ConditionHOI/utils/utils.py", line 15, in function_timer
+    result = function(*args, **kwargs)
+  File "/home/datassd/yilin/Codes/Hand/ConditionHOI/dataset/Dataset.py", line 90, in __init__
+    self.object_meshes = self.load_obj_meshes()
+  File "/home/datassd/yilin/Codes/Hand/ConditionHOI/dataset/Dataset.py", line 116, in load_obj_meshes
+    obj_meshes[obj_name] = trimesh.load(self.obj_mesh_dir, obj_name)
+  File "/home/yilin/anaconda3/envs/pytorch3d/lib/python3.8/site-packages/trimesh/exchange/load.py", line 148, in load
+    raise ValueError('File type: %s not supported' %
+ValueError: File type: pyramidsmall not supported

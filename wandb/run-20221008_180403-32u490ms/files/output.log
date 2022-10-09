@@ -1,0 +1,39 @@
+
+[Function: __init__ start...]
+[Function: __init__ finished, spent time: 2.45197511s]
+[Function: __init__ start...]
+[Function: __init__ finished, spent time: 0.61064959s]
+[Function: __init__ start...]
+[Function: __init__ finished, spent time: 0.82268739s]
+train epoch:1:   0%|                                                                                                                                                                                   | 0/20227 [00:00<?, ?it/s]/home/yilin/anaconda3/envs/pytorch3d/lib/python3.8/site-packages/torch/nn/modules/loss.py:97: UserWarning: Using a target size (torch.Size([16, 1, 3000])) that is different to the input size (torch.Size([16, 3000])). This will likely lead to incorrect results due to broadcasting. Please ensure they have the same size.
+  return F.l1_loss(input, target, reduction=self.reduction)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+train epoch:1:   0%|▌                                                                                                                                                                       | 70/20227 [00:35<2:50:17,  1.97it/s]
+Traceback (most recent call last):
+  File "traineval.py", line 60, in <module>
+    train_val(trainloader, valloader, testloader)
+  File "traineval.py", line 22, in train_val
+    trainer.epoch(epoch + 1)
+  File "/home/datassd/yilin/Codes/Hand/ConditionHOI/epochbase.py", line 221, in epoch
+    self.one_batch(sample)
+  File "/home/datassd/yilin/Codes/Hand/ConditionHOI/epochbase.py", line 190, in one_batch
+    dict_metrics = self.metrics_compute(outputs, data_elements)
+  File "/home/datassd/yilin/Codes/Hand/ConditionHOI/epochbase.py", line 142, in metrics_compute
+    metric_cond = self.ConditionNetMetrics(to_cpu(SDmap_om), to_cpu(obj_sdfs))
+  File "/home/datassd/yilin/Codes/Hand/ConditionHOI/epochbase.py", line 24, in <lambda>
+    to_cpu = lambda tensor: tensor.detach().cpu()
+KeyboardInterrupt

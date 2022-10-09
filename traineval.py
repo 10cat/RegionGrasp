@@ -10,25 +10,22 @@ import config
 from option import MyOptions
 from dataset.Dataset import GrabNetDataset
 from epochbase import TrainEpoch, ValEpoch
-
-os.environ['CUDA_VISIBLE_DEVICES'] = "0,1"
+import random
+from utils.utils import set_random_seed
 
 
 def train_val(trainloader, valloader, testloader):
     trainer = TrainEpoch(trainloader)
     valer = ValEpoch(valloader, mode='val')
-    tester = ValEpoch(testloader, mode='test')
+    # tester = ValEpoch(testloader, mode='test')
     best_val = None
 
     for epoch in range(cfg.start_epoch - 1, cfg.num_epoch):
-        trainer.epoch(epoch + 1)
-        valer.epoch(epoch, best_val=best_val)
+        checkpoints = trainer.epoch(epoch + 1)
+        valer.epoch(epoch + 1, best_val=best_val, checkpoints=checkpoints)
     
     # tester.epoch(epoch, best_val=best_val)
     # print(f"Done with experiment: {cfg.exp_name}")
-        
-
-    
 
 def evaluation(testloader):
     ValEpoch(testloader)
@@ -38,15 +35,19 @@ if __name__ == "__main__":
     import wandb
     from omegaconf import OmegaConf
 
+    set_random_seed(1024)
+
     cfg = MyOptions()
 
     conf = OmegaConf.structured(cfg)
+    # import pdb; pdb.set_trace()
 
-    wandb.login()
+    if cfg.w_wandb:
+        wandb.login()
 
-    wandb.init(project="ConditionHOI",
-               name=cfg.exp_name,
-               config=OmegaConf.to_container(conf, resolve=True)) # omegaconf: resolve=True即可填写自动变量
+        wandb.init(project="ConditionHOI",
+                name=cfg.exp_name,
+                config=OmegaConf.to_container(conf, resolve=True)) # omegaconf: resolve=True即可填写自动变量
 
     if cfg.mode == 'train':
         traindataset = GrabNetDataset(config.dataset_dir, 'train', num_mask=cfg.num_mask)

@@ -24,7 +24,7 @@ from utils.utils import func_timer, makepath
 from utils.visualization import visual_sdf, visual_obj_contact_regions
 # from vedo import show
 class GrabNetDataset(data.Dataset):
-    @func_timer
+    
     def __init__(self,
                  dataset_dir,
                 #  config,
@@ -87,6 +87,7 @@ class GrabNetDataset(data.Dataset):
         # object info
         obj_info_object = np.load(os.path.join(dataset_dir, 'objects_info.npz'), allow_pickle=True)
         self.obj_info = {k: obj_info_object[k] for k in obj_info_object.files}
+        self.object_meshes = self.load_obj_meshes()
 
         # self.frame_sbj_names = self.frame_sbjs
 
@@ -106,6 +107,15 @@ class GrabNetDataset(data.Dataset):
             self.mask_center_ids = None
         # import pdb; pdb.set_trace()
         ####
+
+    def load_obj_meshes(self):
+        obj_meshes = {}
+        obj_files = os.listdir(self.obj_mesh_dir)
+        for obj_file in obj_files:
+            obj_name = obj_file.split('.')[0]
+            obj_meshes[obj_name] = trimesh.load(os.path.join(self.obj_mesh_dir, obj_file))
+
+        return obj_meshes
 
     def _np2torch(self,ds_path):
         data = np.load(ds_path, allow_pickle=True)
@@ -189,13 +199,15 @@ class GrabNetDataset(data.Dataset):
 
         # 读取object template mesh
         obj_name = sample['obj_name']
-        obj_path = os.path.join(self.obj_mesh_dir, obj_name+'.ply')
-        self.ObjMesh = trimesh.load(obj_path)
-        obj_vertices = self.ObjMesh.vertices
+        # obj_path = os.path.join(self.obj_mesh_dir, obj_name+'.ply')
+        # self.ObjMesh = trimesh.load(obj_path)
+        self.ObjMesh = self.object_meshes[obj_name]
+        # obj_vertices = self.ObjMesh.vertices
         obj_faces = self.ObjMesh.faces
         obj_sdf_np = sample['obj_hand_sdf']
-
-        
+        rot_mat_np = np.array(sample['root_orient_obj_rotmat'][0])
+        trans_np = np.array(sample['trans_obj'])
+        obj_vertices = np.matmul(self.ObjMesh.vertices, rot_mat_np) + trans_np 
 
         # For the object meshes that have sdf results with lower than 3000 vertices during decimation
         if obj_sdf_np.shape[0] < 3000:
@@ -211,10 +223,10 @@ class GrabNetDataset(data.Dataset):
         # import pdb; pdb.set_trace()
 
         # numpy 2 torch
-        vertices = torch.from_numpy(obj_vertices)
-        region_mask = torch.from_numpy(region_mask_np)
-        region_centers = torch.from_numpy(region_centers)
-        obj_sdf = torch.from_numpy(obj_sdf_np).reshape(-1, 1)
+        vertices = torch.from_numpy(obj_vertices).float()
+        region_mask = torch.from_numpy(region_mask_np).float()
+        region_centers = torch.from_numpy(region_centers).float()
+        obj_sdf = torch.from_numpy(obj_sdf_np).reshape(-1, 1).float()
         # hand_sdf = torch.from_numpy(sample['hand_obj_sdf'])
 
         return vertices, region_mask, region_centers, obj_sdf
@@ -233,7 +245,7 @@ class GrabNetDataset(data.Dataset):
             if not self.load_on_ram:
                 data, data_sdf = self.load_disk(idx)
                 data_out.update(data)
-                # data_out.update(data_sdf)
+                data_sdf.update(data_out)
                 data_sdf['obj_name'] = self.frame_objs[idx]
                 # import pdb; pdb.set_trace()
                 data_out['verts_obj'], data_out['region_mask'], data_out['region_centers'], data_out['obj_sdf'] = self.obj_annots_2torch(data_sdf, idx) 

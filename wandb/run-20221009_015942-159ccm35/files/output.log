@@ -1,0 +1,32 @@
+
+train epoch:1:   0%|                                                                                                                                                                  | 0/20227 [00:00<?, ?it/s]
+> /home/datassd/yilin/Codes/Hand/ConditionHOI/epochbase.py(86)read_data()
+-> region = sample['region_mask'].transpose(2,1).to('cuda')
+--Call--
+> /home/yilin/anaconda3/envs/pytorch3d/lib/python3.8/site-packages/torch/cuda/__init__.py(146)_lazy_init()
+-> def _lazy_init():
+--Return--
+> /home/yilin/anaconda3/envs/pytorch3d/lib/python3.8/site-packages/torch/cuda/__init__.py(187)_lazy_init()->None
+-> _initialized = True
+> /home/datassd/yilin/Codes/Hand/ConditionHOI/epochbase.py(88)read_data()
+-> return [region, region_centers, obj_vs, obj_sdfs, rhand_vs]
+device(type='cuda', index=0)
+train epoch:1:   0%|                                                                                                                                                                  | 0/20227 [06:27<?, ?it/s]
+Traceback (most recent call last):
+  File "traineval.py", line 63, in <module>
+    train_val(trainloader, valloader, testloader)
+  File "traineval.py", line 24, in train_val
+    checkpoints = trainer.epoch(epoch + 1)
+  File "/home/datassd/yilin/Codes/Hand/ConditionHOI/epochbase.py", line 248, in epoch
+    self.one_batch(sample)
+  File "/home/datassd/yilin/Codes/Hand/ConditionHOI/epochbase.py", line 198, in one_batch
+    data_elements = self.read_data(sample)
+  File "/home/datassd/yilin/Codes/Hand/ConditionHOI/epochbase.py", line 88, in read_data
+    return [region, region_centers, obj_vs, obj_sdfs, rhand_vs]
+  File "/home/datassd/yilin/Codes/Hand/ConditionHOI/epochbase.py", line 88, in read_data
+    return [region, region_centers, obj_vs, obj_sdfs, rhand_vs]
+  File "/home/yilin/anaconda3/envs/pytorch3d/lib/python3.8/bdb.py", line 88, in trace_dispatch
+    return self.dispatch_line(frame)
+  File "/home/yilin/anaconda3/envs/pytorch3d/lib/python3.8/bdb.py", line 113, in dispatch_line
+    if self.quitting: raise BdbQuit
+bdb.BdbQuit

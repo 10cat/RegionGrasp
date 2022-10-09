@@ -1,0 +1,23 @@
+train epoch:1:   0%|                                                                                                                                                                  | 0/20227 [00:00<?, ?it/s]/home/yilin/anaconda3/envs/pytorch3d/lib/python3.8/site-packages/torch/nn/modules/loss.py:97: UserWarning: Using a target size (torch.Size([16, 1, 3000])) that is different to the input size (torch.Size([16, 3000])). This will likely lead to incorrect results due to broadcasting. Please ensure they have the same size.
+  return F.l1_loss(input, target, reduction=self.reduction)
+train epoch:1:   0%|                                                                                                                                                                  | 0/20227 [00:00<?, ?it/s]
+Traceback (most recent call last):
+  File "traineval.py", line 45, in <module>
+    if cfg.w_wandb:
+  File "traineval.py", line 24, in train_val
+    trainer.epoch(epoch + 1)
+  File "/home/datassd/yilin/Codes/Hand/ConditionHOI/epochbase.py", line 241, in epoch
+    self.metrics_log(epoch)
+  File "/home/datassd/yilin/Codes/Hand/ConditionHOI/epochbase.py", line 214, in metrics_log
+    if cfg.w_wandb: wandb.log(AllMeters_avg)
+  File "/home/yilin/anaconda3/envs/pytorch3d/lib/python3.8/site-packages/wandb/sdk/wandb_run.py", line 282, in wrapper
+    return func(self, *args, **kwargs)
+  File "/home/yilin/anaconda3/envs/pytorch3d/lib/python3.8/site-packages/wandb/sdk/wandb_run.py", line 245, in wrapper
+    return func(self, *args, **kwargs)
+  File "/home/yilin/anaconda3/envs/pytorch3d/lib/python3.8/site-packages/wandb/sdk/wandb_run.py", line 1583, in log
+    self._log(data=data, step=step, commit=commit)
+  File "/home/yilin/anaconda3/envs/pytorch3d/lib/python3.8/site-packages/wandb/sdk/wandb_run.py", line 1360, in _log
+    raise ValueError("wandb.log must be passed a dictionary")
+ValueError: wandb.log must be passed a dictionary
+Average loss for epoch 1: train_total_loss_cond:0.6476142406463623; train_total_loss:0.6476142406463623; train_loss_map_hand:0.3176487684249878; train_loss_map_om:0.32931241393089294; train_loss_feat:0.6530536413192749;
+ Average metrics for epoch 1: train_metric_cond:0.3176487684249878;

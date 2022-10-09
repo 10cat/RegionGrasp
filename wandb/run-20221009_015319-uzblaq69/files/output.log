@@ -1,0 +1,23 @@
+
+train epoch:1:   0%|                                                                                                                                                                  | 0/20227 [00:00<?, ?it/s]
+> /home/datassd/yilin/Codes/Hand/ConditionHOI/epochbase.py(86)read_data()
+-> return [region, region_centers, obj_vs, obj_sdfs, rhand_vs]
+train epoch:1:   0%|                                                                                                                                                                  | 0/20227 [00:45<?, ?it/s]
+Traceback (most recent call last):
+  File "traineval.py", line 63, in <module>
+    train_val(trainloader, valloader, testloader)
+  File "traineval.py", line 24, in train_val
+    checkpoints = trainer.epoch(epoch + 1)
+  File "/home/datassd/yilin/Codes/Hand/ConditionHOI/epochbase.py", line 246, in epoch
+    self.one_batch(sample)
+  File "/home/datassd/yilin/Codes/Hand/ConditionHOI/epochbase.py", line 196, in one_batch
+    data_elements = self.read_data(sample)
+  File "/home/datassd/yilin/Codes/Hand/ConditionHOI/epochbase.py", line 86, in read_data
+    return [region, region_centers, obj_vs, obj_sdfs, rhand_vs]
+  File "/home/datassd/yilin/Codes/Hand/ConditionHOI/epochbase.py", line 86, in read_data
+    return [region, region_centers, obj_vs, obj_sdfs, rhand_vs]
+  File "/home/yilin/anaconda3/envs/pytorch3d/lib/python3.8/bdb.py", line 88, in trace_dispatch
+    return self.dispatch_line(frame)
+  File "/home/yilin/anaconda3/envs/pytorch3d/lib/python3.8/bdb.py", line 113, in dispatch_line
+    if self.quitting: raise BdbQuit
+bdb.BdbQuit

@@ -1,0 +1,65 @@
+train epoch:1:   0%|                                                                                                                                                                  | 0/20227 [00:00<?, ?it/s]/home/yilin/anaconda3/envs/pytorch3d/lib/python3.8/site-packages/torch/nn/modules/loss.py:97: UserWarning: Using a target size (torch.Size([16, 1, 3000])) that is different to the input size (torch.Size([16, 3000])). This will likely lead to incorrect results due to broadcasting. Please ensure they have the same size.
+  return F.l1_loss(input, target, reduction=self.reduction)
+
+
+
+
+train epoch:1:   0%|▏                                                                                                                                                      | 21/20227 [00:10<2:44:17,  2.05it/s]
+val epoch:1:   1%|▊                                                                                                                                                           | 10/1940 [00:01<03:40,  8.76it/s]
+Average loss for epoch 1: train_total_loss_cond:0.25755852460861206; train_total_loss:0.25755852460861206; train_loss_map_hand:0.12037494033575058; train_loss_map_om:0.13094830513000488; train_loss_feat:0.6235326528549194;
+val epoch:1:   1%|█▋                                                                                                                                                          | 21/1940 [00:02<03:49,  8.36it/s]
+train epoch:2:   0%|                                                                                                                                                        | 1/20227 [00:00<2:43:05,  2.07it/s]
+Average loss for epoch 1: val_total_loss_cond:0.04310563951730728; val_total_loss:0.04310563951730728; val_loss_map_hand:0.0; val_loss_map_om:0.04310563951730728; val_loss_feat:0.0;
+
+
+
+
+
+train epoch:2:   0%|▏                                                                                                                                                      | 21/20227 [00:10<2:45:04,  2.04it/s]
+Average loss for epoch 2: train_total_loss_cond:0.07059331238269806; train_total_loss:0.07059331238269806; train_loss_map_hand:0.03173231706023216; train_loss_map_om:0.03274921327829361; train_loss_feat:0.6111796498298645;
+ Average metrics for epoch 2: train_metric_cond:0.031732313334941864;
+val epoch:2:   1%|█▎                                                                                                                                                          | 17/1940 [00:01<03:38,  8.79it/s]
+Average loss for epoch 2: val_total_loss_cond:0.017431560903787613; val_total_loss:0.017431560903787613; val_loss_map_hand:0.0; val_loss_map_om:0.017431560903787613; val_loss_feat:0.0;
+val epoch:2:   1%|█▋                                                                                                                                                          | 21/1940 [00:02<03:49,  8.35it/s]
+
+
+
+
+train epoch:3:   0%|▏                                                                                                                                                      | 21/20227 [00:10<2:46:48,  2.02it/s]
+val epoch:3:   0%|▌                                                                                                                                                            | 7/1940 [00:00<03:42,  8.68it/s]
+Traceback (most recent call last):
+  File "traineval.py", line 63, in <module>
+    train_val(trainloader, valloader, testloader)
+  File "traineval.py", line 25, in train_val
+    valer.epoch(epoch + 1, best_val=best_val, checkpoints=checkpoints)
+  File "/home/datassd/yilin/Codes/Hand/ConditionHOI/epochbase.py", line 241, in epoch
+    for idx, sample in enumerate(tqdm(self.dataloader, desc=f'{self.mode} epoch:{epoch}')):
+  File "/home/yilin/anaconda3/envs/pytorch3d/lib/python3.8/site-packages/tqdm/std.py", line 1195, in __iter__
+    for obj in iterable:
+  File "/home/yilin/anaconda3/envs/pytorch3d/lib/python3.8/site-packages/torch/utils/data/dataloader.py", line 521, in __next__
+    data = self._next_data()
+  File "/home/yilin/anaconda3/envs/pytorch3d/lib/python3.8/site-packages/torch/utils/data/dataloader.py", line 561, in _next_data
+    data = self._dataset_fetcher.fetch(index)  # may raise StopIteration
+  File "/home/yilin/anaconda3/envs/pytorch3d/lib/python3.8/site-packages/torch/utils/data/_utils/fetch.py", line 44, in fetch
+    data = [self.dataset[idx] for idx in possibly_batched_index]
+  File "/home/yilin/anaconda3/envs/pytorch3d/lib/python3.8/site-packages/torch/utils/data/_utils/fetch.py", line 44, in <listcomp>
+    data = [self.dataset[idx] for idx in possibly_batched_index]
+  File "/home/datassd/yilin/Codes/Hand/ConditionHOI/dataset/Dataset.py", line 246, in __getitem__
+    data, data_sdf = self.load_disk(idx)
+  File "/home/datassd/yilin/Codes/Hand/ConditionHOI/dataset/Dataset.py", line 142, in load_disk
+    data = self._np2torch(self.frame_names[idx])
+  File "/home/datassd/yilin/Codes/Hand/ConditionHOI/dataset/Dataset.py", line 122, in _np2torch
+    data_torch = {k:torch.tensor(data[k]) for k in data.files}
+  File "/home/datassd/yilin/Codes/Hand/ConditionHOI/dataset/Dataset.py", line 122, in <dictcomp>
+    data_torch = {k:torch.tensor(data[k]) for k in data.files}
+  File "/home/yilin/anaconda3/envs/pytorch3d/lib/python3.8/site-packages/numpy/lib/npyio.py", line 245, in __getitem__
+    return format.read_array(bytes,
+  File "/home/yilin/anaconda3/envs/pytorch3d/lib/python3.8/site-packages/numpy/lib/format.py", line 731, in read_array
+    shape, fortran_order, dtype = _read_array_header(fp, version)
+  File "/home/yilin/anaconda3/envs/pytorch3d/lib/python3.8/site-packages/numpy/lib/format.py", line 594, in _read_array_header
+    header = _filter_header(header)
+  File "/home/yilin/anaconda3/envs/pytorch3d/lib/python3.8/site-packages/numpy/lib/format.py", line 551, in _filter_header
+    from io import StringIO
+KeyboardInterrupt
+Average loss for epoch 3: train_total_loss_cond:0.06241775304079056; train_total_loss:0.06241775304079056; train_loss_map_hand:0.028100963681936264; train_loss_map_om:0.028534438461065292; train_loss_feat:0.5782355666160583;
+ Average metrics for epoch 3: train_metric_cond:0.028100961819291115;

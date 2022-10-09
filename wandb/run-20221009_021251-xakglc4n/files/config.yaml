@@ -1,0 +1,87 @@
+wandb_version: 1
+
+SDmap_input_dim:
+  desc: null
+  value: 1088
+SDmap_leaky_slope:
+  desc: null
+  value: 0.01
+SDmap_output_dim:
+  desc: null
+  value: 1
+_wandb:
+  desc: null
+  value:
+    cli_version: 0.13.3
+    framework: torch
+    is_jupyter_run: false
+    is_kaggle_kernel: false
+    python_version: 3.8.13
+    start_time: 1665303171.05834
+    t:
+      1:
+      - 1
+      - 5
+      - 53
+      - 55
+      2:
+      - 1
+      - 5
+      - 53
+      - 55
+      3:
+      - 13
+      - 16
+      - 23
+      4: 3.8.13
+      5: 0.13.3
+      8:
+      - 5
+batch_size:
+  desc: null
+  value: 16
+check_interval:
+  desc: null
+  value: 2
+exp_name:
+  desc: null
+  value: conditionnet_pretrain_1
+fit_Condition:
+  desc: null
+  value: true
+fit_cGrasp:
+  desc: null
+  value: false
+lambda_cond:
+  desc: null
+  value: 1.0
+lambda_feat:
+  desc: null
+  value: 0.01
+lambda_om:
+  desc: null
+  value: 1.0
+learning_rate:
+  desc: null
+  value: 0.001
+mode:
+  desc: null
+  value: train
+model_root:
+  desc: null
+  value: /home/datassd/yilin/Outputs/ConditionHOI/model/conditionnet_pretrain_1
+num_epoch:
+  desc: null
+  value: 20
+num_mask:
+  desc: null
+  value: 1
+output_root:
+  desc: null
+  value: /home/datassd/yilin/Outputs/ConditionHOI/
+start_epoch:
+  desc: null
+  value: 1
+w_wandb:
+  desc: null
+  value: true

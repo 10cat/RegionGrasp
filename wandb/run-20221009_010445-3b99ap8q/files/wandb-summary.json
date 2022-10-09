@@ -1,0 +1,1 @@
+{"train_total_loss_cond": 0.6476138830184937, "train_total_loss": 0.6476138830184937, "train_loss_map_hand": 0.31764858961105347, "train_loss_map_om": 0.329312264919281, "train_loss_feat": 0.6530535221099854, "train_metric_cond": 0.31764858961105347, "_timestamp": 1665299097.6500072, "_runtime": 11.88656735420227, "_step": 0, "_wandb": {"runtime": 11}}

@@ -1,0 +1,263 @@
+
+train epoch:1:   0%|                                                                                                                                                                  | 0/20227 [00:00<?, ?it/s]
+> /home/datassd/yilin/Codes/Hand/ConditionHOI/epochbase.py(86)read_data()
+-> return [region, region_centers, obj_vs, obj_sdfs, rhand_vs]
+*** AttributeError: 'Tensor' object has no attribute 'devie'
+device(type='cpu')
+[Function: model_forward start...]
+> /home/datassd/yilin/Codes/Hand/ConditionHOI/epochbase.py(97)model_forward()
+-> feats, SD_maps = self.ConditionNet(obj_vs, rhand_vs, region) # cSDF_maps = [pred_map_obj, pred_map_obj_masked]
+*** AttributeError: 'ConditionNet' object has no attribute 'device'
+device(type='cpu')
+device(type='cuda', index=0)
+*** NameError: name 'sample' is not defined
+tensor([[[0., 0., 0.,  ..., 0., 0., 0.]],
+        [[0., 0., 0.,  ..., 0., 0., 0.]],
+        [[0., 0., 0.,  ..., 0., 0., 0.]],
+        ...,
+        [[0., 0., 0.,  ..., 0., 0., 0.]],
+        [[0., 0., 0.,  ..., 0., 0., 0.]],
+        [[0., 1., 1.,  ..., 0., 0., 0.]]], device='cuda:0')
+self = TrainEpoch(
+  (ConditionNet): ConditionNet(
+    (obj_encoder): PointNetEncoder(
+      (stn): STN3d(
+        (conv1): Conv1d(3, 64, kernel_size=(1,), stride=(1,))
+        (conv2): Conv1d(64, 128, kernel_size=(1,), stride=(1,))
+        (conv3): Conv1d(128, 1024, kernel_size=(1,), stride=(1,))
+        (fc1): Linear(in_features=1024, out_features=512, bias=True)
+        (fc2): Linear(in_features=512, out_features=256, bias=True)
+        (fc3): Linear(in_features=256, out_features=9, bias=True)
+        (relu): ReLU()
+        (bn1): BatchNorm1d(64, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+        (bn2): BatchNorm1d(128, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+        (bn3): BatchNorm1d(1024, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+        (bn4): BatchNorm1d(512, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+        (bn5): BatchNorm1d(256, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+      )
+      (conv1): Conv1d(3, 64, kernel_size=(1,), stride=(1,))
+      (conv2): Conv1d(64, 128, kernel_size=(1,), stride=(1,))
+      (conv3): Conv1d(128, 1024, kernel_size=(1,), stride=(1,))
+      (bn1): BatchNorm1d(64, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+      (bn2): BatchNorm1d(128, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+      (bn3): BatchNorm1d(1024, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+    )
+    (obj_masked_encoder): PointNetEncoder(
+      (stn): STN3d(
+        (conv1): Conv1d(3, 64, kernel_size=(1,), stride=(1,))
+        (conv2): Conv1d(64, 128, kernel_size=(1,), stride=(1,))
+        (conv3): Conv1d(128, 1024, kernel_size=(1,), stride=(1,))
+        (fc1): Linear(in_features=1024, out_features=512, bias=True)
+        (fc2): Linear(in_features=512, out_features=256, bias=True)
+        (fc3): Linear(in_features=256, out_features=9, bias=True)
+        (relu): ReLU()
+        (bn1): BatchNorm1d(64, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+        (bn2): BatchNorm1d(128, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+        (bn3): BatchNorm1d(1024, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+        (bn4): BatchNorm1d(512, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+        (bn5): BatchNorm1d(256, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+      )
+      (conv1): Conv1d(3, 64, kernel_size=(1,), stride=(1,))
+      (conv2): Conv1d(64, 128, kernel_size=(1,), stride=(1,))
+      (conv3): Conv1d(128, 1024, kernel_size=(1,), stride=(1,))
+      (bn1): BatchNorm1d(64, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+      (bn2): BatchNorm1d(128, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+      (bn3): BatchNorm1d(1024, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+    )
+    (hand_encoder): PointNetEncoder(
+      (stn): STN3d(
+        (conv1): Conv1d(3, 64, kernel_size=(1,), stride=(1,))
+        (conv2): Conv1d(64, 128, kernel_size=(1,), stride=(1,))
+        (conv3): Conv1d(128, 1024, kernel_size=(1,), stride=(1,))
+        (fc1): Linear(in_features=1024, out_features=512, bias=True)
+        (fc2): Linear(in_features=512, out_features=256, bias=True)
+        (fc3): Linear(in_features=256, out_features=9, bias=True)
+        (relu): ReLU()
+        (bn1): BatchNorm1d(64, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+        (bn2): BatchNorm1d(128, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+        (bn3): BatchNorm1d(1024, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+        (bn4): BatchNorm1d(512, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+        (bn5): BatchNorm1d(256, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+      )
+      (conv1): Conv1d(3, 64, kernel_size=(1,), stride=(1,))
+      (conv2): Conv1d(64, 128, kernel_size=(1,), stride=(1,))
+      (conv3): Conv1d(128, 1024, kernel_size=(1,), stride=(1,))
+      (bn1): BatchNorm1d(64, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+      (bn2): BatchNorm1d(128, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+      (bn3): BatchNorm1d(1024, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+    )
+    (mapnet): SDmapNet(
+      (conv1): Conv1d(1088, 512, kernel_size=(1,), stride=(1,))
+      (conv2): Conv1d(512, 256, kernel_size=(1,), stride=(1,))
+      (conv3): Conv1d(256, 128, kernel_size=(1,), stride=(1,))
+      (conv4): Conv1d(128, 1, kernel_size=(1,), stride=(1,))
+      (bn1): BatchNorm1d(512, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+      (bn2): BatchNorm1d(256, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+      (bn3): BatchNorm1d(128, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+      (activate): LeakyReLU(negative_slope=0.01)
+    )
+    (convfuse): Conv1d(3778, 3000, kernel_size=(1,), stride=(1,))
+    (convfuse_m1): Conv1d(6000, 3000, kernel_size=(1,), stride=(1,))
+    (bnfuse): BatchNorm1d(3000, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+    (bnfuse_m1): BatchNorm1d(3000, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+  )
+  (cGraspVAE): cGraspvae(
+    (obj_encoder): PointNetEncoder(
+      (stn): STN3d(
+        (conv1): Conv1d(4, 64, kernel_size=(1,), stride=(1,))
+        (conv2): Conv1d(64, 128, kernel_size=(1,), stride=(1,))
+        (conv3): Conv1d(128, 1024, kernel_size=(1,), stride=(1,))
+        (fc1): Linear(in_features=1024, out_features=512, bias=True)
+        (fc2): Linear(in_features=512, out_features=256, bias=True)
+        (fc3): Linear(in_features=256, out_features=9, bias=True)
+        (relu): ReLU()
+        (bn1): BatchNorm1d(64, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+        (bn2): BatchNorm1d(128, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+        (bn3): BatchNorm1d(1024, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+        (bn4): BatchNorm1d(512, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+        (bn5): BatchNorm1d(256, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+      )
+      (conv1): Conv1d(4, 64, kernel_size=(1,), stride=(1,))
+      (conv2): Conv1d(64, 128, kernel_size=(1,), stride=(1,))
+      (conv3): Conv1d(128, 1024, kernel_size=(1,), stride=(1,))
+      (bn1): BatchNorm1d(64, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+      (bn2): BatchNorm1d(128, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+      (bn3): BatchNorm1d(1024, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+    )
+    (hand_encoder): PointNetEncoder(
+      (stn): STN3d(
+        (conv1): Conv1d(3, 64, kernel_size=(1,), stride=(1,))
+        (conv2): Conv1d(64, 128, kernel_size=(1,), stride=(1,))
+        (conv3): Conv1d(128, 1024, kernel_size=(1,), stride=(1,))
+        (fc1): Linear(in_features=1024, out_features=512, bias=True)
+        (fc2): Linear(in_features=512, out_features=256, bias=True)
+        (fc3): Linear(in_features=256, out_features=9, bias=True)
+        (relu): ReLU()
+        (bn1): BatchNorm1d(64, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+        (bn2): BatchNorm1d(128, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+        (bn3): BatchNorm1d(1024, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+        (bn4): BatchNorm1d(512, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+        (bn5): BatchNorm1d(256, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+      )
+      (conv1): Conv1d(3, 64, kernel_size=(1,), stride=(1,))
+      (conv2): Conv1d(64, 128, kernel_size=(1,), stride=(1,))
+      (conv3): Conv1d(128, 1024, kernel_size=(1,), stride=(1,))
+      (bn1): BatchNorm1d(64, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+      (bn2): BatchNorm1d(128, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+      (bn3): BatchNorm1d(1024, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+    )
+    (cvae): VAE(
+      (encoder): Encoder(
+        (MLP): Sequential(
+          (L0): Linear(in_features=2048, out_features=512, bias=True)
+          (A0): ReLU()
+          (L1): Linear(in_features=512, out_features=256, bias=True)
+          (A1): ReLU()
+        )
+        (linear_means): Linear(in_features=256, out_features=64, bias=True)
+        (linear_log_var): Linear(in_features=256, out_features=64, bias=True)
+      )
+      (decoder): Decoder(
+        (MLP): Sequential(
+          (L0): Linear(in_features=1088, out_features=1024, bias=True)
+          (A0): ReLU()
+          (L1): Linear(in_features=1024, out_features=256, bias=True)
+          (A1): ReLU()
+          (L2): Linear(in_features=256, out_features=61, bias=True)
+        )
+      )
+    )
+  )
+  (ConditionNetLoss): ConditionNetLoss(
+    (maploss_hand): L1Loss()
+    (maploss_om): L1Loss()
+    (featloss): MSELoss()
+  )
+  (cGraspVAELoss): cGraspvaeLoss()
+  (ConditionNetMetrics): ConditionNetMetrics(
+    (maploss): L1Loss()
+  )
+)
+data = [tensor([[[0., 0., 0.,  ..., 0., 0., 0.]],
+        [[0., 0., 0.,  ..., 0., 0., 0.]],
+        [[0., 0., 0.,  ..., 0., 0., 0.]],
+        ...,
+        [[0., 0., 0.,  ..., 0., 0., 0.]],
+        [[0., 0., 0.,  ..., 0., 0., 0.]],
+        [[0., 1., 1.,  ..., 0., 0., 0.]]]), tensor([[ 898.],
+        [ 738.],
+        [1909.],
+        [3385.],
+        [4614.],
+        [1970.],
+        [3196.],
+        [2419.],
+        [2507.],
+        [4441.],
+        [5091.],
+        [1642.],
+        [1449.],
+        [1391.],
+        [ 673.],
+        [4450.]]), tensor([[[ 0.0484, -0.0507, -0.0044,  ...,  0.0088, -0.0024,  0.0467],
+         [-0.0589, -0.0485,  0.0041,  ...,  0.0237,  0.0464,  0.0005],
+         [-0.0412, -0.0509,  0.0497,  ..., -0.0002, -0.0535, -0.0322]],
+        [[-0.0365, -0.0369, -0.0367,  ..., -0.0022, -0.0073,  0.0058],
+         [-0.0426, -0.0420, -0.0420,  ...,  0.0029,  0.0138, -0.0147],
+         [-0.0365, -0.0360, -0.0366,  ...,  0.0373, -0.0014,  0.0023]],
+        [[ 0.0456, -0.0603, -0.0374,  ..., -0.0499, -0.0365, -0.0026],
+         [-0.0811, -0.0853, -0.0950,  ..., -0.0796, -0.0850, -0.0817],
+         [ 0.0397,  0.0120,  0.0230,  ...,  0.0384,  0.0447,  0.0525]],
+        ...,
+        [[-0.0341, -0.0782,  0.0334,  ...,  0.0593,  0.0713,  0.0778],
+         [ 0.0717, -0.0393, -0.0833,  ..., -0.0088,  0.0186,  0.0333],
+         [-0.0670, -0.0560, -0.0524,  ...,  0.0554,  0.0169, -0.0063]],
+        [[-0.0033, -0.0072, -0.0041,  ...,  0.0049,  0.0110,  0.0050],
+         [-0.0154,  0.0114, -0.0125,  ..., -0.0108,  0.0096,  0.0146],
+         [-0.0037, -0.0085, -0.0041,  ...,  0.0085,  0.0044,  0.0038]],
+        [[ 0.0323,  0.0592,  0.0604,  ...,  0.0407,  0.0729, -0.0601],
+         [-0.0330, -0.0340, -0.0350,  ...,  0.0189,  0.0135, -0.0356],
+         [-0.0066, -0.0113, -0.0037,  ...,  0.0079,  0.0013,  0.0036]]]), tensor([[[-0.0484, -0.0115, -0.0351,  ..., -0.0264, -0.0090, -0.0484]],
+        [[-0.0263, -0.0256, -0.0261,  ..., -0.0077, -0.0206, -0.0050]],
+        [[-0.0883, -0.0658, -0.0673,  ..., -0.0679, -0.0711, -0.0732]],
+        ...,
+        [[-0.1025, -0.1003, -0.1171,  ..., -0.0785, -0.0765, -0.0823]],
+        [[-0.0205, -0.0049, -0.0179,  ..., -0.0275, -0.0233, -0.0194]],
+        [[-0.0251, -0.0110, -0.0043,  ..., -0.0368, -0.0461, -0.0142]]]), tensor([[[-0.0586, -0.0618, -0.0527,  ..., -0.0930, -0.0899, -0.0915],
+         [ 0.0299,  0.0396,  0.0378,  ...,  0.0066, -0.0023,  0.0228],
+         [ 0.0038,  0.0018, -0.0023,  ..., -0.0159, -0.0164, -0.0134]],
+        [[-0.0215, -0.0216, -0.0134,  ..., -0.0406, -0.0415, -0.0382],
+         [ 0.0480,  0.0565,  0.0524,  ...,  0.0246,  0.0159,  0.0410],
+         [ 0.0056,  0.0012,  0.0026,  ..., -0.0219, -0.0184, -0.0219]],
+        [[-0.0303, -0.0290, -0.0257,  ..., -0.0218, -0.0219, -0.0208],
+         [ 0.0631,  0.0722,  0.0662,  ...,  0.0543,  0.0468,  0.0661],
+         [-0.0133, -0.0132, -0.0081,  ..., -0.0511, -0.0491, -0.0464]],
+        ...,
+        [[-0.0559, -0.0579, -0.0470,  ..., -0.0857, -0.0832, -0.0863],
+         [ 0.0481,  0.0567,  0.0586,  ...,  0.0115,  0.0015,  0.0303],
+         [ 0.0791,  0.0750,  0.0736,  ...,  0.0577,  0.0617,  0.0569]],
+        [[-0.0442, -0.0404, -0.0387,  ..., -0.0358, -0.0366, -0.0337],
+         [ 0.0791,  0.0885,  0.0797,  ...,  0.0800,  0.0715,  0.0906],
+         [-0.0130, -0.0100, -0.0058,  ..., -0.0571, -0.0585, -0.0473]],
+        [[-0.0071, -0.0123, -0.0087,  ..., -0.0375, -0.0318, -0.0401],
+         [ 0.0137,  0.0211,  0.0222,  ..., -0.0202, -0.0262, -0.0064],
+train epoch:1:   0%|                                                                                                                                                                  | 0/20227 [05:04<?, ?it/s]
+Traceback (most recent call last):
+  File "traineval.py", line 63, in <module>
+    train_val(trainloader, valloader, testloader)
+  File "traineval.py", line 24, in train_val
+    checkpoints = trainer.epoch(epoch + 1)
+  File "/home/datassd/yilin/Codes/Hand/ConditionHOI/epochbase.py", line 246, in epoch
+  File "/home/datassd/yilin/Codes/Hand/ConditionHOI/epochbase.py", line 197, in one_batch
+    # read data
+  File "/home/datassd/yilin/Codes/Hand/ConditionHOI/utils/utils.py", line 25, in function_timer
+    result = function(*args, **kwargs)
+  File "/home/datassd/yilin/Codes/Hand/ConditionHOI/epochbase.py", line 97, in model_forward
+    if self.use_cuda: self.ConditionNet = self.ConditionNet.to('cuda')
+  File "/home/datassd/yilin/Codes/Hand/ConditionHOI/epochbase.py", line 97, in model_forward
+    if self.use_cuda: self.ConditionNet = self.ConditionNet.to('cuda')
+  File "/home/yilin/anaconda3/envs/pytorch3d/lib/python3.8/bdb.py", line 88, in trace_dispatch
+    return self.dispatch_line(frame)
+  File "/home/yilin/anaconda3/envs/pytorch3d/lib/python3.8/bdb.py", line 113, in dispatch_line
+    if self.quitting: raise BdbQuit
+bdb.BdbQuit

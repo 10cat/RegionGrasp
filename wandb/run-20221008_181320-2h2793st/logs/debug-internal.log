@@ -1,0 +1,362 @@
+2022-10-08 18:13:20,216 INFO    StreamThr :27214 [internal.py:wandb_internal():88] W&B internal server running at pid: 27214, started at: 2022-10-08 18:13:20.215421
+2022-10-08 18:13:20,219 DEBUG   HandlerThread:27214 [handler.py:handle_request():138] handle_request: status
+2022-10-08 18:13:20,222 DEBUG   SenderThread:27214 [sender.py:send_request():315] send_request: status
+2022-10-08 18:13:20,224 DEBUG   SenderThread:27214 [sender.py:send():301] send: header
+2022-10-08 18:13:20,225 INFO    WriterThread:27214 [datastore.py:open_for_write():75] open: /home/datassd/yilin/Codes/Hand/ConditionHOI/wandb/run-20221008_181320-2h2793st/run-2h2793st.wandb
+2022-10-08 18:13:20,244 DEBUG   SenderThread:27214 [sender.py:send():301] send: run
+2022-10-08 18:13:20,580 DEBUG   HandlerThread:27214 [handler.py:handle_request():138] handle_request: check_version
+2022-10-08 18:13:20,587 INFO    SenderThread:27214 [dir_watcher.py:__init__():216] watching files in: /home/datassd/yilin/Codes/Hand/ConditionHOI/wandb/run-20221008_181320-2h2793st/files
+2022-10-08 18:13:20,587 INFO    SenderThread:27214 [sender.py:_start_run_threads():912] run started: 2h2793st with start time 1665274400.208684
+2022-10-08 18:13:20,587 DEBUG   SenderThread:27214 [sender.py:send():301] send: summary
+2022-10-08 18:13:20,588 INFO    SenderThread:27214 [sender.py:_save_file():1155] saving file wandb-summary.json with policy end
+2022-10-08 18:13:20,588 DEBUG   SenderThread:27214 [sender.py:send_request():315] send_request: check_version
+2022-10-08 18:13:20,753 DEBUG   HandlerThread:27214 [handler.py:handle_request():138] handle_request: run_start
+2022-10-08 18:13:20,760 DEBUG   HandlerThread:27214 [meta.py:__init__():34] meta init
+2022-10-08 18:13:20,760 DEBUG   HandlerThread:27214 [meta.py:__init__():49] meta init done
+2022-10-08 18:13:20,760 DEBUG   HandlerThread:27214 [meta.py:probe():215] probe
+2022-10-08 18:13:20,768 DEBUG   HandlerThread:27214 [meta.py:_setup_git():205] setup git
+2022-10-08 18:13:20,796 DEBUG   HandlerThread:27214 [meta.py:_setup_git():212] setup git done
+2022-10-08 18:13:20,797 DEBUG   HandlerThread:27214 [meta.py:_save_pip():53] save pip
+2022-10-08 18:13:20,798 DEBUG   HandlerThread:27214 [meta.py:_save_pip():67] save pip done
+2022-10-08 18:13:20,798 DEBUG   HandlerThread:27214 [meta.py:_save_conda():74] save conda
+2022-10-08 18:13:21,591 INFO    Thread-13 :27214 [dir_watcher.py:_on_file_created():275] file/dir created: /home/datassd/yilin/Codes/Hand/ConditionHOI/wandb/run-20221008_181320-2h2793st/files/wandb-summary.json
+2022-10-08 18:13:21,592 INFO    Thread-13 :27214 [dir_watcher.py:_on_file_created():275] file/dir created: /home/datassd/yilin/Codes/Hand/ConditionHOI/wandb/run-20221008_181320-2h2793st/files/conda-environment.yaml
+2022-10-08 18:13:21,592 INFO    Thread-13 :27214 [dir_watcher.py:_on_file_created():275] file/dir created: /home/datassd/yilin/Codes/Hand/ConditionHOI/wandb/run-20221008_181320-2h2793st/files/requirements.txt
+2022-10-08 18:13:23,505 DEBUG   HandlerThread:27214 [meta.py:_save_conda():84] save conda done
+2022-10-08 18:13:23,505 DEBUG   HandlerThread:27214 [meta.py:probe():253] probe done
+2022-10-08 18:13:23,513 DEBUG   SenderThread:27214 [sender.py:send():301] send: files
+2022-10-08 18:13:23,514 INFO    SenderThread:27214 [sender.py:_save_file():1155] saving file wandb-metadata.json with policy now
+2022-10-08 18:13:23,522 DEBUG   HandlerThread:27214 [handler.py:handle_request():138] handle_request: stop_status
+2022-10-08 18:13:23,523 DEBUG   SenderThread:27214 [sender.py:send_request():315] send_request: stop_status
+2022-10-08 18:13:23,588 INFO    Thread-13 :27214 [dir_watcher.py:_on_file_modified():292] file/dir modified: /home/datassd/yilin/Codes/Hand/ConditionHOI/wandb/run-20221008_181320-2h2793st/files/conda-environment.yaml
+2022-10-08 18:13:23,589 INFO    Thread-13 :27214 [dir_watcher.py:_on_file_created():275] file/dir created: /home/datassd/yilin/Codes/Hand/ConditionHOI/wandb/run-20221008_181320-2h2793st/files/wandb-metadata.json
+2022-10-08 18:13:23,669 DEBUG   SenderThread:27214 [sender.py:send():301] send: telemetry
+2022-10-08 18:13:24,052 INFO    Thread-17 :27214 [upload_job.py:push():139] Uploaded file /tmp/tmp7k1uhhzawandb/1i1d128g-wandb-metadata.json
+2022-10-08 18:13:24,589 INFO    Thread-13 :27214 [dir_watcher.py:_on_file_created():275] file/dir created: /home/datassd/yilin/Codes/Hand/ConditionHOI/wandb/run-20221008_181320-2h2793st/files/output.log
+2022-10-08 18:13:26,590 INFO    Thread-13 :27214 [dir_watcher.py:_on_file_modified():292] file/dir modified: /home/datassd/yilin/Codes/Hand/ConditionHOI/wandb/run-20221008_181320-2h2793st/files/output.log
+2022-10-08 18:13:28,591 INFO    Thread-13 :27214 [dir_watcher.py:_on_file_modified():292] file/dir modified: /home/datassd/yilin/Codes/Hand/ConditionHOI/wandb/run-20221008_181320-2h2793st/files/output.log
+2022-10-08 18:13:30,592 INFO    Thread-13 :27214 [dir_watcher.py:_on_file_modified():292] file/dir modified: /home/datassd/yilin/Codes/Hand/ConditionHOI/wandb/run-20221008_181320-2h2793st/files/output.log
+2022-10-08 18:13:32,593 INFO    Thread-13 :27214 [dir_watcher.py:_on_file_modified():292] file/dir modified: /home/datassd/yilin/Codes/Hand/ConditionHOI/wandb/run-20221008_181320-2h2793st/files/output.log
+2022-10-08 18:13:34,593 INFO    Thread-13 :27214 [dir_watcher.py:_on_file_modified():292] file/dir modified: /home/datassd/yilin/Codes/Hand/ConditionHOI/wandb/run-20221008_181320-2h2793st/files/output.log
+2022-10-08 18:13:36,594 INFO    Thread-13 :27214 [dir_watcher.py:_on_file_modified():292] file/dir modified: /home/datassd/yilin/Codes/Hand/ConditionHOI/wandb/run-20221008_181320-2h2793st/files/output.log
+2022-10-08 18:13:38,595 INFO    Thread-13 :27214 [dir_watcher.py:_on_file_modified():292] file/dir modified: /home/datassd/yilin/Codes/Hand/ConditionHOI/wandb/run-20221008_181320-2h2793st/files/output.log
+2022-10-08 18:13:38,671 DEBUG   HandlerThread:27214 [handler.py:handle_request():138] handle_request: stop_status
+2022-10-08 18:13:38,671 DEBUG   SenderThread:27214 [sender.py:send_request():315] send_request: stop_status
+2022-10-08 18:13:40,595 INFO    Thread-13 :27214 [dir_watcher.py:_on_file_modified():292] file/dir modified: /home/datassd/yilin/Codes/Hand/ConditionHOI/wandb/run-20221008_181320-2h2793st/files/output.log
+2022-10-08 18:13:42,596 INFO    Thread-13 :27214 [dir_watcher.py:_on_file_modified():292] file/dir modified: /home/datassd/yilin/Codes/Hand/ConditionHOI/wandb/run-20221008_181320-2h2793st/files/output.log
+2022-10-08 18:13:44,597 INFO    Thread-13 :27214 [dir_watcher.py:_on_file_modified():292] file/dir modified: /home/datassd/yilin/Codes/Hand/ConditionHOI/wandb/run-20221008_181320-2h2793st/files/output.log
+2022-10-08 18:13:46,598 INFO    Thread-13 :27214 [dir_watcher.py:_on_file_modified():292] file/dir modified: /home/datassd/yilin/Codes/Hand/ConditionHOI/wandb/run-20221008_181320-2h2793st/files/output.log
+2022-10-08 18:13:48,598 INFO    Thread-13 :27214 [dir_watcher.py:_on_file_modified():292] file/dir modified: /home/datassd/yilin/Codes/Hand/ConditionHOI/wandb/run-20221008_181320-2h2793st/files/output.log
+2022-10-08 18:13:49,332 DEBUG   SenderThread:27214 [sender.py:send():301] send: stats
+2022-10-08 18:13:50,600 INFO    Thread-13 :27214 [dir_watcher.py:_on_file_modified():292] file/dir modified: /home/datassd/yilin/Codes/Hand/ConditionHOI/wandb/run-20221008_181320-2h2793st/files/config.yaml
+2022-10-08 18:13:50,600 INFO    Thread-13 :27214 [dir_watcher.py:_on_file_modified():292] file/dir modified: /home/datassd/yilin/Codes/Hand/ConditionHOI/wandb/run-20221008_181320-2h2793st/files/output.log
+2022-10-08 18:13:52,601 INFO    Thread-13 :27214 [dir_watcher.py:_on_file_modified():292] file/dir modified: /home/datassd/yilin/Codes/Hand/ConditionHOI/wandb/run-20221008_181320-2h2793st/files/output.log
+2022-10-08 18:13:53,805 DEBUG   HandlerThread:27214 [handler.py:handle_request():138] handle_request: stop_status
+2022-10-08 18:13:53,805 DEBUG   SenderThread:27214 [sender.py:send_request():315] send_request: stop_status
+2022-10-08 18:13:54,601 INFO    Thread-13 :27214 [dir_watcher.py:_on_file_modified():292] file/dir modified: /home/datassd/yilin/Codes/Hand/ConditionHOI/wandb/run-20221008_181320-2h2793st/files/output.log
+2022-10-08 18:13:56,602 INFO    Thread-13 :27214 [dir_watcher.py:_on_file_modified():292] file/dir modified: /home/datassd/yilin/Codes/Hand/ConditionHOI/wandb/run-20221008_181320-2h2793st/files/output.log
+2022-10-08 18:13:58,603 INFO    Thread-13 :27214 [dir_watcher.py:_on_file_modified():292] file/dir modified: /home/datassd/yilin/Codes/Hand/ConditionHOI/wandb/run-20221008_181320-2h2793st/files/output.log
+2022-10-08 18:14:00,604 INFO    Thread-13 :27214 [dir_watcher.py:_on_file_modified():292] file/dir modified: /home/datassd/yilin/Codes/Hand/ConditionHOI/wandb/run-20221008_181320-2h2793st/files/output.log
+2022-10-08 18:14:02,605 INFO    Thread-13 :27214 [dir_watcher.py:_on_file_modified():292] file/dir modified: /home/datassd/yilin/Codes/Hand/ConditionHOI/wandb/run-20221008_181320-2h2793st/files/output.log
+2022-10-08 18:14:04,605 INFO    Thread-13 :27214 [dir_watcher.py:_on_file_modified():292] file/dir modified: /home/datassd/yilin/Codes/Hand/ConditionHOI/wandb/run-20221008_181320-2h2793st/files/output.log
+2022-10-08 18:14:06,607 INFO    Thread-13 :27214 [dir_watcher.py:_on_file_modified():292] file/dir modified: /home/datassd/yilin/Codes/Hand/ConditionHOI/wandb/run-20221008_181320-2h2793st/files/output.log
+2022-10-08 18:14:08,607 INFO    Thread-13 :27214 [dir_watcher.py:_on_file_modified():292] file/dir modified: /home/datassd/yilin/Codes/Hand/ConditionHOI/wandb/run-20221008_181320-2h2793st/files/output.log
+2022-10-08 18:14:08,951 DEBUG   HandlerThread:27214 [handler.py:handle_request():138] handle_request: stop_status
+2022-10-08 18:14:08,951 DEBUG   SenderThread:27214 [sender.py:send_request():315] send_request: stop_status
+2022-10-08 18:14:10,608 INFO    Thread-13 :27214 [dir_watcher.py:_on_file_modified():292] file/dir modified: /home/datassd/yilin/Codes/Hand/ConditionHOI/wandb/run-20221008_181320-2h2793st/files/output.log
+2022-10-08 18:14:12,609 INFO    Thread-13 :27214 [dir_watcher.py:_on_file_modified():292] file/dir modified: /home/datassd/yilin/Codes/Hand/ConditionHOI/wandb/run-20221008_181320-2h2793st/files/output.log
+2022-10-08 18:14:14,610 INFO    Thread-13 :27214 [dir_watcher.py:_on_file_modified():292] file/dir modified: /home/datassd/yilin/Codes/Hand/ConditionHOI/wandb/run-20221008_181320-2h2793st/files/output.log
+2022-10-08 18:14:16,610 INFO    Thread-13 :27214 [dir_watcher.py:_on_file_modified():292] file/dir modified: /home/datassd/yilin/Codes/Hand/ConditionHOI/wandb/run-20221008_181320-2h2793st/files/output.log
+2022-10-08 18:14:18,611 INFO    Thread-13 :27214 [dir_watcher.py:_on_file_modified():292] file/dir modified: /home/datassd/yilin/Codes/Hand/ConditionHOI/wandb/run-20221008_181320-2h2793st/files/output.log
+2022-10-08 18:14:19,835 DEBUG   SenderThread:27214 [sender.py:send():301] send: stats
+2022-10-08 18:14:20,612 INFO    Thread-13 :27214 [dir_watcher.py:_on_file_modified():292] file/dir modified: /home/datassd/yilin/Codes/Hand/ConditionHOI/wandb/run-20221008_181320-2h2793st/files/output.log
+2022-10-08 18:14:22,613 INFO    Thread-13 :27214 [dir_watcher.py:_on_file_modified():292] file/dir modified: /home/datassd/yilin/Codes/Hand/ConditionHOI/wandb/run-20221008_181320-2h2793st/files/output.log
+2022-10-08 18:14:24,096 DEBUG   HandlerThread:27214 [handler.py:handle_request():138] handle_request: stop_status
+2022-10-08 18:14:24,097 DEBUG   SenderThread:27214 [sender.py:send_request():315] send_request: stop_status
+2022-10-08 18:14:24,613 INFO    Thread-13 :27214 [dir_watcher.py:_on_file_modified():292] file/dir modified: /home/datassd/yilin/Codes/Hand/ConditionHOI/wandb/run-20221008_181320-2h2793st/files/output.log
+2022-10-08 18:14:26,614 INFO    Thread-13 :27214 [dir_watcher.py:_on_file_modified():292] file/dir modified: /home/datassd/yilin/Codes/Hand/ConditionHOI/wandb/run-20221008_181320-2h2793st/files/output.log
+2022-10-08 18:14:28,615 INFO    Thread-13 :27214 [dir_watcher.py:_on_file_modified():292] file/dir modified: /home/datassd/yilin/Codes/Hand/ConditionHOI/wandb/run-20221008_181320-2h2793st/files/output.log
+2022-10-08 18:14:30,616 INFO    Thread-13 :27214 [dir_watcher.py:_on_file_modified():292] file/dir modified: /home/datassd/yilin/Codes/Hand/ConditionHOI/wandb/run-20221008_181320-2h2793st/files/output.log
+2022-10-08 18:14:32,617 INFO    Thread-13 :27214 [dir_watcher.py:_on_file_modified():292] file/dir modified: /home/datassd/yilin/Codes/Hand/ConditionHOI/wandb/run-20221008_181320-2h2793st/files/output.log
+2022-10-08 18:14:34,617 INFO    Thread-13 :27214 [dir_watcher.py:_on_file_modified():292] file/dir modified: /home/datassd/yilin/Codes/Hand/ConditionHOI/wandb/run-20221008_181320-2h2793st/files/output.log
+2022-10-08 18:14:36,618 INFO    Thread-13 :27214 [dir_watcher.py:_on_file_modified():292] file/dir modified: /home/datassd/yilin/Codes/Hand/ConditionHOI/wandb/run-20221008_181320-2h2793st/files/output.log
+2022-10-08 18:14:38,619 INFO    Thread-13 :27214 [dir_watcher.py:_on_file_modified():292] file/dir modified: /home/datassd/yilin/Codes/Hand/ConditionHOI/wandb/run-20221008_181320-2h2793st/files/output.log
+2022-10-08 18:14:39,229 DEBUG   HandlerThread:27214 [handler.py:handle_request():138] handle_request: stop_status
+2022-10-08 18:14:39,229 DEBUG   SenderThread:27214 [sender.py:send_request():315] send_request: stop_status
+2022-10-08 18:14:40,620 INFO    Thread-13 :27214 [dir_watcher.py:_on_file_modified():292] file/dir modified: /home/datassd/yilin/Codes/Hand/ConditionHOI/wandb/run-20221008_181320-2h2793st/files/output.log
+2022-10-08 18:14:42,621 INFO    Thread-13 :27214 [dir_watcher.py:_on_file_modified():292] file/dir modified: /home/datassd/yilin/Codes/Hand/ConditionHOI/wandb/run-20221008_181320-2h2793st/files/output.log
+2022-10-08 18:14:44,622 INFO    Thread-13 :27214 [dir_watcher.py:_on_file_modified():292] file/dir modified: /home/datassd/yilin/Codes/Hand/ConditionHOI/wandb/run-20221008_181320-2h2793st/files/output.log
+2022-10-08 18:14:46,622 INFO    Thread-13 :27214 [dir_watcher.py:_on_file_modified():292] file/dir modified: /home/datassd/yilin/Codes/Hand/ConditionHOI/wandb/run-20221008_181320-2h2793st/files/output.log
+2022-10-08 18:14:48,623 INFO    Thread-13 :27214 [dir_watcher.py:_on_file_modified():292] file/dir modified: /home/datassd/yilin/Codes/Hand/ConditionHOI/wandb/run-20221008_181320-2h2793st/files/output.log
+2022-10-08 18:14:50,336 DEBUG   SenderThread:27214 [sender.py:send():301] send: stats
+2022-10-08 18:14:50,624 INFO    Thread-13 :27214 [dir_watcher.py:_on_file_modified():292] file/dir modified: /home/datassd/yilin/Codes/Hand/ConditionHOI/wandb/run-20221008_181320-2h2793st/files/output.log
+2022-10-08 18:14:52,625 INFO    Thread-13 :27214 [dir_watcher.py:_on_file_modified():292] file/dir modified: /home/datassd/yilin/Codes/Hand/ConditionHOI/wandb/run-20221008_181320-2h2793st/files/output.log
+2022-10-08 18:14:54,364 DEBUG   HandlerThread:27214 [handler.py:handle_request():138] handle_request: stop_status
+2022-10-08 18:14:54,364 DEBUG   SenderThread:27214 [sender.py:send_request():315] send_request: stop_status
+2022-10-08 18:14:54,625 INFO    Thread-13 :27214 [dir_watcher.py:_on_file_modified():292] file/dir modified: /home/datassd/yilin/Codes/Hand/ConditionHOI/wandb/run-20221008_181320-2h2793st/files/output.log
+2022-10-08 18:14:56,626 INFO    Thread-13 :27214 [dir_watcher.py:_on_file_modified():292] file/dir modified: /home/datassd/yilin/Codes/Hand/ConditionHOI/wandb/run-20221008_181320-2h2793st/files/output.log
+2022-10-08 18:14:58,627 INFO    Thread-13 :27214 [dir_watcher.py:_on_file_modified():292] file/dir modified: /home/datassd/yilin/Codes/Hand/ConditionHOI/wandb/run-20221008_181320-2h2793st/files/output.log
+2022-10-08 18:15:00,627 INFO    Thread-13 :27214 [dir_watcher.py:_on_file_modified():292] file/dir modified: /home/datassd/yilin/Codes/Hand/ConditionHOI/wandb/run-20221008_181320-2h2793st/files/output.log
+2022-10-08 18:15:02,628 INFO    Thread-13 :27214 [dir_watcher.py:_on_file_modified():292] file/dir modified: /home/datassd/yilin/Codes/Hand/ConditionHOI/wandb/run-20221008_181320-2h2793st/files/output.log
+2022-10-08 18:15:04,629 INFO    Thread-13 :27214 [dir_watcher.py:_on_file_modified():292] file/dir modified: /home/datassd/yilin/Codes/Hand/ConditionHOI/wandb/run-20221008_181320-2h2793st/files/output.log
+2022-10-08 18:15:06,630 INFO    Thread-13 :27214 [dir_watcher.py:_on_file_modified():292] file/dir modified: /home/datassd/yilin/Codes/Hand/ConditionHOI/wandb/run-20221008_181320-2h2793st/files/output.log
+2022-10-08 18:15:08,630 INFO    Thread-13 :27214 [dir_watcher.py:_on_file_modified():292] file/dir modified: /home/datassd/yilin/Codes/Hand/ConditionHOI/wandb/run-20221008_181320-2h2793st/files/output.log
+2022-10-08 18:15:09,497 DEBUG   HandlerThread:27214 [handler.py:handle_request():138] handle_request: stop_status
+2022-10-08 18:15:09,498 DEBUG   SenderThread:27214 [sender.py:send_request():315] send_request: stop_status
+2022-10-08 18:15:10,631 INFO    Thread-13 :27214 [dir_watcher.py:_on_file_modified():292] file/dir modified: /home/datassd/yilin/Codes/Hand/ConditionHOI/wandb/run-20221008_181320-2h2793st/files/output.log
+2022-10-08 18:15:12,632 INFO    Thread-13 :27214 [dir_watcher.py:_on_file_modified():292] file/dir modified: /home/datassd/yilin/Codes/Hand/ConditionHOI/wandb/run-20221008_181320-2h2793st/files/output.log
+2022-10-08 18:15:14,633 INFO    Thread-13 :27214 [dir_watcher.py:_on_file_modified():292] file/dir modified: /home/datassd/yilin/Codes/Hand/ConditionHOI/wandb/run-20221008_181320-2h2793st/files/output.log
+2022-10-08 18:15:16,634 INFO    Thread-13 :27214 [dir_watcher.py:_on_file_modified():292] file/dir modified: /home/datassd/yilin/Codes/Hand/ConditionHOI/wandb/run-20221008_181320-2h2793st/files/output.log
+2022-10-08 18:15:18,634 INFO    Thread-13 :27214 [dir_watcher.py:_on_file_modified():292] file/dir modified: /home/datassd/yilin/Codes/Hand/ConditionHOI/wandb/run-20221008_181320-2h2793st/files/output.log
+2022-10-08 18:15:20,635 INFO    Thread-13 :27214 [dir_watcher.py:_on_file_modified():292] file/dir modified: /home/datassd/yilin/Codes/Hand/ConditionHOI/wandb/run-20221008_181320-2h2793st/files/output.log
+2022-10-08 18:15:20,820 DEBUG   SenderThread:27214 [sender.py:send():301] send: stats
+2022-10-08 18:15:22,636 INFO    Thread-13 :27214 [dir_watcher.py:_on_file_modified():292] file/dir modified: /home/datassd/yilin/Codes/Hand/ConditionHOI/wandb/run-20221008_181320-2h2793st/files/output.log
+2022-10-08 18:15:24,629 DEBUG   HandlerThread:27214 [handler.py:handle_request():138] handle_request: stop_status
+2022-10-08 18:15:24,630 DEBUG   SenderThread:27214 [sender.py:send_request():315] send_request: stop_status
+2022-10-08 18:15:24,637 INFO    Thread-13 :27214 [dir_watcher.py:_on_file_modified():292] file/dir modified: /home/datassd/yilin/Codes/Hand/ConditionHOI/wandb/run-20221008_181320-2h2793st/files/output.log
+2022-10-08 18:15:26,637 INFO    Thread-13 :27214 [dir_watcher.py:_on_file_modified():292] file/dir modified: /home/datassd/yilin/Codes/Hand/ConditionHOI/wandb/run-20221008_181320-2h2793st/files/output.log
+2022-10-08 18:15:28,638 INFO    Thread-13 :27214 [dir_watcher.py:_on_file_modified():292] file/dir modified: /home/datassd/yilin/Codes/Hand/ConditionHOI/wandb/run-20221008_181320-2h2793st/files/output.log
+2022-10-08 18:15:30,639 INFO    Thread-13 :27214 [dir_watcher.py:_on_file_modified():292] file/dir modified: /home/datassd/yilin/Codes/Hand/ConditionHOI/wandb/run-20221008_181320-2h2793st/files/output.log
+2022-10-08 18:15:32,640 INFO    Thread-13 :27214 [dir_watcher.py:_on_file_modified():292] file/dir modified: /home/datassd/yilin/Codes/Hand/ConditionHOI/wandb/run-20221008_181320-2h2793st/files/output.log
+2022-10-08 18:15:34,640 INFO    Thread-13 :27214 [dir_watcher.py:_on_file_modified():292] file/dir modified: /home/datassd/yilin/Codes/Hand/ConditionHOI/wandb/run-20221008_181320-2h2793st/files/output.log
+2022-10-08 18:15:36,641 INFO    Thread-13 :27214 [dir_watcher.py:_on_file_modified():292] file/dir modified: /home/datassd/yilin/Codes/Hand/ConditionHOI/wandb/run-20221008_181320-2h2793st/files/output.log
+2022-10-08 18:15:38,642 INFO    Thread-13 :27214 [dir_watcher.py:_on_file_modified():292] file/dir modified: /home/datassd/yilin/Codes/Hand/ConditionHOI/wandb/run-20221008_181320-2h2793st/files/output.log
+2022-10-08 18:15:39,789 DEBUG   HandlerThread:27214 [handler.py:handle_request():138] handle_request: stop_status
+2022-10-08 18:15:39,789 DEBUG   SenderThread:27214 [sender.py:send_request():315] send_request: stop_status
+2022-10-08 18:15:40,643 INFO    Thread-13 :27214 [dir_watcher.py:_on_file_modified():292] file/dir modified: /home/datassd/yilin/Codes/Hand/ConditionHOI/wandb/run-20221008_181320-2h2793st/files/output.log
+2022-10-08 18:15:42,644 INFO    Thread-13 :27214 [dir_watcher.py:_on_file_modified():292] file/dir modified: /home/datassd/yilin/Codes/Hand/ConditionHOI/wandb/run-20221008_181320-2h2793st/files/output.log
+2022-10-08 18:15:44,644 INFO    Thread-13 :27214 [dir_watcher.py:_on_file_modified():292] file/dir modified: /home/datassd/yilin/Codes/Hand/ConditionHOI/wandb/run-20221008_181320-2h2793st/files/output.log
+2022-10-08 18:15:46,645 INFO    Thread-13 :27214 [dir_watcher.py:_on_file_modified():292] file/dir modified: /home/datassd/yilin/Codes/Hand/ConditionHOI/wandb/run-20221008_181320-2h2793st/files/output.log
+2022-10-08 18:15:48,646 INFO    Thread-13 :27214 [dir_watcher.py:_on_file_modified():292] file/dir modified: /home/datassd/yilin/Codes/Hand/ConditionHOI/wandb/run-20221008_181320-2h2793st/files/output.log
+2022-10-08 18:15:50,647 INFO    Thread-13 :27214 [dir_watcher.py:_on_file_modified():292] file/dir modified: /home/datassd/yilin/Codes/Hand/ConditionHOI/wandb/run-20221008_181320-2h2793st/files/output.log
+2022-10-08 18:15:51,310 DEBUG   SenderThread:27214 [sender.py:send():301] send: stats
+2022-10-08 18:15:52,648 INFO    Thread-13 :27214 [dir_watcher.py:_on_file_modified():292] file/dir modified: /home/datassd/yilin/Codes/Hand/ConditionHOI/wandb/run-20221008_181320-2h2793st/files/output.log
+2022-10-08 18:15:54,648 INFO    Thread-13 :27214 [dir_watcher.py:_on_file_modified():292] file/dir modified: /home/datassd/yilin/Codes/Hand/ConditionHOI/wandb/run-20221008_181320-2h2793st/files/output.log
+2022-10-08 18:15:54,921 DEBUG   HandlerThread:27214 [handler.py:handle_request():138] handle_request: stop_status
+2022-10-08 18:15:54,921 DEBUG   SenderThread:27214 [sender.py:send_request():315] send_request: stop_status
+2022-10-08 18:15:56,649 INFO    Thread-13 :27214 [dir_watcher.py:_on_file_modified():292] file/dir modified: /home/datassd/yilin/Codes/Hand/ConditionHOI/wandb/run-20221008_181320-2h2793st/files/output.log
+2022-10-08 18:15:58,650 INFO    Thread-13 :27214 [dir_watcher.py:_on_file_modified():292] file/dir modified: /home/datassd/yilin/Codes/Hand/ConditionHOI/wandb/run-20221008_181320-2h2793st/files/output.log
+2022-10-08 18:16:00,651 INFO    Thread-13 :27214 [dir_watcher.py:_on_file_modified():292] file/dir modified: /home/datassd/yilin/Codes/Hand/ConditionHOI/wandb/run-20221008_181320-2h2793st/files/output.log
+2022-10-08 18:16:02,652 INFO    Thread-13 :27214 [dir_watcher.py:_on_file_modified():292] file/dir modified: /home/datassd/yilin/Codes/Hand/ConditionHOI/wandb/run-20221008_181320-2h2793st/files/output.log
+2022-10-08 18:16:04,652 INFO    Thread-13 :27214 [dir_watcher.py:_on_file_modified():292] file/dir modified: /home/datassd/yilin/Codes/Hand/ConditionHOI/wandb/run-20221008_181320-2h2793st/files/output.log
+2022-10-08 18:16:06,653 INFO    Thread-13 :27214 [dir_watcher.py:_on_file_modified():292] file/dir modified: /home/datassd/yilin/Codes/Hand/ConditionHOI/wandb/run-20221008_181320-2h2793st/files/output.log
+2022-10-08 18:16:08,654 INFO    Thread-13 :27214 [dir_watcher.py:_on_file_modified():292] file/dir modified: /home/datassd/yilin/Codes/Hand/ConditionHOI/wandb/run-20221008_181320-2h2793st/files/output.log
+2022-10-08 18:16:10,068 DEBUG   HandlerThread:27214 [handler.py:handle_request():138] handle_request: stop_status
+2022-10-08 18:16:10,068 DEBUG   SenderThread:27214 [sender.py:send_request():315] send_request: stop_status
+2022-10-08 18:16:10,655 INFO    Thread-13 :27214 [dir_watcher.py:_on_file_modified():292] file/dir modified: /home/datassd/yilin/Codes/Hand/ConditionHOI/wandb/run-20221008_181320-2h2793st/files/output.log
+2022-10-08 18:16:12,655 INFO    Thread-13 :27214 [dir_watcher.py:_on_file_modified():292] file/dir modified: /home/datassd/yilin/Codes/Hand/ConditionHOI/wandb/run-20221008_181320-2h2793st/files/output.log
+2022-10-08 18:16:14,656 INFO    Thread-13 :27214 [dir_watcher.py:_on_file_modified():292] file/dir modified: /home/datassd/yilin/Codes/Hand/ConditionHOI/wandb/run-20221008_181320-2h2793st/files/output.log
+2022-10-08 18:16:16,657 INFO    Thread-13 :27214 [dir_watcher.py:_on_file_modified():292] file/dir modified: /home/datassd/yilin/Codes/Hand/ConditionHOI/wandb/run-20221008_181320-2h2793st/files/output.log
+2022-10-08 18:16:18,658 INFO    Thread-13 :27214 [dir_watcher.py:_on_file_modified():292] file/dir modified: /home/datassd/yilin/Codes/Hand/ConditionHOI/wandb/run-20221008_181320-2h2793st/files/output.log
+2022-10-08 18:16:20,659 INFO    Thread-13 :27214 [dir_watcher.py:_on_file_modified():292] file/dir modified: /home/datassd/yilin/Codes/Hand/ConditionHOI/wandb/run-20221008_181320-2h2793st/files/output.log
+2022-10-08 18:16:21,806 DEBUG   SenderThread:27214 [sender.py:send():301] send: stats
+2022-10-08 18:16:22,659 INFO    Thread-13 :27214 [dir_watcher.py:_on_file_modified():292] file/dir modified: /home/datassd/yilin/Codes/Hand/ConditionHOI/wandb/run-20221008_181320-2h2793st/files/output.log
+2022-10-08 18:16:24,660 INFO    Thread-13 :27214 [dir_watcher.py:_on_file_modified():292] file/dir modified: /home/datassd/yilin/Codes/Hand/ConditionHOI/wandb/run-20221008_181320-2h2793st/files/output.log
+2022-10-08 18:16:25,214 DEBUG   HandlerThread:27214 [handler.py:handle_request():138] handle_request: stop_status
+2022-10-08 18:16:25,214 DEBUG   SenderThread:27214 [sender.py:send_request():315] send_request: stop_status
+2022-10-08 18:16:26,661 INFO    Thread-13 :27214 [dir_watcher.py:_on_file_modified():292] file/dir modified: /home/datassd/yilin/Codes/Hand/ConditionHOI/wandb/run-20221008_181320-2h2793st/files/output.log
+2022-10-08 18:16:28,662 INFO    Thread-13 :27214 [dir_watcher.py:_on_file_modified():292] file/dir modified: /home/datassd/yilin/Codes/Hand/ConditionHOI/wandb/run-20221008_181320-2h2793st/files/output.log
+2022-10-08 18:16:30,663 INFO    Thread-13 :27214 [dir_watcher.py:_on_file_modified():292] file/dir modified: /home/datassd/yilin/Codes/Hand/ConditionHOI/wandb/run-20221008_181320-2h2793st/files/output.log
+2022-10-08 18:16:32,663 INFO    Thread-13 :27214 [dir_watcher.py:_on_file_modified():292] file/dir modified: /home/datassd/yilin/Codes/Hand/ConditionHOI/wandb/run-20221008_181320-2h2793st/files/output.log
+2022-10-08 18:16:34,664 INFO    Thread-13 :27214 [dir_watcher.py:_on_file_modified():292] file/dir modified: /home/datassd/yilin/Codes/Hand/ConditionHOI/wandb/run-20221008_181320-2h2793st/files/output.log
+2022-10-08 18:16:36,665 INFO    Thread-13 :27214 [dir_watcher.py:_on_file_modified():292] file/dir modified: /home/datassd/yilin/Codes/Hand/ConditionHOI/wandb/run-20221008_181320-2h2793st/files/output.log
+2022-10-08 18:16:38,666 INFO    Thread-13 :27214 [dir_watcher.py:_on_file_modified():292] file/dir modified: /home/datassd/yilin/Codes/Hand/ConditionHOI/wandb/run-20221008_181320-2h2793st/files/output.log
+2022-10-08 18:16:40,358 DEBUG   HandlerThread:27214 [handler.py:handle_request():138] handle_request: stop_status
+2022-10-08 18:16:40,359 DEBUG   SenderThread:27214 [sender.py:send_request():315] send_request: stop_status
+2022-10-08 18:16:40,666 INFO    Thread-13 :27214 [dir_watcher.py:_on_file_modified():292] file/dir modified: /home/datassd/yilin/Codes/Hand/ConditionHOI/wandb/run-20221008_181320-2h2793st/files/output.log
+2022-10-08 18:16:42,667 INFO    Thread-13 :27214 [dir_watcher.py:_on_file_modified():292] file/dir modified: /home/datassd/yilin/Codes/Hand/ConditionHOI/wandb/run-20221008_181320-2h2793st/files/output.log
+2022-10-08 18:16:44,667 INFO    Thread-13 :27214 [dir_watcher.py:_on_file_modified():292] file/dir modified: /home/datassd/yilin/Codes/Hand/ConditionHOI/wandb/run-20221008_181320-2h2793st/files/output.log
+2022-10-08 18:16:46,668 INFO    Thread-13 :27214 [dir_watcher.py:_on_file_modified():292] file/dir modified: /home/datassd/yilin/Codes/Hand/ConditionHOI/wandb/run-20221008_181320-2h2793st/files/output.log
+2022-10-08 18:16:48,669 INFO    Thread-13 :27214 [dir_watcher.py:_on_file_modified():292] file/dir modified: /home/datassd/yilin/Codes/Hand/ConditionHOI/wandb/run-20221008_181320-2h2793st/files/output.log
+2022-10-08 18:16:50,670 INFO    Thread-13 :27214 [dir_watcher.py:_on_file_modified():292] file/dir modified: /home/datassd/yilin/Codes/Hand/ConditionHOI/wandb/run-20221008_181320-2h2793st/files/output.log
+2022-10-08 18:16:52,322 DEBUG   SenderThread:27214 [sender.py:send():301] send: stats
+2022-10-08 18:16:52,670 INFO    Thread-13 :27214 [dir_watcher.py:_on_file_modified():292] file/dir modified: /home/datassd/yilin/Codes/Hand/ConditionHOI/wandb/run-20221008_181320-2h2793st/files/output.log
+2022-10-08 18:16:54,671 INFO    Thread-13 :27214 [dir_watcher.py:_on_file_modified():292] file/dir modified: /home/datassd/yilin/Codes/Hand/ConditionHOI/wandb/run-20221008_181320-2h2793st/files/output.log
+2022-10-08 18:16:55,503 DEBUG   HandlerThread:27214 [handler.py:handle_request():138] handle_request: stop_status
+2022-10-08 18:16:55,503 DEBUG   SenderThread:27214 [sender.py:send_request():315] send_request: stop_status
+2022-10-08 18:16:56,672 INFO    Thread-13 :27214 [dir_watcher.py:_on_file_modified():292] file/dir modified: /home/datassd/yilin/Codes/Hand/ConditionHOI/wandb/run-20221008_181320-2h2793st/files/output.log
+2022-10-08 18:16:58,673 INFO    Thread-13 :27214 [dir_watcher.py:_on_file_modified():292] file/dir modified: /home/datassd/yilin/Codes/Hand/ConditionHOI/wandb/run-20221008_181320-2h2793st/files/output.log
+2022-10-08 18:17:00,674 INFO    Thread-13 :27214 [dir_watcher.py:_on_file_modified():292] file/dir modified: /home/datassd/yilin/Codes/Hand/ConditionHOI/wandb/run-20221008_181320-2h2793st/files/output.log
+2022-10-08 18:17:02,674 INFO    Thread-13 :27214 [dir_watcher.py:_on_file_modified():292] file/dir modified: /home/datassd/yilin/Codes/Hand/ConditionHOI/wandb/run-20221008_181320-2h2793st/files/output.log
+2022-10-08 18:17:04,675 INFO    Thread-13 :27214 [dir_watcher.py:_on_file_modified():292] file/dir modified: /home/datassd/yilin/Codes/Hand/ConditionHOI/wandb/run-20221008_181320-2h2793st/files/output.log
+2022-10-08 18:17:06,676 INFO    Thread-13 :27214 [dir_watcher.py:_on_file_modified():292] file/dir modified: /home/datassd/yilin/Codes/Hand/ConditionHOI/wandb/run-20221008_181320-2h2793st/files/output.log
+2022-10-08 18:17:08,677 INFO    Thread-13 :27214 [dir_watcher.py:_on_file_modified():292] file/dir modified: /home/datassd/yilin/Codes/Hand/ConditionHOI/wandb/run-20221008_181320-2h2793st/files/output.log
+2022-10-08 18:17:10,678 INFO    Thread-13 :27214 [dir_watcher.py:_on_file_modified():292] file/dir modified: /home/datassd/yilin/Codes/Hand/ConditionHOI/wandb/run-20221008_181320-2h2793st/files/output.log
+2022-10-08 18:17:10,678 DEBUG   HandlerThread:27214 [handler.py:handle_request():138] handle_request: stop_status
+2022-10-08 18:17:10,678 DEBUG   SenderThread:27214 [sender.py:send_request():315] send_request: stop_status
+2022-10-08 18:17:12,678 INFO    Thread-13 :27214 [dir_watcher.py:_on_file_modified():292] file/dir modified: /home/datassd/yilin/Codes/Hand/ConditionHOI/wandb/run-20221008_181320-2h2793st/files/output.log
+2022-10-08 18:17:14,679 INFO    Thread-13 :27214 [dir_watcher.py:_on_file_modified():292] file/dir modified: /home/datassd/yilin/Codes/Hand/ConditionHOI/wandb/run-20221008_181320-2h2793st/files/output.log
+2022-10-08 18:17:16,679 INFO    Thread-13 :27214 [dir_watcher.py:_on_file_modified():292] file/dir modified: /home/datassd/yilin/Codes/Hand/ConditionHOI/wandb/run-20221008_181320-2h2793st/files/output.log
+2022-10-08 18:17:18,680 INFO    Thread-13 :27214 [dir_watcher.py:_on_file_modified():292] file/dir modified: /home/datassd/yilin/Codes/Hand/ConditionHOI/wandb/run-20221008_181320-2h2793st/files/output.log
+2022-10-08 18:17:20,681 INFO    Thread-13 :27214 [dir_watcher.py:_on_file_modified():292] file/dir modified: /home/datassd/yilin/Codes/Hand/ConditionHOI/wandb/run-20221008_181320-2h2793st/files/output.log
+2022-10-08 18:17:22,682 INFO    Thread-13 :27214 [dir_watcher.py:_on_file_modified():292] file/dir modified: /home/datassd/yilin/Codes/Hand/ConditionHOI/wandb/run-20221008_181320-2h2793st/files/output.log
+2022-10-08 18:17:22,834 DEBUG   SenderThread:27214 [sender.py:send():301] send: stats
+2022-10-08 18:17:24,682 INFO    Thread-13 :27214 [dir_watcher.py:_on_file_modified():292] file/dir modified: /home/datassd/yilin/Codes/Hand/ConditionHOI/wandb/run-20221008_181320-2h2793st/files/output.log
+2022-10-08 18:17:25,817 DEBUG   HandlerThread:27214 [handler.py:handle_request():138] handle_request: stop_status
+2022-10-08 18:17:25,817 DEBUG   SenderThread:27214 [sender.py:send_request():315] send_request: stop_status
+2022-10-08 18:17:26,683 INFO    Thread-13 :27214 [dir_watcher.py:_on_file_modified():292] file/dir modified: /home/datassd/yilin/Codes/Hand/ConditionHOI/wandb/run-20221008_181320-2h2793st/files/output.log
+2022-10-08 18:17:28,684 INFO    Thread-13 :27214 [dir_watcher.py:_on_file_modified():292] file/dir modified: /home/datassd/yilin/Codes/Hand/ConditionHOI/wandb/run-20221008_181320-2h2793st/files/output.log
+2022-10-08 18:17:30,685 INFO    Thread-13 :27214 [dir_watcher.py:_on_file_modified():292] file/dir modified: /home/datassd/yilin/Codes/Hand/ConditionHOI/wandb/run-20221008_181320-2h2793st/files/output.log
+2022-10-08 18:17:32,685 INFO    Thread-13 :27214 [dir_watcher.py:_on_file_modified():292] file/dir modified: /home/datassd/yilin/Codes/Hand/ConditionHOI/wandb/run-20221008_181320-2h2793st/files/output.log
+2022-10-08 18:17:34,685 INFO    Thread-13 :27214 [dir_watcher.py:_on_file_modified():292] file/dir modified: /home/datassd/yilin/Codes/Hand/ConditionHOI/wandb/run-20221008_181320-2h2793st/files/output.log
+2022-10-08 18:17:36,686 INFO    Thread-13 :27214 [dir_watcher.py:_on_file_modified():292] file/dir modified: /home/datassd/yilin/Codes/Hand/ConditionHOI/wandb/run-20221008_181320-2h2793st/files/output.log
+2022-10-08 18:17:38,687 INFO    Thread-13 :27214 [dir_watcher.py:_on_file_modified():292] file/dir modified: /home/datassd/yilin/Codes/Hand/ConditionHOI/wandb/run-20221008_181320-2h2793st/files/output.log
+2022-10-08 18:17:40,688 INFO    Thread-13 :27214 [dir_watcher.py:_on_file_modified():292] file/dir modified: /home/datassd/yilin/Codes/Hand/ConditionHOI/wandb/run-20221008_181320-2h2793st/files/output.log
+2022-10-08 18:17:40,960 DEBUG   HandlerThread:27214 [handler.py:handle_request():138] handle_request: stop_status
+2022-10-08 18:17:40,960 DEBUG   SenderThread:27214 [sender.py:send_request():315] send_request: stop_status
+2022-10-08 18:17:42,688 INFO    Thread-13 :27214 [dir_watcher.py:_on_file_modified():292] file/dir modified: /home/datassd/yilin/Codes/Hand/ConditionHOI/wandb/run-20221008_181320-2h2793st/files/output.log
+2022-10-08 18:17:44,689 INFO    Thread-13 :27214 [dir_watcher.py:_on_file_modified():292] file/dir modified: /home/datassd/yilin/Codes/Hand/ConditionHOI/wandb/run-20221008_181320-2h2793st/files/output.log
+2022-10-08 18:17:46,690 INFO    Thread-13 :27214 [dir_watcher.py:_on_file_modified():292] file/dir modified: /home/datassd/yilin/Codes/Hand/ConditionHOI/wandb/run-20221008_181320-2h2793st/files/output.log
+2022-10-08 18:17:48,691 INFO    Thread-13 :27214 [dir_watcher.py:_on_file_modified():292] file/dir modified: /home/datassd/yilin/Codes/Hand/ConditionHOI/wandb/run-20221008_181320-2h2793st/files/output.log
+2022-10-08 18:17:50,691 INFO    Thread-13 :27214 [dir_watcher.py:_on_file_modified():292] file/dir modified: /home/datassd/yilin/Codes/Hand/ConditionHOI/wandb/run-20221008_181320-2h2793st/files/output.log
+2022-10-08 18:17:52,692 INFO    Thread-13 :27214 [dir_watcher.py:_on_file_modified():292] file/dir modified: /home/datassd/yilin/Codes/Hand/ConditionHOI/wandb/run-20221008_181320-2h2793st/files/output.log
+2022-10-08 18:17:53,324 DEBUG   SenderThread:27214 [sender.py:send():301] send: stats
+2022-10-08 18:17:54,693 INFO    Thread-13 :27214 [dir_watcher.py:_on_file_modified():292] file/dir modified: /home/datassd/yilin/Codes/Hand/ConditionHOI/wandb/run-20221008_181320-2h2793st/files/output.log
+2022-10-08 18:17:56,100 DEBUG   HandlerThread:27214 [handler.py:handle_request():138] handle_request: stop_status
+2022-10-08 18:17:56,100 DEBUG   SenderThread:27214 [sender.py:send_request():315] send_request: stop_status
+2022-10-08 18:17:56,693 INFO    Thread-13 :27214 [dir_watcher.py:_on_file_modified():292] file/dir modified: /home/datassd/yilin/Codes/Hand/ConditionHOI/wandb/run-20221008_181320-2h2793st/files/output.log
+2022-10-08 18:17:58,694 INFO    Thread-13 :27214 [dir_watcher.py:_on_file_modified():292] file/dir modified: /home/datassd/yilin/Codes/Hand/ConditionHOI/wandb/run-20221008_181320-2h2793st/files/output.log
+2022-10-08 18:18:00,695 INFO    Thread-13 :27214 [dir_watcher.py:_on_file_modified():292] file/dir modified: /home/datassd/yilin/Codes/Hand/ConditionHOI/wandb/run-20221008_181320-2h2793st/files/output.log
+2022-10-08 18:18:02,696 INFO    Thread-13 :27214 [dir_watcher.py:_on_file_modified():292] file/dir modified: /home/datassd/yilin/Codes/Hand/ConditionHOI/wandb/run-20221008_181320-2h2793st/files/output.log
+2022-10-08 18:18:04,697 INFO    Thread-13 :27214 [dir_watcher.py:_on_file_modified():292] file/dir modified: /home/datassd/yilin/Codes/Hand/ConditionHOI/wandb/run-20221008_181320-2h2793st/files/output.log
+2022-10-08 18:18:06,697 INFO    Thread-13 :27214 [dir_watcher.py:_on_file_modified():292] file/dir modified: /home/datassd/yilin/Codes/Hand/ConditionHOI/wandb/run-20221008_181320-2h2793st/files/output.log
+2022-10-08 18:18:08,698 INFO    Thread-13 :27214 [dir_watcher.py:_on_file_modified():292] file/dir modified: /home/datassd/yilin/Codes/Hand/ConditionHOI/wandb/run-20221008_181320-2h2793st/files/output.log
+2022-10-08 18:18:10,698 INFO    Thread-13 :27214 [dir_watcher.py:_on_file_modified():292] file/dir modified: /home/datassd/yilin/Codes/Hand/ConditionHOI/wandb/run-20221008_181320-2h2793st/files/output.log
+2022-10-08 18:18:11,235 DEBUG   HandlerThread:27214 [handler.py:handle_request():138] handle_request: stop_status
+2022-10-08 18:18:11,235 DEBUG   SenderThread:27214 [sender.py:send_request():315] send_request: stop_status
+2022-10-08 18:18:12,699 INFO    Thread-13 :27214 [dir_watcher.py:_on_file_modified():292] file/dir modified: /home/datassd/yilin/Codes/Hand/ConditionHOI/wandb/run-20221008_181320-2h2793st/files/output.log
+2022-10-08 18:18:14,700 INFO    Thread-13 :27214 [dir_watcher.py:_on_file_modified():292] file/dir modified: /home/datassd/yilin/Codes/Hand/ConditionHOI/wandb/run-20221008_181320-2h2793st/files/output.log
+2022-10-08 18:18:16,700 INFO    Thread-13 :27214 [dir_watcher.py:_on_file_modified():292] file/dir modified: /home/datassd/yilin/Codes/Hand/ConditionHOI/wandb/run-20221008_181320-2h2793st/files/output.log
+2022-10-08 18:18:18,701 INFO    Thread-13 :27214 [dir_watcher.py:_on_file_modified():292] file/dir modified: /home/datassd/yilin/Codes/Hand/ConditionHOI/wandb/run-20221008_181320-2h2793st/files/output.log
+2022-10-08 18:18:20,702 INFO    Thread-13 :27214 [dir_watcher.py:_on_file_modified():292] file/dir modified: /home/datassd/yilin/Codes/Hand/ConditionHOI/wandb/run-20221008_181320-2h2793st/files/output.log
+2022-10-08 18:18:22,703 INFO    Thread-13 :27214 [dir_watcher.py:_on_file_modified():292] file/dir modified: /home/datassd/yilin/Codes/Hand/ConditionHOI/wandb/run-20221008_181320-2h2793st/files/output.log
+2022-10-08 18:18:23,796 DEBUG   SenderThread:27214 [sender.py:send():301] send: stats
+2022-10-08 18:18:24,703 INFO    Thread-13 :27214 [dir_watcher.py:_on_file_modified():292] file/dir modified: /home/datassd/yilin/Codes/Hand/ConditionHOI/wandb/run-20221008_181320-2h2793st/files/output.log
+2022-10-08 18:18:26,383 DEBUG   HandlerThread:27214 [handler.py:handle_request():138] handle_request: stop_status
+2022-10-08 18:18:26,383 DEBUG   SenderThread:27214 [sender.py:send_request():315] send_request: stop_status
+2022-10-08 18:18:26,704 INFO    Thread-13 :27214 [dir_watcher.py:_on_file_modified():292] file/dir modified: /home/datassd/yilin/Codes/Hand/ConditionHOI/wandb/run-20221008_181320-2h2793st/files/output.log
+2022-10-08 18:18:28,142 DEBUG   SenderThread:27214 [sender.py:send():301] send: exit
+2022-10-08 18:18:28,142 DEBUG   HandlerThread:27214 [handler.py:handle_request():138] handle_request: poll_exit
+2022-10-08 18:18:28,142 INFO    SenderThread:27214 [sender.py:send_exit():437] handling exit code: 255
+2022-10-08 18:18:28,142 INFO    SenderThread:27214 [sender.py:send_exit():439] handling runtime: 307
+2022-10-08 18:18:28,143 INFO    SenderThread:27214 [sender.py:_save_file():1155] saving file wandb-summary.json with policy end
+2022-10-08 18:18:28,143 INFO    SenderThread:27214 [sender.py:send_exit():445] send defer
+2022-10-08 18:18:28,143 DEBUG   SenderThread:27214 [sender.py:send_request():315] send_request: poll_exit
+2022-10-08 18:18:28,143 DEBUG   HandlerThread:27214 [handler.py:handle_request():138] handle_request: defer
+2022-10-08 18:18:28,143 INFO    HandlerThread:27214 [handler.py:handle_request_defer():161] handle defer: 0
+2022-10-08 18:18:28,143 DEBUG   SenderThread:27214 [sender.py:send_request():315] send_request: defer
+2022-10-08 18:18:28,144 INFO    SenderThread:27214 [sender.py:send_request_defer():454] handle sender defer: 0
+2022-10-08 18:18:28,144 INFO    SenderThread:27214 [sender.py:transition_state():458] send defer: 1
+2022-10-08 18:18:28,144 DEBUG   HandlerThread:27214 [handler.py:handle_request():138] handle_request: defer
+2022-10-08 18:18:28,144 INFO    HandlerThread:27214 [handler.py:handle_request_defer():161] handle defer: 1
+2022-10-08 18:18:28,181 DEBUG   SenderThread:27214 [sender.py:send_request():315] send_request: defer
+2022-10-08 18:18:28,181 INFO    SenderThread:27214 [sender.py:send_request_defer():454] handle sender defer: 1
+2022-10-08 18:18:28,181 INFO    SenderThread:27214 [sender.py:transition_state():458] send defer: 2
+2022-10-08 18:18:28,181 DEBUG   SenderThread:27214 [sender.py:send():301] send: stats
+2022-10-08 18:18:28,181 DEBUG   HandlerThread:27214 [handler.py:handle_request():138] handle_request: defer
+2022-10-08 18:18:28,181 INFO    HandlerThread:27214 [handler.py:handle_request_defer():161] handle defer: 2
+2022-10-08 18:18:28,181 DEBUG   SenderThread:27214 [sender.py:send_request():315] send_request: defer
+2022-10-08 18:18:28,182 INFO    SenderThread:27214 [sender.py:send_request_defer():454] handle sender defer: 2
+2022-10-08 18:18:28,182 INFO    SenderThread:27214 [sender.py:transition_state():458] send defer: 3
+2022-10-08 18:18:28,182 DEBUG   HandlerThread:27214 [handler.py:handle_request():138] handle_request: defer
+2022-10-08 18:18:28,182 INFO    HandlerThread:27214 [handler.py:handle_request_defer():161] handle defer: 3
+2022-10-08 18:18:28,182 DEBUG   SenderThread:27214 [sender.py:send_request():315] send_request: defer
+2022-10-08 18:18:28,182 INFO    SenderThread:27214 [sender.py:send_request_defer():454] handle sender defer: 3
+2022-10-08 18:18:28,182 INFO    SenderThread:27214 [sender.py:transition_state():458] send defer: 4
+2022-10-08 18:18:28,182 DEBUG   HandlerThread:27214 [handler.py:handle_request():138] handle_request: defer
+2022-10-08 18:18:28,182 INFO    HandlerThread:27214 [handler.py:handle_request_defer():161] handle defer: 4
+2022-10-08 18:18:28,182 DEBUG   SenderThread:27214 [sender.py:send():301] send: summary
+2022-10-08 18:18:28,182 INFO    SenderThread:27214 [sender.py:_save_file():1155] saving file wandb-summary.json with policy end
+2022-10-08 18:18:28,183 DEBUG   SenderThread:27214 [sender.py:send_request():315] send_request: defer
+2022-10-08 18:18:28,183 INFO    SenderThread:27214 [sender.py:send_request_defer():454] handle sender defer: 4
+2022-10-08 18:18:28,183 INFO    SenderThread:27214 [sender.py:transition_state():458] send defer: 5
+2022-10-08 18:18:28,183 DEBUG   HandlerThread:27214 [handler.py:handle_request():138] handle_request: defer
+2022-10-08 18:18:28,183 INFO    HandlerThread:27214 [handler.py:handle_request_defer():161] handle defer: 5
+2022-10-08 18:18:28,183 DEBUG   SenderThread:27214 [sender.py:send_request():315] send_request: defer
+2022-10-08 18:18:28,183 INFO    SenderThread:27214 [sender.py:send_request_defer():454] handle sender defer: 5
+2022-10-08 18:18:28,183 INFO    SenderThread:27214 [sender.py:transition_state():458] send defer: 6
+2022-10-08 18:18:28,183 DEBUG   HandlerThread:27214 [handler.py:handle_request():138] handle_request: defer
+2022-10-08 18:18:28,183 INFO    HandlerThread:27214 [handler.py:handle_request_defer():161] handle defer: 6
+2022-10-08 18:18:28,183 DEBUG   SenderThread:27214 [sender.py:send_request():315] send_request: defer
+2022-10-08 18:18:28,183 INFO    SenderThread:27214 [sender.py:send_request_defer():454] handle sender defer: 6
+2022-10-08 18:18:28,244 DEBUG   HandlerThread:27214 [handler.py:handle_request():138] handle_request: poll_exit
+2022-10-08 18:18:28,705 INFO    Thread-13 :27214 [dir_watcher.py:_on_file_modified():292] file/dir modified: /home/datassd/yilin/Codes/Hand/ConditionHOI/wandb/run-20221008_181320-2h2793st/files/wandb-summary.json
+2022-10-08 18:18:28,706 INFO    Thread-13 :27214 [dir_watcher.py:_on_file_modified():292] file/dir modified: /home/datassd/yilin/Codes/Hand/ConditionHOI/wandb/run-20221008_181320-2h2793st/files/output.log
+2022-10-08 18:18:30,652 INFO    SenderThread:27214 [sender.py:transition_state():458] send defer: 7
+2022-10-08 18:18:30,653 DEBUG   SenderThread:27214 [sender.py:send_request():315] send_request: poll_exit
+2022-10-08 18:18:30,654 DEBUG   HandlerThread:27214 [handler.py:handle_request():138] handle_request: defer
+2022-10-08 18:18:30,654 INFO    HandlerThread:27214 [handler.py:handle_request_defer():161] handle defer: 7
+2022-10-08 18:18:30,655 DEBUG   SenderThread:27214 [sender.py:send_request():315] send_request: defer
+2022-10-08 18:18:30,655 INFO    SenderThread:27214 [sender.py:send_request_defer():454] handle sender defer: 7
+2022-10-08 18:18:30,655 INFO    SenderThread:27214 [dir_watcher.py:finish():362] shutting down directory watcher
+2022-10-08 18:18:30,706 INFO    Thread-13 :27214 [dir_watcher.py:_on_file_modified():292] file/dir modified: /home/datassd/yilin/Codes/Hand/ConditionHOI/wandb/run-20221008_181320-2h2793st/files/output.log
+2022-10-08 18:18:30,707 INFO    SenderThread:27214 [dir_watcher.py:finish():392] scan: /home/datassd/yilin/Codes/Hand/ConditionHOI/wandb/run-20221008_181320-2h2793st/files
+2022-10-08 18:18:30,708 INFO    SenderThread:27214 [dir_watcher.py:finish():406] scan save: /home/datassd/yilin/Codes/Hand/ConditionHOI/wandb/run-20221008_181320-2h2793st/files/config.yaml config.yaml
+2022-10-08 18:18:30,708 INFO    SenderThread:27214 [dir_watcher.py:finish():406] scan save: /home/datassd/yilin/Codes/Hand/ConditionHOI/wandb/run-20221008_181320-2h2793st/files/wandb-metadata.json wandb-metadata.json
+2022-10-08 18:18:30,708 INFO    SenderThread:27214 [dir_watcher.py:finish():406] scan save: /home/datassd/yilin/Codes/Hand/ConditionHOI/wandb/run-20221008_181320-2h2793st/files/conda-environment.yaml conda-environment.yaml
+2022-10-08 18:18:30,709 INFO    SenderThread:27214 [dir_watcher.py:finish():406] scan save: /home/datassd/yilin/Codes/Hand/ConditionHOI/wandb/run-20221008_181320-2h2793st/files/requirements.txt requirements.txt
+2022-10-08 18:18:30,715 INFO    SenderThread:27214 [dir_watcher.py:finish():406] scan save: /home/datassd/yilin/Codes/Hand/ConditionHOI/wandb/run-20221008_181320-2h2793st/files/wandb-summary.json wandb-summary.json
+2022-10-08 18:18:30,727 INFO    SenderThread:27214 [dir_watcher.py:finish():406] scan save: /home/datassd/yilin/Codes/Hand/ConditionHOI/wandb/run-20221008_181320-2h2793st/files/output.log output.log
+2022-10-08 18:18:30,728 INFO    SenderThread:27214 [sender.py:transition_state():458] send defer: 8
+2022-10-08 18:18:30,739 DEBUG   HandlerThread:27214 [handler.py:handle_request():138] handle_request: defer
+2022-10-08 18:18:30,739 INFO    HandlerThread:27214 [handler.py:handle_request_defer():161] handle defer: 8
+2022-10-08 18:18:30,740 DEBUG   SenderThread:27214 [sender.py:send_request():315] send_request: defer
+2022-10-08 18:18:30,740 INFO    SenderThread:27214 [sender.py:send_request_defer():454] handle sender defer: 8
+2022-10-08 18:18:30,740 INFO    SenderThread:27214 [file_pusher.py:finish():168] shutting down file pusher
+2022-10-08 18:18:30,756 DEBUG   HandlerThread:27214 [handler.py:handle_request():138] handle_request: poll_exit
+2022-10-08 18:18:30,756 DEBUG   SenderThread:27214 [sender.py:send_request():315] send_request: poll_exit
+2022-10-08 18:18:30,858 DEBUG   HandlerThread:27214 [handler.py:handle_request():138] handle_request: poll_exit
+2022-10-08 18:18:30,858 DEBUG   SenderThread:27214 [sender.py:send_request():315] send_request: poll_exit
+2022-10-08 18:18:30,960 DEBUG   HandlerThread:27214 [handler.py:handle_request():138] handle_request: poll_exit
+2022-10-08 18:18:30,961 DEBUG   SenderThread:27214 [sender.py:send_request():315] send_request: poll_exit
+2022-10-08 18:18:31,063 DEBUG   HandlerThread:27214 [handler.py:handle_request():138] handle_request: poll_exit
+2022-10-08 18:18:31,063 DEBUG   SenderThread:27214 [sender.py:send_request():315] send_request: poll_exit
+2022-10-08 18:18:31,165 DEBUG   HandlerThread:27214 [handler.py:handle_request():138] handle_request: poll_exit
+2022-10-08 18:18:31,165 DEBUG   SenderThread:27214 [sender.py:send_request():315] send_request: poll_exit
+2022-10-08 18:18:31,267 DEBUG   HandlerThread:27214 [handler.py:handle_request():138] handle_request: poll_exit
+2022-10-08 18:18:31,268 DEBUG   SenderThread:27214 [sender.py:send_request():315] send_request: poll_exit
+2022-10-08 18:18:31,273 INFO    Thread-19 :27214 [upload_job.py:push():139] Uploaded file /home/datassd/yilin/Codes/Hand/ConditionHOI/wandb/run-20221008_181320-2h2793st/files/conda-environment.yaml
+2022-10-08 18:18:31,276 INFO    Thread-21 :27214 [upload_job.py:push():139] Uploaded file /home/datassd/yilin/Codes/Hand/ConditionHOI/wandb/run-20221008_181320-2h2793st/files/wandb-summary.json
+2022-10-08 18:18:31,281 INFO    Thread-22 :27214 [upload_job.py:push():139] Uploaded file /home/datassd/yilin/Codes/Hand/ConditionHOI/wandb/run-20221008_181320-2h2793st/files/output.log
+2022-10-08 18:18:31,298 INFO    Thread-18 :27214 [upload_job.py:push():139] Uploaded file /home/datassd/yilin/Codes/Hand/ConditionHOI/wandb/run-20221008_181320-2h2793st/files/config.yaml
+2022-10-08 18:18:31,369 DEBUG   HandlerThread:27214 [handler.py:handle_request():138] handle_request: poll_exit
+2022-10-08 18:18:31,370 DEBUG   SenderThread:27214 [sender.py:send_request():315] send_request: poll_exit
+2022-10-08 18:18:31,383 INFO    Thread-20 :27214 [upload_job.py:push():139] Uploaded file /home/datassd/yilin/Codes/Hand/ConditionHOI/wandb/run-20221008_181320-2h2793st/files/requirements.txt
+2022-10-08 18:18:31,472 DEBUG   HandlerThread:27214 [handler.py:handle_request():138] handle_request: poll_exit
+2022-10-08 18:18:31,472 DEBUG   SenderThread:27214 [sender.py:send_request():315] send_request: poll_exit
+2022-10-08 18:18:31,574 DEBUG   HandlerThread:27214 [handler.py:handle_request():138] handle_request: poll_exit
+2022-10-08 18:18:31,574 DEBUG   SenderThread:27214 [sender.py:send_request():315] send_request: poll_exit
+2022-10-08 18:18:31,584 INFO    Thread-12 :27214 [sender.py:transition_state():458] send defer: 9
+2022-10-08 18:18:31,584 DEBUG   HandlerThread:27214 [handler.py:handle_request():138] handle_request: defer
+2022-10-08 18:18:31,585 INFO    HandlerThread:27214 [handler.py:handle_request_defer():161] handle defer: 9
+2022-10-08 18:18:31,585 DEBUG   SenderThread:27214 [sender.py:send_request():315] send_request: defer
+2022-10-08 18:18:31,585 INFO    SenderThread:27214 [sender.py:send_request_defer():454] handle sender defer: 9
+2022-10-08 18:18:31,676 DEBUG   HandlerThread:27214 [handler.py:handle_request():138] handle_request: poll_exit
+2022-10-08 18:18:31,797 INFO    SenderThread:27214 [sender.py:transition_state():458] send defer: 10
+2022-10-08 18:18:31,797 DEBUG   SenderThread:27214 [sender.py:send_request():315] send_request: poll_exit
+2022-10-08 18:18:31,798 DEBUG   HandlerThread:27214 [handler.py:handle_request():138] handle_request: defer
+2022-10-08 18:18:31,798 INFO    HandlerThread:27214 [handler.py:handle_request_defer():161] handle defer: 10
+2022-10-08 18:18:31,799 DEBUG   SenderThread:27214 [sender.py:send_request():315] send_request: defer
+2022-10-08 18:18:31,799 INFO    SenderThread:27214 [sender.py:send_request_defer():454] handle sender defer: 10
+2022-10-08 18:18:31,799 INFO    SenderThread:27214 [sender.py:transition_state():458] send defer: 11
+2022-10-08 18:18:31,800 DEBUG   SenderThread:27214 [sender.py:send():301] send: final
+2022-10-08 18:18:31,800 DEBUG   HandlerThread:27214 [handler.py:handle_request():138] handle_request: defer
+2022-10-08 18:18:31,801 DEBUG   SenderThread:27214 [sender.py:send():301] send: footer
+2022-10-08 18:18:31,801 INFO    HandlerThread:27214 [handler.py:handle_request_defer():161] handle defer: 11
+2022-10-08 18:18:31,801 DEBUG   SenderThread:27214 [sender.py:send_request():315] send_request: defer
+2022-10-08 18:18:31,801 INFO    SenderThread:27214 [sender.py:send_request_defer():454] handle sender defer: 11
+2022-10-08 18:18:31,900 DEBUG   HandlerThread:27214 [handler.py:handle_request():138] handle_request: poll_exit
+2022-10-08 18:18:31,900 DEBUG   SenderThread:27214 [sender.py:send_request():315] send_request: poll_exit
+2022-10-08 18:18:31,901 INFO    SenderThread:27214 [file_pusher.py:join():173] waiting for file pusher
+2022-10-08 18:18:32,305 DEBUG   HandlerThread:27214 [handler.py:handle_request():138] handle_request: sampled_history
+2022-10-08 18:18:32,307 DEBUG   HandlerThread:27214 [handler.py:handle_request():138] handle_request: get_summary
+2022-10-08 18:18:32,308 INFO    MainThread:27214 [wandb_run.py:_footer_history_summary_info():3321] rendering history
+2022-10-08 18:18:32,308 INFO    MainThread:27214 [wandb_run.py:_footer_history_summary_info():3353] rendering summary
+2022-10-08 18:18:32,308 INFO    MainThread:27214 [wandb_run.py:_footer_sync_info():3277] logging synced files
+2022-10-08 18:18:32,309 DEBUG   HandlerThread:27214 [handler.py:handle_request():138] handle_request: shutdown
+2022-10-08 18:18:32,310 INFO    HandlerThread:27214 [handler.py:finish():807] shutting down handler
+2022-10-08 18:18:32,801 INFO    WriterThread:27214 [datastore.py:close():279] close: /home/datassd/yilin/Codes/Hand/ConditionHOI/wandb/run-20221008_181320-2h2793st/run-2h2793st.wandb
+2022-10-08 18:18:33,204 INFO    SenderThread:27214 [sender.py:finish():1315] shutting down sender
+2022-10-08 18:18:33,204 INFO    SenderThread:27214 [file_pusher.py:finish():168] shutting down file pusher
+2022-10-08 18:18:33,204 INFO    SenderThread:27214 [file_pusher.py:join():173] waiting for file pusher
+2022-10-08 18:18:33,314 INFO    MainThread:27214 [internal.py:handle_exit():78] Internal process exited

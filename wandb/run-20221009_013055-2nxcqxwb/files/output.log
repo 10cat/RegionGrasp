@@ -1,0 +1,131 @@
+train epoch:1:   0%|                                                                                                                                                                  | 0/20227 [00:00<?, ?it/s]/home/yilin/anaconda3/envs/pytorch3d/lib/python3.8/site-packages/torch/nn/modules/loss.py:97: UserWarning: Using a target size (torch.Size([16, 1, 3000])) that is different to the input size (torch.Size([16, 3000])). This will likely lead to incorrect results due to broadcasting. Please ensure they have the same size.
+  return F.l1_loss(input, target, reduction=self.reduction)
+[Function: model_forward start...]
+[Function: forward start...]
+[Function: forward finished, spent time: 0.19747782s]
+[Function: forward start...]
+[Function: forward finished, spent time: 0.05115151s]
+[Function: forward start...]
+[Function: forward finished, spent time: 0.16134071s]
+[Function: feat_hand_fusion start...]
+[Function: feat_hand_fusion finished, spent time: 0.29731059s]
+[Function: feat_om_fusion start...]
+[Function: feat_om_fusion finished, spent time: 0.43604827s]
+[Function: model_forward finished, spent time: 1.35855865s]
+[Function: model_update start...]
+train epoch:1:   0%|                                                                                                                                                       | 1/20227 [00:03<22:27:26,  4.00s/it]
+[Function: model_update finished, spent time: 2.54485798s]
+[Function: model_forward start...]
+[Function: forward start...]
+[Function: forward finished, spent time: 0.16104293s]
+[Function: forward start...]
+[Function: forward finished, spent time: 0.04515886s]
+[Function: forward start...]
+[Function: forward finished, spent time: 0.15736485s]
+[Function: feat_hand_fusion start...]
+[Function: feat_hand_fusion finished, spent time: 0.30267572s]
+[Function: feat_om_fusion start...]
+[Function: feat_om_fusion finished, spent time: 0.42134881s]
+[Function: model_forward finished, spent time: 1.30876708s]
+
+train epoch:1:   0%|                                                                                                                                                       | 2/20227 [00:07<22:12:09,  3.95s/it]
+[Function: model_update finished, spent time: 2.53720665s]
+[Function: model_forward start...]
+[Function: forward start...]
+[Function: forward finished, spent time: 0.16125178s]
+[Function: forward start...]
+[Function: forward finished, spent time: 0.04458475s]
+[Function: forward start...]
+[Function: forward finished, spent time: 0.15784574s]
+[Function: feat_hand_fusion start...]
+[Function: feat_hand_fusion finished, spent time: 0.29416966s]
+[Function: feat_om_fusion start...]
+[Function: feat_om_fusion finished, spent time: 0.42441273s]
+[Function: model_forward finished, spent time: 1.29613996s]
+
+train epoch:1:   0%|                                                                                                                                                       | 3/20227 [00:11<22:04:33,  3.93s/it]
+[Function: model_update finished, spent time: 2.53409886s]
+[Function: model_forward start...]
+[Function: forward start...]
+[Function: forward finished, spent time: 0.15914083s]
+[Function: forward start...]
+[Function: forward finished, spent time: 0.04430485s]
+[Function: forward start...]
+[Function: forward finished, spent time: 0.15738559s]
+[Function: feat_hand_fusion start...]
+[Function: feat_hand_fusion finished, spent time: 0.29557586s]
+[Function: feat_om_fusion start...]
+[Function: feat_om_fusion finished, spent time: 0.41956091s]
+[Function: model_forward finished, spent time: 1.28868508s]
+
+train epoch:1:   0%|                                                                                                                                                       | 4/20227 [00:15<22:01:33,  3.92s/it]
+[Function: model_update finished, spent time: 2.54685903s]
+[Function: model_forward start...]
+[Function: forward start...]
+[Function: forward finished, spent time: 0.15869212s]
+[Function: forward start...]
+[Function: forward finished, spent time: 0.04411745s]
+[Function: forward start...]
+[Function: forward finished, spent time: 0.15735269s]
+[Function: feat_hand_fusion start...]
+[Function: feat_hand_fusion finished, spent time: 0.29582262s]
+[Function: feat_om_fusion start...]
+[Function: feat_om_fusion finished, spent time: 0.42063856s]
+[Function: model_forward finished, spent time: 1.28957486s]
+
+train epoch:1:   0%|                                                                                                                                                       | 5/20227 [00:19<21:58:39,  3.91s/it]
+[Function: model_update finished, spent time: 2.53770018s]
+[Function: model_forward start...]
+[Function: forward start...]
+[Function: forward finished, spent time: 0.15869880s]
+[Function: forward start...]
+[Function: forward finished, spent time: 0.04399991s]
+[Function: forward start...]
+[Function: forward finished, spent time: 0.15823793s]
+[Function: feat_hand_fusion start...]
+[Function: feat_hand_fusion finished, spent time: 0.29399204s]
+[Function: feat_om_fusion start...]
+[Function: feat_om_fusion finished, spent time: 0.42146492s]
+[Function: model_forward finished, spent time: 1.28915334s]
+
+train epoch:1:   0%|                                                                                                                                                       | 6/20227 [00:23<21:58:19,  3.91s/it]
+[Function: model_update finished, spent time: 2.54713941s]
+[Function: model_forward start...]
+train epoch:1:   0%|                                                                                                                                                       | 6/20227 [00:24<23:13:25,  4.13s/it]
+Traceback (most recent call last):
+  File "traineval.py", line 63, in <module>
+    train_val(trainloader, valloader, testloader)
+  File "traineval.py", line 24, in train_val
+    checkpoints = trainer.epoch(epoch + 1)
+  File "/home/datassd/yilin/Codes/Hand/ConditionHOI/epochbase.py", line 245, in epoch
+    self.one_batch(sample)
+  File "/home/datassd/yilin/Codes/Hand/ConditionHOI/epochbase.py", line 196, in one_batch
+    outputs = self.model_forward(data_elements)
+  File "/home/datassd/yilin/Codes/Hand/ConditionHOI/utils/utils.py", line 25, in function_timer
+    result = function(*args, **kwargs)
+  File "/home/datassd/yilin/Codes/Hand/ConditionHOI/epochbase.py", line 96, in model_forward
+    feats, SD_maps = self.ConditionNet(obj_vs, rhand_vs, region) # cSDF_maps = [pred_map_obj, pred_map_obj_masked]
+  File "/home/yilin/anaconda3/envs/pytorch3d/lib/python3.8/site-packages/torch/nn/modules/module.py", line 1051, in _call_impl
+    return forward_call(*input, **kwargs)
+  File "/home/datassd/yilin/Codes/Hand/ConditionHOI/models/ConditionNet.py", line 72, in forward
+    map_om = self.mapnet(feat_oom, N) # wo hand; w/ om
+  File "/home/yilin/anaconda3/envs/pytorch3d/lib/python3.8/site-packages/torch/nn/modules/module.py", line 1051, in _call_impl
+    return forward_call(*input, **kwargs)
+  File "/home/datassd/yilin/Codes/Hand/ConditionHOI/models/ConditionNet.py", line 121, in forward
+    x = self.activate(self.bn1(self.conv1(x)))
+  File "/home/yilin/anaconda3/envs/pytorch3d/lib/python3.8/site-packages/torch/nn/modules/module.py", line 1051, in _call_impl
+    return forward_call(*input, **kwargs)
+  File "/home/yilin/anaconda3/envs/pytorch3d/lib/python3.8/site-packages/torch/nn/modules/conv.py", line 298, in forward
+    return self._conv_forward(input, self.weight, self.bias)
+  File "/home/yilin/anaconda3/envs/pytorch3d/lib/python3.8/site-packages/torch/nn/modules/conv.py", line 294, in _conv_forward
+    return F.conv1d(input, weight, bias, self.stride,
+KeyboardInterrupt
+[Function: forward finished, spent time: 0.15919018s]
+[Function: forward start...]
+[Function: forward finished, spent time: 0.04411030s]
+[Function: forward start...]
+[Function: forward finished, spent time: 0.15738940s]
+[Function: feat_hand_fusion start...]
+[Function: feat_hand_fusion finished, spent time: 0.29228854s]
+[Function: feat_om_fusion start...]
+[Function: feat_om_fusion finished, spent time: 0.42453504s]

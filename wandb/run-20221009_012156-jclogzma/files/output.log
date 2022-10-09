@@ -1,0 +1,48 @@
+train epoch:1:   0%|                                                                                                                                                                  | 0/20227 [00:00<?, ?it/s]/home/yilin/anaconda3/envs/pytorch3d/lib/python3.8/site-packages/torch/nn/modules/loss.py:97: UserWarning: Using a target size (torch.Size([16, 1, 3000])) that is different to the input size (torch.Size([16, 3000])). This will likely lead to incorrect results due to broadcasting. Please ensure they have the same size.
+  return F.l1_loss(input, target, reduction=self.reduction)
+[Function: model_forward start...]
+[Function: model_forward finished, spent time: 1.36148691s]
+[Function: model_update start...]
+train epoch:1:   0%|                                                                                                                                                       | 1/20227 [00:04<22:34:02,  4.02s/it]
+[Function: model_update finished, spent time: 2.56664443s]
+[Function: model_forward start...]
+[Function: model_forward finished, spent time: 1.30283976s]
+
+train epoch:1:   0%|                                                                                                                                                       | 2/20227 [00:07<22:14:38,  3.96s/it]
+[Function: model_update finished, spent time: 2.54296851s]
+[Function: model_forward start...]
+[Function: model_forward finished, spent time: 1.30407381s]
+
+train epoch:1:   0%|                                                                                                                                                       | 3/20227 [00:11<22:08:02,  3.94s/it]
+[Function: model_update finished, spent time: 2.54320908s]
+[Function: model_forward start...]
+[Function: model_forward finished, spent time: 1.29102969s]
+
+train epoch:1:   0%|                                                                                                                                                       | 4/20227 [00:15<22:03:29,  3.93s/it]
+[Function: model_update finished, spent time: 2.53948021s]
+[Function: model_forward start...]
+[Function: model_forward finished, spent time: 1.29192924s]
+
+train epoch:1:   0%|                                                                                                                                                       | 5/20227 [00:19<22:01:41,  3.92s/it]
+[Function: model_update finished, spent time: 2.55006742s]
+[Function: model_forward start...]
+[Function: model_forward finished, spent time: 1.28771567s]
+train epoch:1:   0%|                                                                                                                                                       | 5/20227 [00:23<26:24:33,  4.70s/it]
+Traceback (most recent call last):
+  File "traineval.py", line 63, in <module>
+    train_val(trainloader, valloader, testloader)
+  File "traineval.py", line 24, in train_val
+    checkpoints = trainer.epoch(epoch + 1)
+  File "/home/datassd/yilin/Codes/Hand/ConditionHOI/epochbase.py", line 245, in epoch
+    self.one_batch(sample)
+  File "/home/datassd/yilin/Codes/Hand/ConditionHOI/epochbase.py", line 199, in one_batch
+    self.model_update(dict_losses)
+  File "/home/datassd/yilin/Codes/Hand/ConditionHOI/utils/utils.py", line 25, in function_timer
+    result = function(*args, **kwargs)
+  File "/home/datassd/yilin/Codes/Hand/ConditionHOI/epochbase.py", line 172, in model_update
+    dict_losses['total_loss_cond'].backward()
+  File "/home/yilin/anaconda3/envs/pytorch3d/lib/python3.8/site-packages/torch/_tensor.py", line 255, in backward
+    torch.autograd.backward(self, gradient, retain_graph, create_graph, inputs=inputs)
+  File "/home/yilin/anaconda3/envs/pytorch3d/lib/python3.8/site-packages/torch/autograd/__init__.py", line 147, in backward
+    Variable._execution_engine.run_backward(
+KeyboardInterrupt

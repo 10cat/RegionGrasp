@@ -16,7 +16,7 @@ from torch.autograd import Variable
 
 import numpy as np
 import torch.nn.functional as F
-from utils.utils import size_splits
+from utils.utils import size_splits, func_timer
 
 class STN3d(nn.Module):
     def __init__(self, channel):
@@ -36,7 +36,7 @@ class STN3d(nn.Module):
         self.bn5 = nn.BatchNorm1d(256)
 
     def forward(self, x):
-        batchsize = x.size()[0]
+        batchsize = x.shape[0]
         x = F.relu(self.bn1(self.conv1(x)))
         x = F.relu(self.bn2(self.conv2(x)))
         x = F.relu(self.bn3(self.conv3(x)))
@@ -111,7 +111,9 @@ class PointNetEncoder(nn.Module):
         if self.feature_transform:
             self.fstn = STNkd(k=64)
 
+    # @func_timer
     def forward(self, x):
+        # x = x.transpoes()
         B, D, N = x.size()
         # - input transfrom based on STN3d
         trans = self.stn(x) 

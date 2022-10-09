@@ -1,0 +1,177 @@
+
+[Function: __init__ start...]
+[Function: __init__ finished, spent time: 2.47201419s]
+[Function: __init__ start...]
+[Function: __init__ finished, spent time: 0.60501814s]
+[Function: __init__ start...]
+[Function: __init__ finished, spent time: 0.82498789s]
+train epoch:1:   0%|                                                                                                                                                                                   | 0/20227 [00:00<?, ?it/s]/home/yilin/anaconda3/envs/pytorch3d/lib/python3.8/site-packages/torch/nn/modules/loss.py:97: UserWarning: Using a target size (torch.Size([16, 1, 3000])) that is different to the input size (torch.Size([16, 3000])). This will likely lead to incorrect results due to broadcasting. Please ensure they have the same size.
+  return F.l1_loss(input, target, reduction=self.reduction)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+train epoch:1:   3%|█████▏                                                                                                                                                                 | 628/20227 [05:00<2:36:06,  2.09it/s]
+Traceback (most recent call last):
+  File "traineval.py", line 60, in <module>
+    train_val(trainloader, valloader, testloader)
+  File "traineval.py", line 22, in train_val
+    trainer.epoch(epoch + 1)
+  File "/home/datassd/yilin/Codes/Hand/ConditionHOI/epochbase.py", line 221, in epoch
+    self.one_batch(sample)
+  File "/home/datassd/yilin/Codes/Hand/ConditionHOI/epochbase.py", line 189, in one_batch
+    self.model_update(dict_losses)
+  File "/home/datassd/yilin/Codes/Hand/ConditionHOI/epochbase.py", line 164, in model_update
+    self.optimizer_cond.step()
+  File "/home/yilin/anaconda3/envs/pytorch3d/lib/python3.8/site-packages/torch/optim/optimizer.py", line 88, in wrapper
+    return func(*args, **kwargs)
+  File "/home/yilin/anaconda3/envs/pytorch3d/lib/python3.8/site-packages/torch/autograd/grad_mode.py", line 28, in decorate_context
+    return func(*args, **kwargs)
+  File "/home/yilin/anaconda3/envs/pytorch3d/lib/python3.8/site-packages/torch/optim/adam.py", line 107, in step
+    F.adam(params_with_grad,
+  File "/home/yilin/anaconda3/envs/pytorch3d/lib/python3.8/site-packages/torch/optim/_functional.py", line 87, in adam
+    exp_avg_sq.mul_(beta2).addcmul_(grad, grad, value=1 - beta2)
+KeyboardInterrupt
