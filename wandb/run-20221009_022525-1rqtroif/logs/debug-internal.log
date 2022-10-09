@@ -629,3 +629,130 @@
 2022-10-09 02:40:29,384 INFO    Thread-13 :3541 [dir_watcher.py:_on_file_modified():292] file/dir modified: /home/datassd/yilin/Codes/Hand/ConditionHOI/wandb/run-20221009_022525-1rqtroif/files/output.log
 2022-10-09 02:40:31,385 INFO    Thread-13 :3541 [dir_watcher.py:_on_file_modified():292] file/dir modified: /home/datassd/yilin/Codes/Hand/ConditionHOI/wandb/run-20221009_022525-1rqtroif/files/output.log
 2022-10-09 02:40:33,385 INFO    Thread-13 :3541 [dir_watcher.py:_on_file_modified():292] file/dir modified: /home/datassd/yilin/Codes/Hand/ConditionHOI/wandb/run-20221009_022525-1rqtroif/files/output.log
+2022-10-09 02:40:35,387 INFO    Thread-13 :3541 [dir_watcher.py:_on_file_modified():292] file/dir modified: /home/datassd/yilin/Codes/Hand/ConditionHOI/wandb/run-20221009_022525-1rqtroif/files/output.log
+2022-10-09 02:40:37,387 INFO    Thread-13 :3541 [dir_watcher.py:_on_file_modified():292] file/dir modified: /home/datassd/yilin/Codes/Hand/ConditionHOI/wandb/run-20221009_022525-1rqtroif/files/output.log
+2022-10-09 02:40:37,705 DEBUG   HandlerThread:3541 [handler.py:handle_request():138] handle_request: stop_status
+2022-10-09 02:40:37,705 DEBUG   SenderThread:3541 [sender.py:send_request():315] send_request: stop_status
+2022-10-09 02:40:39,388 INFO    Thread-13 :3541 [dir_watcher.py:_on_file_modified():292] file/dir modified: /home/datassd/yilin/Codes/Hand/ConditionHOI/wandb/run-20221009_022525-1rqtroif/files/output.log
+2022-10-09 02:40:39,659 DEBUG   SenderThread:3541 [sender.py:send():301] send: stats
+2022-10-09 02:40:41,389 INFO    Thread-13 :3541 [dir_watcher.py:_on_file_modified():292] file/dir modified: /home/datassd/yilin/Codes/Hand/ConditionHOI/wandb/run-20221009_022525-1rqtroif/files/output.log
+2022-10-09 02:40:43,389 INFO    Thread-13 :3541 [dir_watcher.py:_on_file_modified():292] file/dir modified: /home/datassd/yilin/Codes/Hand/ConditionHOI/wandb/run-20221009_022525-1rqtroif/files/output.log
+2022-10-09 02:40:45,390 INFO    Thread-13 :3541 [dir_watcher.py:_on_file_modified():292] file/dir modified: /home/datassd/yilin/Codes/Hand/ConditionHOI/wandb/run-20221009_022525-1rqtroif/files/output.log
+2022-10-09 02:40:47,391 INFO    Thread-13 :3541 [dir_watcher.py:_on_file_modified():292] file/dir modified: /home/datassd/yilin/Codes/Hand/ConditionHOI/wandb/run-20221009_022525-1rqtroif/files/output.log
+2022-10-09 02:40:49,392 INFO    Thread-13 :3541 [dir_watcher.py:_on_file_modified():292] file/dir modified: /home/datassd/yilin/Codes/Hand/ConditionHOI/wandb/run-20221009_022525-1rqtroif/files/output.log
+2022-10-09 02:40:51,392 INFO    Thread-13 :3541 [dir_watcher.py:_on_file_modified():292] file/dir modified: /home/datassd/yilin/Codes/Hand/ConditionHOI/wandb/run-20221009_022525-1rqtroif/files/output.log
+2022-10-09 02:40:52,842 DEBUG   HandlerThread:3541 [handler.py:handle_request():138] handle_request: stop_status
+2022-10-09 02:40:52,842 DEBUG   SenderThread:3541 [sender.py:send_request():315] send_request: stop_status
+2022-10-09 02:40:53,393 INFO    Thread-13 :3541 [dir_watcher.py:_on_file_modified():292] file/dir modified: /home/datassd/yilin/Codes/Hand/ConditionHOI/wandb/run-20221009_022525-1rqtroif/files/output.log
+2022-10-09 02:40:55,393 INFO    Thread-13 :3541 [dir_watcher.py:_on_file_modified():292] file/dir modified: /home/datassd/yilin/Codes/Hand/ConditionHOI/wandb/run-20221009_022525-1rqtroif/files/output.log
+2022-10-09 02:40:57,394 INFO    Thread-13 :3541 [dir_watcher.py:_on_file_modified():292] file/dir modified: /home/datassd/yilin/Codes/Hand/ConditionHOI/wandb/run-20221009_022525-1rqtroif/files/output.log
+2022-10-09 02:40:59,395 INFO    Thread-13 :3541 [dir_watcher.py:_on_file_modified():292] file/dir modified: /home/datassd/yilin/Codes/Hand/ConditionHOI/wandb/run-20221009_022525-1rqtroif/files/output.log
+2022-10-09 02:41:01,396 INFO    Thread-13 :3541 [dir_watcher.py:_on_file_modified():292] file/dir modified: /home/datassd/yilin/Codes/Hand/ConditionHOI/wandb/run-20221009_022525-1rqtroif/files/output.log
+2022-10-09 02:41:03,397 INFO    Thread-13 :3541 [dir_watcher.py:_on_file_modified():292] file/dir modified: /home/datassd/yilin/Codes/Hand/ConditionHOI/wandb/run-20221009_022525-1rqtroif/files/output.log
+2022-10-09 02:41:05,397 INFO    Thread-13 :3541 [dir_watcher.py:_on_file_modified():292] file/dir modified: /home/datassd/yilin/Codes/Hand/ConditionHOI/wandb/run-20221009_022525-1rqtroif/files/output.log
+2022-10-09 02:41:07,398 INFO    Thread-13 :3541 [dir_watcher.py:_on_file_modified():292] file/dir modified: /home/datassd/yilin/Codes/Hand/ConditionHOI/wandb/run-20221009_022525-1rqtroif/files/output.log
+2022-10-09 02:41:07,975 DEBUG   HandlerThread:3541 [handler.py:handle_request():138] handle_request: stop_status
+2022-10-09 02:41:07,976 DEBUG   SenderThread:3541 [sender.py:send_request():315] send_request: stop_status
+2022-10-09 02:41:09,399 INFO    Thread-13 :3541 [dir_watcher.py:_on_file_modified():292] file/dir modified: /home/datassd/yilin/Codes/Hand/ConditionHOI/wandb/run-20221009_022525-1rqtroif/files/output.log
+2022-10-09 02:41:10,169 DEBUG   SenderThread:3541 [sender.py:send():301] send: stats
+2022-10-09 02:41:11,399 INFO    Thread-13 :3541 [dir_watcher.py:_on_file_modified():292] file/dir modified: /home/datassd/yilin/Codes/Hand/ConditionHOI/wandb/run-20221009_022525-1rqtroif/files/output.log
+2022-10-09 02:41:13,400 INFO    Thread-13 :3541 [dir_watcher.py:_on_file_modified():292] file/dir modified: /home/datassd/yilin/Codes/Hand/ConditionHOI/wandb/run-20221009_022525-1rqtroif/files/output.log
+2022-10-09 02:41:15,401 INFO    Thread-13 :3541 [dir_watcher.py:_on_file_modified():292] file/dir modified: /home/datassd/yilin/Codes/Hand/ConditionHOI/wandb/run-20221009_022525-1rqtroif/files/output.log
+2022-10-09 02:41:17,402 INFO    Thread-13 :3541 [dir_watcher.py:_on_file_modified():292] file/dir modified: /home/datassd/yilin/Codes/Hand/ConditionHOI/wandb/run-20221009_022525-1rqtroif/files/output.log
+2022-10-09 02:41:19,402 INFO    Thread-13 :3541 [dir_watcher.py:_on_file_modified():292] file/dir modified: /home/datassd/yilin/Codes/Hand/ConditionHOI/wandb/run-20221009_022525-1rqtroif/files/output.log
+2022-10-09 02:41:21,403 INFO    Thread-13 :3541 [dir_watcher.py:_on_file_modified():292] file/dir modified: /home/datassd/yilin/Codes/Hand/ConditionHOI/wandb/run-20221009_022525-1rqtroif/files/output.log
+2022-10-09 02:41:23,121 DEBUG   HandlerThread:3541 [handler.py:handle_request():138] handle_request: stop_status
+2022-10-09 02:41:23,121 DEBUG   SenderThread:3541 [sender.py:send_request():315] send_request: stop_status
+2022-10-09 02:41:23,404 INFO    Thread-13 :3541 [dir_watcher.py:_on_file_modified():292] file/dir modified: /home/datassd/yilin/Codes/Hand/ConditionHOI/wandb/run-20221009_022525-1rqtroif/files/output.log
+2022-10-09 02:41:25,405 INFO    Thread-13 :3541 [dir_watcher.py:_on_file_modified():292] file/dir modified: /home/datassd/yilin/Codes/Hand/ConditionHOI/wandb/run-20221009_022525-1rqtroif/files/output.log
+2022-10-09 02:41:27,406 INFO    Thread-13 :3541 [dir_watcher.py:_on_file_modified():292] file/dir modified: /home/datassd/yilin/Codes/Hand/ConditionHOI/wandb/run-20221009_022525-1rqtroif/files/output.log
+2022-10-09 02:41:29,407 INFO    Thread-13 :3541 [dir_watcher.py:_on_file_modified():292] file/dir modified: /home/datassd/yilin/Codes/Hand/ConditionHOI/wandb/run-20221009_022525-1rqtroif/files/output.log
+2022-10-09 02:41:31,407 INFO    Thread-13 :3541 [dir_watcher.py:_on_file_modified():292] file/dir modified: /home/datassd/yilin/Codes/Hand/ConditionHOI/wandb/run-20221009_022525-1rqtroif/files/output.log
+2022-10-09 02:41:33,408 INFO    Thread-13 :3541 [dir_watcher.py:_on_file_modified():292] file/dir modified: /home/datassd/yilin/Codes/Hand/ConditionHOI/wandb/run-20221009_022525-1rqtroif/files/output.log
+2022-10-09 02:41:35,409 INFO    Thread-13 :3541 [dir_watcher.py:_on_file_modified():292] file/dir modified: /home/datassd/yilin/Codes/Hand/ConditionHOI/wandb/run-20221009_022525-1rqtroif/files/output.log
+2022-10-09 02:41:37,410 INFO    Thread-13 :3541 [dir_watcher.py:_on_file_modified():292] file/dir modified: /home/datassd/yilin/Codes/Hand/ConditionHOI/wandb/run-20221009_022525-1rqtroif/files/output.log
+2022-10-09 02:41:38,254 DEBUG   HandlerThread:3541 [handler.py:handle_request():138] handle_request: stop_status
+2022-10-09 02:41:38,254 DEBUG   SenderThread:3541 [sender.py:send_request():315] send_request: stop_status
+2022-10-09 02:41:39,410 INFO    Thread-13 :3541 [dir_watcher.py:_on_file_modified():292] file/dir modified: /home/datassd/yilin/Codes/Hand/ConditionHOI/wandb/run-20221009_022525-1rqtroif/files/output.log
+2022-10-09 02:41:40,664 DEBUG   SenderThread:3541 [sender.py:send():301] send: stats
+2022-10-09 02:41:41,411 INFO    Thread-13 :3541 [dir_watcher.py:_on_file_modified():292] file/dir modified: /home/datassd/yilin/Codes/Hand/ConditionHOI/wandb/run-20221009_022525-1rqtroif/files/output.log
+2022-10-09 02:41:43,412 INFO    Thread-13 :3541 [dir_watcher.py:_on_file_modified():292] file/dir modified: /home/datassd/yilin/Codes/Hand/ConditionHOI/wandb/run-20221009_022525-1rqtroif/files/output.log
+2022-10-09 02:41:45,413 INFO    Thread-13 :3541 [dir_watcher.py:_on_file_modified():292] file/dir modified: /home/datassd/yilin/Codes/Hand/ConditionHOI/wandb/run-20221009_022525-1rqtroif/files/output.log
+2022-10-09 02:41:47,414 INFO    Thread-13 :3541 [dir_watcher.py:_on_file_modified():292] file/dir modified: /home/datassd/yilin/Codes/Hand/ConditionHOI/wandb/run-20221009_022525-1rqtroif/files/output.log
+2022-10-09 02:41:49,415 INFO    Thread-13 :3541 [dir_watcher.py:_on_file_modified():292] file/dir modified: /home/datassd/yilin/Codes/Hand/ConditionHOI/wandb/run-20221009_022525-1rqtroif/files/output.log
+2022-10-09 02:41:51,415 INFO    Thread-13 :3541 [dir_watcher.py:_on_file_modified():292] file/dir modified: /home/datassd/yilin/Codes/Hand/ConditionHOI/wandb/run-20221009_022525-1rqtroif/files/output.log
+2022-10-09 02:41:53,396 DEBUG   HandlerThread:3541 [handler.py:handle_request():138] handle_request: stop_status
+2022-10-09 02:41:53,397 DEBUG   SenderThread:3541 [sender.py:send_request():315] send_request: stop_status
+2022-10-09 02:41:53,416 INFO    Thread-13 :3541 [dir_watcher.py:_on_file_modified():292] file/dir modified: /home/datassd/yilin/Codes/Hand/ConditionHOI/wandb/run-20221009_022525-1rqtroif/files/output.log
+2022-10-09 02:41:55,417 INFO    Thread-13 :3541 [dir_watcher.py:_on_file_modified():292] file/dir modified: /home/datassd/yilin/Codes/Hand/ConditionHOI/wandb/run-20221009_022525-1rqtroif/files/output.log
+2022-10-09 02:41:57,417 INFO    Thread-13 :3541 [dir_watcher.py:_on_file_modified():292] file/dir modified: /home/datassd/yilin/Codes/Hand/ConditionHOI/wandb/run-20221009_022525-1rqtroif/files/output.log
+2022-10-09 02:41:59,418 INFO    Thread-13 :3541 [dir_watcher.py:_on_file_modified():292] file/dir modified: /home/datassd/yilin/Codes/Hand/ConditionHOI/wandb/run-20221009_022525-1rqtroif/files/output.log
+2022-10-09 02:42:01,419 INFO    Thread-13 :3541 [dir_watcher.py:_on_file_modified():292] file/dir modified: /home/datassd/yilin/Codes/Hand/ConditionHOI/wandb/run-20221009_022525-1rqtroif/files/output.log
+2022-10-09 02:42:03,420 INFO    Thread-13 :3541 [dir_watcher.py:_on_file_modified():292] file/dir modified: /home/datassd/yilin/Codes/Hand/ConditionHOI/wandb/run-20221009_022525-1rqtroif/files/output.log
+2022-10-09 02:42:05,421 INFO    Thread-13 :3541 [dir_watcher.py:_on_file_modified():292] file/dir modified: /home/datassd/yilin/Codes/Hand/ConditionHOI/wandb/run-20221009_022525-1rqtroif/files/output.log
+2022-10-09 02:42:07,421 INFO    Thread-13 :3541 [dir_watcher.py:_on_file_modified():292] file/dir modified: /home/datassd/yilin/Codes/Hand/ConditionHOI/wandb/run-20221009_022525-1rqtroif/files/output.log
+2022-10-09 02:42:08,559 DEBUG   HandlerThread:3541 [handler.py:handle_request():138] handle_request: stop_status
+2022-10-09 02:42:08,560 DEBUG   SenderThread:3541 [sender.py:send_request():315] send_request: stop_status
+2022-10-09 02:42:09,422 INFO    Thread-13 :3541 [dir_watcher.py:_on_file_modified():292] file/dir modified: /home/datassd/yilin/Codes/Hand/ConditionHOI/wandb/run-20221009_022525-1rqtroif/files/output.log
+2022-10-09 02:42:11,154 DEBUG   SenderThread:3541 [sender.py:send():301] send: stats
+2022-10-09 02:42:11,423 INFO    Thread-13 :3541 [dir_watcher.py:_on_file_modified():292] file/dir modified: /home/datassd/yilin/Codes/Hand/ConditionHOI/wandb/run-20221009_022525-1rqtroif/files/output.log
+2022-10-09 02:42:13,424 INFO    Thread-13 :3541 [dir_watcher.py:_on_file_modified():292] file/dir modified: /home/datassd/yilin/Codes/Hand/ConditionHOI/wandb/run-20221009_022525-1rqtroif/files/output.log
+2022-10-09 02:42:15,425 INFO    Thread-13 :3541 [dir_watcher.py:_on_file_modified():292] file/dir modified: /home/datassd/yilin/Codes/Hand/ConditionHOI/wandb/run-20221009_022525-1rqtroif/files/output.log
+2022-10-09 02:42:17,425 INFO    Thread-13 :3541 [dir_watcher.py:_on_file_modified():292] file/dir modified: /home/datassd/yilin/Codes/Hand/ConditionHOI/wandb/run-20221009_022525-1rqtroif/files/output.log
+2022-10-09 02:42:19,426 INFO    Thread-13 :3541 [dir_watcher.py:_on_file_modified():292] file/dir modified: /home/datassd/yilin/Codes/Hand/ConditionHOI/wandb/run-20221009_022525-1rqtroif/files/output.log
+2022-10-09 02:42:21,427 INFO    Thread-13 :3541 [dir_watcher.py:_on_file_modified():292] file/dir modified: /home/datassd/yilin/Codes/Hand/ConditionHOI/wandb/run-20221009_022525-1rqtroif/files/output.log
+2022-10-09 02:42:23,428 INFO    Thread-13 :3541 [dir_watcher.py:_on_file_modified():292] file/dir modified: /home/datassd/yilin/Codes/Hand/ConditionHOI/wandb/run-20221009_022525-1rqtroif/files/output.log
+2022-10-09 02:42:23,703 DEBUG   HandlerThread:3541 [handler.py:handle_request():138] handle_request: stop_status
+2022-10-09 02:42:23,703 DEBUG   SenderThread:3541 [sender.py:send_request():315] send_request: stop_status
+2022-10-09 02:42:25,429 INFO    Thread-13 :3541 [dir_watcher.py:_on_file_modified():292] file/dir modified: /home/datassd/yilin/Codes/Hand/ConditionHOI/wandb/run-20221009_022525-1rqtroif/files/output.log
+2022-10-09 02:42:27,429 INFO    Thread-13 :3541 [dir_watcher.py:_on_file_modified():292] file/dir modified: /home/datassd/yilin/Codes/Hand/ConditionHOI/wandb/run-20221009_022525-1rqtroif/files/output.log
+2022-10-09 02:42:29,430 INFO    Thread-13 :3541 [dir_watcher.py:_on_file_modified():292] file/dir modified: /home/datassd/yilin/Codes/Hand/ConditionHOI/wandb/run-20221009_022525-1rqtroif/files/output.log
+2022-10-09 02:42:31,430 INFO    Thread-13 :3541 [dir_watcher.py:_on_file_modified():292] file/dir modified: /home/datassd/yilin/Codes/Hand/ConditionHOI/wandb/run-20221009_022525-1rqtroif/files/output.log
+2022-10-09 02:42:33,431 INFO    Thread-13 :3541 [dir_watcher.py:_on_file_modified():292] file/dir modified: /home/datassd/yilin/Codes/Hand/ConditionHOI/wandb/run-20221009_022525-1rqtroif/files/output.log
+2022-10-09 02:42:35,432 INFO    Thread-13 :3541 [dir_watcher.py:_on_file_modified():292] file/dir modified: /home/datassd/yilin/Codes/Hand/ConditionHOI/wandb/run-20221009_022525-1rqtroif/files/output.log
+2022-10-09 02:42:37,433 INFO    Thread-13 :3541 [dir_watcher.py:_on_file_modified():292] file/dir modified: /home/datassd/yilin/Codes/Hand/ConditionHOI/wandb/run-20221009_022525-1rqtroif/files/output.log
+2022-10-09 02:42:38,837 DEBUG   HandlerThread:3541 [handler.py:handle_request():138] handle_request: stop_status
+2022-10-09 02:42:38,837 DEBUG   SenderThread:3541 [sender.py:send_request():315] send_request: stop_status
+2022-10-09 02:42:39,434 INFO    Thread-13 :3541 [dir_watcher.py:_on_file_modified():292] file/dir modified: /home/datassd/yilin/Codes/Hand/ConditionHOI/wandb/run-20221009_022525-1rqtroif/files/output.log
+2022-10-09 02:42:41,434 INFO    Thread-13 :3541 [dir_watcher.py:_on_file_modified():292] file/dir modified: /home/datassd/yilin/Codes/Hand/ConditionHOI/wandb/run-20221009_022525-1rqtroif/files/output.log
+2022-10-09 02:42:41,648 DEBUG   SenderThread:3541 [sender.py:send():301] send: stats
+2022-10-09 02:42:43,435 INFO    Thread-13 :3541 [dir_watcher.py:_on_file_modified():292] file/dir modified: /home/datassd/yilin/Codes/Hand/ConditionHOI/wandb/run-20221009_022525-1rqtroif/files/output.log
+2022-10-09 02:42:45,435 INFO    Thread-13 :3541 [dir_watcher.py:_on_file_modified():292] file/dir modified: /home/datassd/yilin/Codes/Hand/ConditionHOI/wandb/run-20221009_022525-1rqtroif/files/output.log
+2022-10-09 02:42:47,437 INFO    Thread-13 :3541 [dir_watcher.py:_on_file_modified():292] file/dir modified: /home/datassd/yilin/Codes/Hand/ConditionHOI/wandb/run-20221009_022525-1rqtroif/files/output.log
+2022-10-09 02:42:49,438 INFO    Thread-13 :3541 [dir_watcher.py:_on_file_modified():292] file/dir modified: /home/datassd/yilin/Codes/Hand/ConditionHOI/wandb/run-20221009_022525-1rqtroif/files/output.log
+2022-10-09 02:42:51,438 INFO    Thread-13 :3541 [dir_watcher.py:_on_file_modified():292] file/dir modified: /home/datassd/yilin/Codes/Hand/ConditionHOI/wandb/run-20221009_022525-1rqtroif/files/output.log
+2022-10-09 02:42:53,974 DEBUG   HandlerThread:3541 [handler.py:handle_request():138] handle_request: stop_status
+2022-10-09 02:42:53,974 DEBUG   SenderThread:3541 [sender.py:send_request():315] send_request: stop_status
+2022-10-09 02:42:54,439 INFO    Thread-13 :3541 [dir_watcher.py:_on_file_modified():292] file/dir modified: /home/datassd/yilin/Codes/Hand/ConditionHOI/wandb/run-20221009_022525-1rqtroif/files/output.log
+2022-10-09 02:42:56,440 INFO    Thread-13 :3541 [dir_watcher.py:_on_file_modified():292] file/dir modified: /home/datassd/yilin/Codes/Hand/ConditionHOI/wandb/run-20221009_022525-1rqtroif/files/output.log
+2022-10-09 02:42:58,440 INFO    Thread-13 :3541 [dir_watcher.py:_on_file_modified():292] file/dir modified: /home/datassd/yilin/Codes/Hand/ConditionHOI/wandb/run-20221009_022525-1rqtroif/files/output.log
+2022-10-09 02:43:00,441 INFO    Thread-13 :3541 [dir_watcher.py:_on_file_modified():292] file/dir modified: /home/datassd/yilin/Codes/Hand/ConditionHOI/wandb/run-20221009_022525-1rqtroif/files/output.log
+2022-10-09 02:43:02,442 INFO    Thread-13 :3541 [dir_watcher.py:_on_file_modified():292] file/dir modified: /home/datassd/yilin/Codes/Hand/ConditionHOI/wandb/run-20221009_022525-1rqtroif/files/output.log
+2022-10-09 02:43:04,443 INFO    Thread-13 :3541 [dir_watcher.py:_on_file_modified():292] file/dir modified: /home/datassd/yilin/Codes/Hand/ConditionHOI/wandb/run-20221009_022525-1rqtroif/files/output.log
+2022-10-09 02:43:06,443 INFO    Thread-13 :3541 [dir_watcher.py:_on_file_modified():292] file/dir modified: /home/datassd/yilin/Codes/Hand/ConditionHOI/wandb/run-20221009_022525-1rqtroif/files/output.log
+2022-10-09 02:43:08,444 INFO    Thread-13 :3541 [dir_watcher.py:_on_file_modified():292] file/dir modified: /home/datassd/yilin/Codes/Hand/ConditionHOI/wandb/run-20221009_022525-1rqtroif/files/output.log
+2022-10-09 02:43:09,109 DEBUG   HandlerThread:3541 [handler.py:handle_request():138] handle_request: stop_status
+2022-10-09 02:43:09,109 DEBUG   SenderThread:3541 [sender.py:send_request():315] send_request: stop_status
+2022-10-09 02:43:10,445 INFO    Thread-13 :3541 [dir_watcher.py:_on_file_modified():292] file/dir modified: /home/datassd/yilin/Codes/Hand/ConditionHOI/wandb/run-20221009_022525-1rqtroif/files/output.log
+2022-10-09 02:43:12,169 DEBUG   SenderThread:3541 [sender.py:send():301] send: stats
+2022-10-09 02:43:12,446 INFO    Thread-13 :3541 [dir_watcher.py:_on_file_modified():292] file/dir modified: /home/datassd/yilin/Codes/Hand/ConditionHOI/wandb/run-20221009_022525-1rqtroif/files/output.log
+2022-10-09 02:43:14,447 INFO    Thread-13 :3541 [dir_watcher.py:_on_file_modified():292] file/dir modified: /home/datassd/yilin/Codes/Hand/ConditionHOI/wandb/run-20221009_022525-1rqtroif/files/output.log
+2022-10-09 02:43:16,447 INFO    Thread-13 :3541 [dir_watcher.py:_on_file_modified():292] file/dir modified: /home/datassd/yilin/Codes/Hand/ConditionHOI/wandb/run-20221009_022525-1rqtroif/files/output.log
+2022-10-09 02:43:18,448 INFO    Thread-13 :3541 [dir_watcher.py:_on_file_modified():292] file/dir modified: /home/datassd/yilin/Codes/Hand/ConditionHOI/wandb/run-20221009_022525-1rqtroif/files/output.log
+2022-10-09 02:43:20,448 INFO    Thread-13 :3541 [dir_watcher.py:_on_file_modified():292] file/dir modified: /home/datassd/yilin/Codes/Hand/ConditionHOI/wandb/run-20221009_022525-1rqtroif/files/output.log
+2022-10-09 02:43:22,449 INFO    Thread-13 :3541 [dir_watcher.py:_on_file_modified():292] file/dir modified: /home/datassd/yilin/Codes/Hand/ConditionHOI/wandb/run-20221009_022525-1rqtroif/files/output.log
+2022-10-09 02:43:24,271 DEBUG   HandlerThread:3541 [handler.py:handle_request():138] handle_request: stop_status
+2022-10-09 02:43:24,272 DEBUG   SenderThread:3541 [sender.py:send_request():315] send_request: stop_status
+2022-10-09 02:43:24,450 INFO    Thread-13 :3541 [dir_watcher.py:_on_file_modified():292] file/dir modified: /home/datassd/yilin/Codes/Hand/ConditionHOI/wandb/run-20221009_022525-1rqtroif/files/output.log
+2022-10-09 02:43:26,451 INFO    Thread-13 :3541 [dir_watcher.py:_on_file_modified():292] file/dir modified: /home/datassd/yilin/Codes/Hand/ConditionHOI/wandb/run-20221009_022525-1rqtroif/files/output.log
+2022-10-09 02:43:28,452 INFO    Thread-13 :3541 [dir_watcher.py:_on_file_modified():292] file/dir modified: /home/datassd/yilin/Codes/Hand/ConditionHOI/wandb/run-20221009_022525-1rqtroif/files/output.log
+2022-10-09 02:43:30,453 INFO    Thread-13 :3541 [dir_watcher.py:_on_file_modified():292] file/dir modified: /home/datassd/yilin/Codes/Hand/ConditionHOI/wandb/run-20221009_022525-1rqtroif/files/output.log
+2022-10-09 02:43:32,454 INFO    Thread-13 :3541 [dir_watcher.py:_on_file_modified():292] file/dir modified: /home/datassd/yilin/Codes/Hand/ConditionHOI/wandb/run-20221009_022525-1rqtroif/files/output.log
+2022-10-09 02:43:34,454 INFO    Thread-13 :3541 [dir_watcher.py:_on_file_modified():292] file/dir modified: /home/datassd/yilin/Codes/Hand/ConditionHOI/wandb/run-20221009_022525-1rqtroif/files/output.log
+2022-10-09 02:43:36,455 INFO    Thread-13 :3541 [dir_watcher.py:_on_file_modified():292] file/dir modified: /home/datassd/yilin/Codes/Hand/ConditionHOI/wandb/run-20221009_022525-1rqtroif/files/output.log
+2022-10-09 02:43:38,456 INFO    Thread-13 :3541 [dir_watcher.py:_on_file_modified():292] file/dir modified: /home/datassd/yilin/Codes/Hand/ConditionHOI/wandb/run-20221009_022525-1rqtroif/files/output.log
+2022-10-09 02:43:39,404 DEBUG   HandlerThread:3541 [handler.py:handle_request():138] handle_request: stop_status
+2022-10-09 02:43:39,404 DEBUG   SenderThread:3541 [sender.py:send_request():315] send_request: stop_status
+2022-10-09 02:43:40,457 INFO    Thread-13 :3541 [dir_watcher.py:_on_file_modified():292] file/dir modified: /home/datassd/yilin/Codes/Hand/ConditionHOI/wandb/run-20221009_022525-1rqtroif/files/output.log
+2022-10-09 02:43:42,458 INFO    Thread-13 :3541 [dir_watcher.py:_on_file_modified():292] file/dir modified: /home/datassd/yilin/Codes/Hand/ConditionHOI/wandb/run-20221009_022525-1rqtroif/files/output.log
+2022-10-09 02:43:42,697 DEBUG   SenderThread:3541 [sender.py:send():301] send: stats
