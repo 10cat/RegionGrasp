@@ -70,7 +70,6 @@ class Encoder(nn.Module):
         return means, log_vars
 
 class Decoder(nn.Module):
-
     def __init__(self, layer_sizes, latent_size, conditional, condition_size):
         super().__init__()
         self.MLP = nn.Sequential()
@@ -81,17 +80,24 @@ class Decoder(nn.Module):
             input_size = latent_size
 
         for i, (in_size, out_size) in enumerate(zip([input_size] + layer_sizes[:-1], layer_sizes)):
-            self.MLP.add_module(name="L{:d}".format(i), module=nn.Linear(in_size, out_size))
-
             if i+1 < len(layer_sizes):
+                self.MLP.add_module(name="L{:d}".format(i), module=nn.Linear(in_size, out_size))
                 self.MLP.add_module(name="A{:d}".format(i), module=nn.ReLU())
+
+        # for decoding the hand params based on mano framework from otaheri
+        pose_dim, trans_dim = layer_sizes[-1]
+        feat_dim = layer_sizes[-2]
+        self.dec_pose = nn.Linear(feat_dim, pose_dim)
+        self.dec_trans = nn.Linear(feat_dim, trans_dim)
 
     def forward(self, z, c):
         if self.conditional:
             z = torch.cat((z, c), dim=-1)
         
         x = self.MLP(z)
+        pose = self.dec_pose(x)
+        trans = self.dec_trans(x)
 
-        return x
+        return [pose, trans]
 
 

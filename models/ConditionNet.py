@@ -6,7 +6,7 @@ import torch.nn as nn
 import torch.nn.functional as F
 from option import MyOptions as cfg
 from models.pointnet_encoder import PointNetEncoder
-from utils.utils import func_timer
+from utils.utils import func_timer, region_masked_pointwise
 
 class ConditionNet(nn.Module):
     def __init__(self, input_channel_obj, input_channel_hand):
@@ -59,7 +59,7 @@ class ConditionNet(nn.Module):
         N = obj_pc.size(2)
 
         # mask the obj pointcloud
-        obj_masked_pc = self.mask_obj_pts(obj_pc, region_mask)
+        obj_masked_pc = region_masked_pointwise(obj_pc, region_mask)
         # embed features
         feat_o, trans, trans_feat = self.obj_encoder(obj_pc)
         feat_h, trans2, trans_feat2 = self.hand_encoder(hand_xyz)

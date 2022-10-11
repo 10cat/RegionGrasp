@@ -96,11 +96,16 @@ class Epoch(nn.Module):
         condition_vec, SD_maps, hand_params, sample_stats = None, None, None, None
         # if self.use_cuda: self.ConditionNet = self.ConditionNet.to('cuda')
         # import pdb; pdb.set_trace()
-        feats, SD_maps = self.ConditionNet(obj_vs, rhand_vs, region) # cSDF_maps = [pred_map_obj, pred_map_obj_masked]
-        condition_vec = feats[0]
-        if cfg.fit_cGrasp:
+        if cfg.forward_Condition:
+            feats, SD_maps = self.ConditionNet(obj_vs, rhand_vs, region) # cSDF_maps = [pred_map_obj, pred_map_obj_masked]
+            
+        if cfg.forward_cGrasp:
+            if cfg.forward_Condition is not True:
+                hand_params, sample_stats = self.cGraspVAE([obj_vs, rhand_vs], region)
             # if self.use_cuda: self.cGraspVAE = self.cGraspVAE.to('cuda')
-            hand_params, sample_stats = self.cGraspVAE([obj_vs, rhand_vs], condition_vec)
+            else:
+                condition_vec = feats[0]
+                hand_params, sample_stats = self.cGraspVAE([obj_vs, rhand_vs], condition_vec)
         
         # outputs as a dict
         outputs = {}
@@ -231,6 +236,7 @@ class Epoch(nn.Module):
                         checkpoint_path)
             # checkpoint = torch.load(checkpoint_path)
             # self.ConditionNet.load_state_dict(checkpoint['ConditonNet_state_dict'])
+        return best_val
 
     
     def epoch(self, epoch, best_val=None, checkpoints=None):
@@ -247,7 +253,7 @@ class Epoch(nn.Module):
                 self.one_batch(sample)
             # if idx > 20:
             #     break
-        self.save_checkpoints(epoch, best_val)
+        best_val = self.save_checkpoints(epoch, best_val)
         self.metrics_log(epoch)
 
         if cfg.fit_cGrasp:

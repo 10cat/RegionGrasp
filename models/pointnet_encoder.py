@@ -16,7 +16,8 @@ from torch.autograd import Variable
 
 import numpy as np
 import torch.nn.functional as F
-from utils.utils import size_splits, func_timer
+from utils.utils import region_masked_pointwise, size_splits, func_timer
+from option import MyOptions as cfg
 
 class STN3d(nn.Module):
     def __init__(self, channel):
@@ -110,14 +111,12 @@ class PointNetEncoder(nn.Module):
         self.feature_transform = feature_transform
         if self.feature_transform:
             self.fstn = STNkd(k=64)
+    
+    def pre_pointfeat_forward(self, x):
 
-    # @func_timer
-    def forward(self, x):
-        # x = x.transpoes()
         B, D, N = x.size()
         # - input transfrom based on STN3d
         trans = self.stn(x) 
-
         # - matrix-matrix product
         x = x.transpose(2, 1)
         if D > 3:
@@ -136,14 +135,61 @@ class PointNetEncoder(nn.Module):
         else:
             trans_feat = None
 
-        pointfeat = x # local feature for every given points -- (B, 64, N)
+        return x, trans, trans_feat, N
+
+    def pointfeat_forward(self, point_feat):
+        x = point_feat
         x = F.relu(self.bn2(self.conv2(x)))
         x = self.bn3(self.conv3(x))
         x = torch.max(x, 2, keepdim=True)[0]
         x = x.view(-1, 1024)
+        return x
+
+    # @func_timer
+    def forward(self, x):
+        # x = x.transpoes()
+        x, trans, trans_feat, N = self.pre_pointfeat_forward(x)
+
+        pointfeat = x # local feature for every given points -- (B, 64, N)
+        
+        x = self.pointfeat_forward(x)
+
         if self.global_feat:
             return x, trans, trans_feat
         else:
             x = x.view(-1, 1024, 1).repeat(1, 1, N) # (B, 1024) -> (B, 1024, N)
             return torch.cat([x, pointfeat], 1), trans, trans_feat
         
+
+class ObjRegionConditionEncoder(PointNetEncoder):
+    def __init__(self, global_feat=True, feature_transform=False, channel=3):
+        super().__init__(global_feat, feature_transform, channel)
+        output_dim = cfg.VAE_condition_size
+        self.conv2_m = nn.Conv1d(64, 128, 1)
+        self.conv3_m = nn.Conv1d(128, 1024, 1)
+        self.bn2_m = nn.BatchNorm1d(128)
+        self.bn3_m = nn.BatchNorm1d(1024)
+        self.convfuse = nn.Conv1d(in_channels=2048, out_channels=output_dim, kernel_size=1)
+        self.bnfuse = nn.BatchNorm1d(output_dim)
+
+    def pointfeat_masked_forward(self, pointfeat_masked):
+        x = pointfeat_masked
+        x = F.relu(self.bn2_m(self.conv2_m(x)))
+        x = self.bn3_m(self.conv3_m(x))
+        x = torch.max(x, 2, keepdim=True)[0]
+        x = x.view(-1, 1024)
+        return x
+
+
+    def forward(self, obj_pc, region_mask):
+        x, trans, trans_feat, N = self.pre_pointfeat_forward(x)
+
+        pointfeat = x # local feature for every given points -- (B, 64, N)
+        pointfeat_masked = region_masked_pointwise()
+        
+        x1 = self.pointfeat_forward(pointfeat)
+        x2 = self.pointfeat_masked_forward(pointfeat_masked)
+
+        x = self.bnfuse(self.convfuse(torch.cat((x1, x2), dim=-1))) # use global fuse feature
+
+        return x, trans, trans_feat

@@ -10,15 +10,17 @@ class MyOptions:
     """
     Base Configuration
     """
-    w_wandb: bool = True
-    exp_name: str = 'conditionnet_pretrain_1' # 1
+    w_wandb: bool = False
+    exp_name: str = 'conditionnet_pretrain_2' # 1
     mode: str = 'train'
     num_mask: int = 1
     batch_size: int = 16
     start_epoch: int = 1
     num_epoch: int = 10
-    fit_Condition: bool = True
-    fit_cGrasp: bool = False
+    forward_Condition: bool = False
+    forward_cGrasp: bool = True
+    fit_Condition: bool = False
+    fit_cGrasp: bool = True
 
     learning_rate: float = 1e-3
     class optimizer_cond:
@@ -34,15 +36,21 @@ class MyOptions:
     SDmap_input_dim: int = 1088
     SDmap_output_dim: int = 1
     SDmap_layer_dims = [512, 256, 128]
-    SDmap_leaky_slope: float = 0.01
-        
+    SDmap_leaky_slope: float = 1
+
+    #VAE
+    VAE_condition_size: int = 1024 # fusion layers output dim = 1024
 
     """
     Loss Configuration
     """
+    # ConditionNetLoss
     lambda_cond: float = 1.0 # = lambda_cond / lambda_vae
     lambda_om: float = 1
     lambda_feat: float = 1e-2
+
+    # cGraspvaeLoss
+
     
     """
     Root Path

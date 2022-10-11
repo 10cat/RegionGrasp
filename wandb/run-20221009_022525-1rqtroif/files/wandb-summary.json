@@ -1,1 +1,1 @@
-{}
+{"train_total_loss_cond": 0.0445123128592968, "train_total_loss": 0.0445123128592968, "train_loss_map_hand": 0.022263161838054657, "train_loss_map_om": 0.02224654331803322, "train_loss_feat": 0.000258756335824728, "train_metric_cond": 0.022263161838054657, "_timestamp": 1665403340.0261972, "_runtime": 99414.34677314758, "_step": 19, "val_total_loss_cond": 0.01708255149424076, "val_total_loss": 0.01708255149424076, "val_loss_map_hand": 0.0, "val_loss_map_om": 0.01708255149424076, "val_loss_feat": 0.0, "val_metric_cond": 0.01708255149424076, "_wandb": {"runtime": 99417}}

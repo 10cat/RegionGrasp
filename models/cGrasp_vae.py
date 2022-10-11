@@ -1,5 +1,7 @@
 # torch related
 import sys
+
+
 sys.path.append('.')
 sys.path.append('..')
 import torch
@@ -11,13 +13,16 @@ import torch.nn.functional as F
 
 import numpy as np
 
-from models.pointnet_encoder import PointNetEncoder
+from models.pointnet_encoder import ObjRegionConditionEncoder, PointNetEncoder
 from models.CVAE import VAE
+from utils.utils import CRot2rotmat, region_masked_pointwise, rotmat2aa
+
+from option import MyOptions as cfg
 
 
 class cGraspvae(nn.Module):
     def __init__(self, in_channel_obj=4, in_channel_hand=3, encoder_sizes=[1024, 512, 256], \
-                latent_size=64, decoder_sizes=[1024, 256, 61], condition_size=1024):
+                latent_size=64, decoder_sizes=[1024, 256, [16*6, 3]], condition_size=1024):
         super(cGraspvae, self).__init__()
 
         self.in_channel_obj = in_channel_obj
@@ -27,34 +32,65 @@ class cGraspvae(nn.Module):
         self.decoder_sizes = decoder_sizes
         self.condition_size = condition_size
 
-        self.obj_encoder = PointNetEncoder(global_feat=True, feature_transform=False, channel=self.in_channel_obj)
+        # self.obj_encoder = PointNetEncoder(global_feat=False, feature_transform=False, channel=self.in_channel_obj)
         self.hand_encoder = PointNetEncoder(global_feat=True, feature_transform=False, channel=self.in_channel_hand)
+        if cfg.fit_Condition is not True:
+            self.obj_rc_encoder = ObjRegionConditionEncoder()
 
         self.cvae = VAE(encoder_layer_sizes=self.encoder_sizes,
                         latent_size=self.latent_size,
                         decoder_layer_sizes=self.decoder_sizes,
                         condition_size=self.condition_size)
 
-    def forward(self, obj_pc, hand_xyz):
+    def forward(self, obj_pc, hand_xyz, region_mask=None, condition_vec=None):
         """
         :param obj_pc:[B, 3+n, N1]
         :param hand_param: [B, 61]
         :return: reconstructed hand vertex
         """
 
-        B = obj_pc.shape[0]
-        obj_glb_feature, _, _ = self.obj_encoder(obj_pc) # [B, 1024]
+        B = obj_pc.size(0)
+        # obj_pc_masked = region_masked_pointwise(obj_pc, region_mask)
+        # obj_glb_feature, _, _ = self.obj_encoder(obj_pc) # [B, 1024]
         hand_glb_feature, _, _ = self.hand_encoder(hand_xyz) # [B, 1024]
-        recon, means, log_var, z = self.cvae(x=hand_glb_feature, c=obj_glb_feature)
-        recon = recon.contiguous().view(B, 61)
+        if condition_vec is None:
+            assert region_mask is not None
+            obj_rc_glb_feature, _, _ = self.obj_rc_encoder(obj_pc, region_mask)
+            condition_vec = obj_rc_glb_feature
+        recon, means, log_var, z = self.cvae(x=hand_glb_feature, c=condition_vec)
+        pose, trans = recon
+        recon = hand_params_decode(pose, trans)
+        # recon = recon.contiguous().view(B, 61)
         return recon, means, log_var, z
 
-    def inference(self, obj_pc):
+    def inference(self, obj_pc, region_mask=None, condition_vec=None):
         B = obj_pc.size(0)
-        obj_glb_feature, _, _ = self.obj_encoder(obj_pc)
-        recon, z = self.cvae.inference(n=B, c=obj_glb_feature)
-        recon = recon.contiguous().view(B, 61)
+        # obj_pc_masked = region_masked_pointwise(obj_pc, region_mask)
+        if condition_vec is None:
+            assert region_mask is not None
+            obj_rc_glb_feature, _, _ = self.obj_rc_encoder(obj_pc, region_mask)
+            condition_vec = obj_rc_glb_feature
+        recon, z = self.cvae.inference(n=B, c=condition_vec)
+        # recon = recon.contiguous().view(B, 61)
+        pose, trans = recon
+        recon = hand_params_decode(pose, trans)
         return recon
+
+def hand_params_decode(pose, trans):
+    batch_size = trans.shape[0]
+
+    pose_full = CRot2rotmat(pose) # [bs*16, 3, 3]
+    pose = pose_full.view([batch_size, 1, -1, 9]) # [bs, 1, 16, 9]
+    pose = rotmat2aa(pose).view(batch_size, -1) # [bs, 48]
+
+    global_orient = pose[:, :3]
+    hand_pose = pose[:, 3:]
+    pose_full = pose_full.view([batch_size, -1, 3, 3])
+
+    hand_params = {'global_orient':global_orient, 'hand_pose':hand_pose, 'transl':trans, 'fullpose':pose_full}
+
+    return hand_params
+
 
 
 if __name__ == "__main__":

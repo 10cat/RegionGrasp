@@ -40,6 +40,7 @@ class cGraspvaeLoss(nn.Module):
     def __init__(self):
         super(cGraspvaeLoss, self).__init__()
 
+        
 
 
 if __name__ == "__main__":
