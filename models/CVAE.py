@@ -2,6 +2,7 @@ from copy import deepcopy
 import torch
 import torch.nn as nn
 from option import MyOptions as cfg
+from utils.utils import get_std
 
 class VAE(nn.Module):
     def __init__(self, encoder_layer_sizes, latent_size, decoder_layer_sizes,
@@ -31,7 +32,7 @@ class VAE(nn.Module):
     def forward(self, x, c=None):
         batch_size = x.size(0)
         means, log_var = self.encoder(x, c)
-        std = torch.exp(0.5 * log_var)
+        std = get_std(log_var)
         eps = torch.randn([batch_size, self.latent_size], device=means.device)
         z = eps * std + means
 

@@ -8,6 +8,10 @@ import inspect
 import random
 import torch.nn.functional as F
 import chamfer_distance as chd
+import sys
+sys.path.append('.')
+sys.path.append('..')
+from option import MyOptions as cfg
 
 to_cpu = lambda tensor: tensor.detach().cpu().numpy() # 好！直接用lambda代入法一句话代替函数
 
@@ -61,6 +65,15 @@ def makepath(desired_path, isfile=False):
     else:
         if not os.path.exists(desired_path): os.makedirs(desired_path)
     return desired_path
+
+def get_std(log_vars):
+    p_std = 0
+    if cfg.std_type == 'softplus':
+        p_std = F.softplus(log_vars)
+    if cfg.std_type == 'exp':
+        p_std = torch.exp(cfg.std_exp_beta * log_vars)
+
+    return p_std
 
 def euler(rots, order="xyz", units="deg"):
     '''

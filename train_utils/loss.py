@@ -3,7 +3,7 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 from option import MyOptions as cfg
-from utils.utils import point2point_signed
+from utils.utils import get_std, point2point_signed
 from pytorch3d.structures import Meshes
 import chamfer_distance as chd
 
@@ -75,14 +75,15 @@ class cGraspvaeLoss(nn.Module):
         loss_dist_o = cfg.lambda_dist_o * torch.mean(torch.einsum('ij,ij->ij', torch.abs(o2h_signed_pred - o2h_signed), weight))
         return loss_dist_h, loss_dist_o
 
-    def KLLoss(self, rhand_vs, p_mean, p_std):
+    def KLLoss(self, rhand_vs, p_mean, log_vars):
         device = rhand_vs.device
         dtype = rhand_vs.dtype
         # import pdb; pdb.set_trace()
         B = rhand_vs.size(0)
-        q_z = torch.distributions.normal.Normal(p_mean, F.softplus(p_std)) # why we have softplus here: turn the negative std components to positive
 
-        # q_z = torch.distributions.normal.Normal(p_mean, torch.exp(0.5 * p_std))
+        p_std = get_std(log_vars) 
+        q_z = torch.distributions.normal.Normal(p_mean, p_std)
+        
         p_z = torch.distributions.normal.Normal(
             loc=torch.tensor(np.zeros([B, cfg.VAE_enc_out_size]), requires_grad=False).to(device).to(dtype),
             scale=torch.tensor(np.ones([B, cfg.VAE_enc_out_size]), requires_grad=False).to(device).to(dtype)
@@ -125,8 +126,8 @@ class cGraspvaeLoss(nn.Module):
 
         #### KL Loss ####
         if sample_stats is not None: 
-            p_mean, p_std, Zin = sample_stats
-            loss_kl = self.KLLoss(rhand_vs, p_mean, p_std)
+            p_mean, log_vars, Zin = sample_stats
+            loss_kl = self.KLLoss(rhand_vs, p_mean, log_vars)
         else:
             loss_kl = torch.tensor(0.0, dtype=float).to(self.device)
 

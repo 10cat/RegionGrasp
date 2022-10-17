@@ -12,7 +12,7 @@ class MyOptions:
     """
     w_wandb: bool = True
     exp_name: str = 'cgrasp_1_debug1' # 1
-    note: str = 'changed the parameterization of standard variations'
+    note: str = 'changed the parameterization of standard variations to exp'
     mode: str = 'train'
     cuda_id: int = 1
     num_mask: int = 1
@@ -46,6 +46,8 @@ class MyOptions:
     VAE_encoder_sizes = [1024, 512, 256]
     VAE_enc_out_size: int = 64
     VAE_condition_size: int = 1024 # fusion layers output dim = 1024
+    std_type: str = 'exp'
+    std_exp_beta: int = 0.5
 
     """
     Loss Configuration
