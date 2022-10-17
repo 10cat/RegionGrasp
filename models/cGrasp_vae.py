@@ -21,13 +21,13 @@ from option import MyOptions as cfg
 
 
 class cGraspvae(nn.Module):
-    def __init__(self, in_channel_obj=4, in_channel_hand=3, encoder_sizes=[1024, 512, 256], \
-                latent_size=64, decoder_sizes=[1024, 256, [16*6, 3]], condition_size=1024):
+    def __init__(self, in_channel_obj=3, in_channel_hand=3, encoder_sizes=cfg.VAE_encoder_sizes,
+                latent_size=64, decoder_sizes=[1024, 256, [16*6, 3]], condition_size=cfg.VAE_condition_size):
         super(cGraspvae, self).__init__()
 
         self.in_channel_obj = in_channel_obj
         self.in_channel_hand = in_channel_hand
-        self.encoder_sizes = encoder_sizes
+        self.encoder_sizes = cfg.VAE_encoder_sizes
         self.latent_size = latent_size
         self.decoder_sizes = decoder_sizes
         self.condition_size = condition_size
@@ -36,6 +36,9 @@ class cGraspvae(nn.Module):
         self.hand_encoder = PointNetEncoder(global_feat=True, feature_transform=False, channel=self.in_channel_hand)
         if cfg.fit_Condition is not True:
             self.obj_rc_encoder = ObjRegionConditionEncoder()
+
+        
+        # import pdb; pdb.set_trace()
 
         self.cvae = VAE(encoder_layer_sizes=self.encoder_sizes,
                         latent_size=self.latent_size,
@@ -58,10 +61,11 @@ class cGraspvae(nn.Module):
             obj_rc_glb_feature, _, _ = self.obj_rc_encoder(obj_pc, region_mask)
             condition_vec = obj_rc_glb_feature
         recon, means, log_var, z = self.cvae(x=hand_glb_feature, c=condition_vec)
+        # import pdb; pdb.set_trace()
         pose, trans = recon
         recon = hand_params_decode(pose, trans)
         # recon = recon.contiguous().view(B, 61)
-        return recon, means, log_var, z
+        return recon, [means, log_var, z]
 
     def inference(self, obj_pc, region_mask=None, condition_vec=None):
         B = obj_pc.size(0)
@@ -94,13 +98,18 @@ def hand_params_decode(pose, trans):
 
 
 if __name__ == "__main__":
-    obj_verts = torch.randn(16, 3, 3000)
-    hand_verts = torch.randn(16, 3, 778)
+    B = cfg.batch_size
+    obj_verts = torch.randn(B, 3, 3000)
+    region_mask = torch.randn(B, 1, 3000)
+    hand_verts = torch.randn(B, 3, 778)
 
     model = cGraspvae(in_channel_obj=3)
 
-    recon, means, log_var, z = model(obj_verts, hand_verts)
+    recon, stats = model(obj_verts, hand_verts, region_mask)
+    means, log_var, z = stats
+    import pdb; pdb.set_trace()
+
 
     recon_inf = model.inference(obj_verts)
-    import pdb; pdb.set_trace()
+    
     

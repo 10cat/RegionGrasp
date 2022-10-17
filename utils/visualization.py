@@ -74,3 +74,13 @@ def visual_obj_contact_regions(Mesh, obj_face_ids, candidates, all=False, check=
     
     if all and check:
         Mesh.show()
+
+def visual_obj(Mesh, region_centers=None, region_faces_ids=None):
+    Mesh.visual.face_colors = colors_like(colors['grey'])
+    if region_faces_ids is not None: Mesh.visual.face_colors[region_faces_ids] = colors_like(colors['blue'])
+    if region_centers is not None: Mesh.visual.face_colors[region_centers] = colors_like(colors['yellow'])
+    return
+
+def visual_hand(Mesh):
+    Mesh.visual.face_colors = colors_like(colors['skin'])
+    return

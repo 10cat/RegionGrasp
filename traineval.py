@@ -14,21 +14,33 @@ import random
 from utils.utils import set_random_seed
 
 
-def train_val(trainloader, valloader, testloader):
-    trainer = TrainEpoch(trainloader)
-    valer = ValEpoch(valloader, mode='val')
+def train_val():
+    traindataset = GrabNetDataset(config.dataset_dir, 'train', num_mask=cfg.num_mask)
+    trainloader = data.DataLoader(traindataset, batch_size=cfg.batch_size, shuffle=True)
+
+    valdataset = GrabNetDataset(config.dataset_dir, 'val', num_mask=cfg.num_mask)
+    valloader = data.DataLoader(valdataset, batch_size=cfg.batch_size, shuffle=False)
+
+    trainer = TrainEpoch(trainloader, traindataset)
+
+    # import pdb; pdb.set_trace()
+
+    valer = ValEpoch(valloader, valdataset, mode='val')
     # tester = ValEpoch(testloader, mode='test')
     best_val = None
 
     for epoch in range(cfg.start_epoch - 1, cfg.num_epoch):
-        checkpoints = trainer.epoch(epoch + 1)
-        valer.epoch(epoch + 1, best_val=best_val, checkpoints=checkpoints)
+        checkpoints, _ = trainer.one_epoch(epoch + 1, best_val=best_val)
+        _, best_val = valer.one_epoch(epoch + 1, best_val=best_val, checkpoints=checkpoints)
+        
     
     # tester.epoch(epoch, best_val=best_val)
     # print(f"Done with experiment: {cfg.exp_name}")
 
 def evaluation(testloader):
-    ValEpoch(testloader)
+    testdataset = GrabNetDataset(config.dataset_dir, 'test', num_mask=cfg.num_mask)
+    testloader = data.DataLoader(testdataset, batch_size=cfg.batch_size, shuffle=False)
+    ValEpoch(testloader, testdataset)
 
 
 if __name__ == "__main__":
@@ -50,19 +62,9 @@ if __name__ == "__main__":
                 config=OmegaConf.to_container(conf, resolve=True)) # omegaconf: resolve=True即可填写自动变量
 
     if cfg.mode == 'train':
-        traindataset = GrabNetDataset(config.dataset_dir, 'train', num_mask=cfg.num_mask)
-        trainloader = data.DataLoader(traindataset, batch_size=cfg.batch_size, shuffle=True)
-
-        valdataset = GrabNetDataset(config.dataset_dir, 'val', num_mask=cfg.num_mask)
-        valloader = data.DataLoader(valdataset, batch_size=cfg.batch_size, shuffle=False)
-
-    testdataset = GrabNetDataset(config.dataset_dir, 'test', num_mask=cfg.num_mask)
-    testloader = data.DataLoader(testdataset, batch_size=cfg.batch_size, shuffle=False)
-
-    if cfg.mode == 'train':
-        train_val(trainloader, valloader, testloader)
+        train_val()
     else:
-        evaluation(testloader)
+        evaluation()
 
     
 

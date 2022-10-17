@@ -23,3 +23,4 @@ config: {'w_wandb': True, 'exp_name': 'conditionnet_pretrain_2', 'mode': 'train'
 2022-10-10 13:52:25,229 INFO    MainThread:19723 [wandb_run.py:_redirect():1877] Wrapping output streams.
 2022-10-10 13:52:25,229 INFO    MainThread:19723 [wandb_run.py:_redirect():1899] Redirects installed.
 2022-10-10 13:52:25,230 INFO    MainThread:19723 [wandb_init.py:init():764] run started, returning control to user process
+2022-10-11 17:38:20,956 WARNING MsgRouterThr:19723 [router.py:message_loop():77] message_loop has been closed

@@ -18,13 +18,15 @@ from copy import deepcopy
 from trimesh import viewer
 from pycaster import pycaster
 
+import mano
+
 import time
 import random
 from utils.utils import func_timer, makepath
 from utils.visualization import visual_sdf, visual_obj_contact_regions
 # from vedo import show
 class GrabNetDataset(data.Dataset):
-    
+    @func_timer
     def __init__(self,
                  dataset_dir,
                 #  config,
@@ -108,6 +110,8 @@ class GrabNetDataset(data.Dataset):
         # import pdb; pdb.set_trace()
         ####
 
+        self.region_face_ids = {}
+
     def load_obj_meshes(self):
         obj_meshes = {}
         obj_files = os.listdir(self.obj_mesh_dir)
@@ -189,7 +193,9 @@ class GrabNetDataset(data.Dataset):
         region_mask_np = np.zeros_like(obj_vertices[:, :1], dtype=float)
         region_mask_np[region_vertices_ids] = 1.0
 
-        return region_mask_np, region_centers
+        self.region_face_ids[str(idx)] = region_faces_ids
+
+        return region_mask_np, region_centers, region_faces_ids
 
     def obj_annots_2torch(self, sample, idx):
         """
@@ -219,17 +225,20 @@ class GrabNetDataset(data.Dataset):
             obj_sdf_np = np.concatenate([obj_sdf_np.reshape(-1, 1), add_sdf.reshape(-1, 1)])
             # import pdb; pdb.set_trace()
 
-        region_mask_np, region_centers = self.region_mask_vertices(sample, obj_vertices, obj_faces, idx)
+        region_mask_np, region_centers, region_faces_ids = self.region_mask_vertices(sample, obj_vertices, obj_faces, idx)
         # import pdb; pdb.set_trace()
 
         # numpy 2 torch
         vertices = torch.from_numpy(obj_vertices).float()
         region_mask = torch.from_numpy(region_mask_np).float()
         region_centers = torch.from_numpy(region_centers).float()
+        # region_faces_ids = torch.tensor(region_faces_ids)
         obj_sdf = torch.from_numpy(obj_sdf_np).reshape(-1, 1).float()
+        # obj_faces = torch.from_numpy(obj_faces).float()
+        sample_idx = torch.tensor([idx])
         # hand_sdf = torch.from_numpy(sample['hand_obj_sdf'])
 
-        return vertices, region_mask, region_centers, obj_sdf
+        return vertices, region_mask, region_centers, obj_sdf, sample_idx
 
 
     def __len__(self):
@@ -245,10 +254,11 @@ class GrabNetDataset(data.Dataset):
             if not self.load_on_ram:
                 data, data_sdf = self.load_disk(idx)
                 data_out.update(data)
+                # import pdb; pdb.set_trace()
                 data_sdf.update(data_out)
                 data_sdf['obj_name'] = self.frame_objs[idx]
                 # import pdb; pdb.set_trace()
-                data_out['verts_obj'], data_out['region_mask'], data_out['region_centers'], data_out['obj_sdf'] = self.obj_annots_2torch(data_sdf, idx) 
+                data_out['verts_obj'], data_out['region_mask'], data_out['region_centers'], data_out['obj_sdf'], data_out['sample_idx'] = self.obj_annots_2torch(data_sdf, idx) 
         return data_out
 
 if __name__ == "__main__":
@@ -259,9 +269,13 @@ if __name__ == "__main__":
 
     dataset_dir = "/home/datassd/yilin/GrabNet/data/"
 
+    traindataset = GrabNetDataset(dataset_dir=dataset_dir, ds_name='train', num_mask=1)
+
     valdataset = GrabNetDataset(dataset_dir=dataset_dir, ds_name='val', num_mask=1)
 
     dataset = GrabNetDataset(dataset_dir=dataset_dir, ds_name='test', num_mask=1)
+
+    traindataset.__getitem__(0)
 
     dataloader = data.DataLoader(dataset, batch_size=16, shuffle=False)
 

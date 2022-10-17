@@ -1,3 +1,4 @@
+from multiprocessing.sharedctypes import Value
 import numpy as np
 import torch
 import logging
@@ -6,6 +7,7 @@ from functools import wraps
 import inspect
 import random
 import torch.nn.functional as F
+import chamfer_distance as chd
 
 to_cpu = lambda tensor: tensor.detach().cpu().numpy() # 好！直接用lambda代入法一句话代替函数
 
@@ -285,10 +287,41 @@ def quaternion_to_angle_axis(quaternion: torch.Tensor) -> torch.Tensor:
     return angle_axis
 
 
+def point2point_signed(x, y, x_normals=None, y_normals=None):
+    N, P1, D = x.shape
+    P2 = y.shape[1]
 
+    if y.shape[0] != N or y.shape[2] != D:
+        raise ValueError("y does not have the correct shape")
 
+    ch_dist = chd.ChamferDistance()
 
+    x_near, y_near, xid_near, yidx_near = ch_dist(x, y)
 
+    xidx_near_expanded = xid_near.view(N, P1, 1).expand(N, P1, D).to(torch.long)
+    x_near = y.gather(1, xidx_near_expanded)
+
+    yidx_near_expanded = yidx_near.view(N, P2, 1).expand(N, P2, D).to(torch.long)
+    y_near = x.gather(1, yidx_near_expanded)
+
+    x2y = x - x_near
+    y2x = y - y_near
+
+    if x_normals is not None:
+        y_nn = x_normals.gather(1, yidx_near_expanded) #
+        in_out = torch.bmm(y_nn.view(-1, 1, 3), y2x.view(-1, 3, 1)).view(N, -1).sign()
+        y2x_signed = y2x.norm(dim=2) * in_out
+    else:
+        y2x_signed = y2x.norm(dim=2)
+
+    if y_normals is not None:
+        x_nn = y_normals.gather(1, xidx_near_expanded)
+        in_out = torch.bmm(x_nn.view(-1, 1, 3), x2y.view(-1, 3, 1)).view(N, -1).sign()
+        x2y_signed = x2y.norm(dim=2) * in_out
+    else:
+        x2y_signed = x2y.norm(dim=2)
+
+    return y2x_signed, x2y_signed, yidx_near
 
     
 contact_ids={'Body': 1,

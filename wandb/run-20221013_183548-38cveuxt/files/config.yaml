@@ -1,0 +1,138 @@
+wandb_version: 1
+
+SDmap_input_dim:
+  desc: null
+  value: 1088
+SDmap_leaky_slope:
+  desc: null
+  value: 1.0
+SDmap_output_dim:
+  desc: null
+  value: 1
+VAE_condition_size:
+  desc: null
+  value: 1024
+VAE_enc_out_size:
+  desc: null
+  value: 64
+_wandb:
+  desc: null
+  value:
+    cli_version: 0.13.3
+    framework: torch
+    is_jupyter_run: false
+    is_kaggle_kernel: false
+    python_version: 3.8.13
+    start_time: 1665707748.624704
+    t:
+      1:
+      - 1
+      - 5
+      - 53
+      - 55
+      2:
+      - 1
+      - 5
+      - 53
+      - 55
+      3:
+      - 13
+      - 16
+      - 23
+      4: 3.8.13
+      5: 0.13.3
+      8:
+      - 5
+batch_size:
+  desc: null
+  value: 32
+check_interval:
+  desc: null
+  value: 2
+exp_name:
+  desc: null
+  value: cgrasp_1
+fit_Condition:
+  desc: null
+  value: false
+fit_cGrasp:
+  desc: null
+  value: true
+forward_Condition:
+  desc: null
+  value: false
+forward_cGrasp:
+  desc: null
+  value: true
+kl_coef:
+  desc: null
+  value: 0.005
+lambda_cond:
+  desc: null
+  value: 1.0
+lambda_dist_h:
+  desc: null
+  value: 34.825
+lambda_dist_o:
+  desc: null
+  value: 29.85
+lambda_edge:
+  desc: null
+  value: 29.85
+lambda_feat:
+  desc: null
+  value: 0.01
+lambda_mesh_rec_w:
+  desc: null
+  value: 29.85
+lambda_om:
+  desc: null
+  value: 1.0
+learning_rate:
+  desc: null
+  value: 0.001
+mano_rh_path:
+  desc: null
+  value: /home/datassd/yilin/Codes/_toolbox/mano/models/MANO_RIGHT.pkl
+mode:
+  desc: null
+  value: train
+model_root:
+  desc: null
+  value: /home/datassd/yilin/Outputs/ConditionHOI/cgrasp_1/model
+num_epoch:
+  desc: null
+  value: 30
+num_mask:
+  desc: null
+  value: 1
+num_obj_verts:
+  desc: null
+  value: 3000
+output_root:
+  desc: null
+  value: /home/datassd/yilin/Outputs/ConditionHOI/cgrasp_1
+start_epoch:
+  desc: null
+  value: 1
+th_contact:
+  desc: null
+  value: 0.01
+th_penet:
+  desc: null
+  value: -0.005
+use_gtsdm:
+  desc: null
+  value: false
+w_wandb:
+  desc: null
+  value: true
+weight_contact:
+  desc: null
+  value: 0.1
+weight_penet:
+  desc: null
+  value: 1.5
+weight_region:
+  desc: null
+  value: 1.5

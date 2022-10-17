@@ -364,8 +364,8 @@ class GrabNetDataset(data.Dataset):
         rhand_sbj_model = load(model_path = self.mano_path,
                           is_rhand = True,
                           num_pca_comps=45,
-                          betas = betas,
-                          v_template = vtemp,
+                        #   betas = betas,
+                        #   v_template = vtemp,
                           flat_hand_mean=True)
         
 
@@ -463,8 +463,8 @@ if __name__ == "__main__":
     # test_idx = np.arange(0, int(math.ceil(dataset.__len__()/2))).tolist()
     test_idx = np.arange(0, dataset.__len__()).tolist()
     for idx in tqdm(test_idx):
-        if idx < 50000: # test 50000
-            continue
+        if idx > 0: # test 50000
+            break
         dataset.__getitem__(idx)
 
     # ObjMesh, HandMesh, hoi_info = dataset.get_new_annotations(0)

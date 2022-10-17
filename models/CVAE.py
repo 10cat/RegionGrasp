@@ -1,5 +1,7 @@
+from copy import deepcopy
 import torch
 import torch.nn as nn
+from option import MyOptions as cfg
 
 class VAE(nn.Module):
     def __init__(self, encoder_layer_sizes, latent_size, decoder_layer_sizes,
@@ -14,12 +16,16 @@ class VAE(nn.Module):
         assert type(decoder_layer_sizes) == list
 
         self.latent_size = latent_size
+        
+        # import pdb; pdb.set_trace()
 
         self.encoder = Encoder(
             encoder_layer_sizes, latent_size, conditional, condition_size)
 
         self.decoder = Decoder(
             decoder_layer_sizes, latent_size, conditional, condition_size)
+        
+        # import pdb; pdb.set_trace()
 
     
     def forward(self, x, c=None):
@@ -42,12 +48,16 @@ class VAE(nn.Module):
 
 class Encoder(nn.Module):
 
-    def __init__(self, layer_sizes, latent_size, conditional, condition_size):
+    def __init__(self, layer_sizes_set, latent_size, conditional, condition_size):
         
         super().__init__()
 
+        layer_sizes = deepcopy(layer_sizes_set) # 发现：必须要在这一步用deepcopy才不会将某一次init中layer_sizes[0] += condition_size的变化传递到cfg.VAE_encoder_sizes上，任何之前一步做deepcopy都无济于事（？？？）
+        # layer_sizes = layer_sizes_set
+
         self.conditional = conditional
         if self.conditional:
+            # import pdb; pdb.set_trace()
             layer_sizes[0] += condition_size
 
         self.MLP = nn.Sequential()

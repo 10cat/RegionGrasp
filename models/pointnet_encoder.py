@@ -182,14 +182,19 @@ class ObjRegionConditionEncoder(PointNetEncoder):
 
 
     def forward(self, obj_pc, region_mask):
-        x, trans, trans_feat, N = self.pre_pointfeat_forward(x)
+
+        B = obj_pc.shape[0]
+        x, trans, trans_feat, N = self.pre_pointfeat_forward(obj_pc)
 
         pointfeat = x # local feature for every given points -- (B, 64, N)
-        pointfeat_masked = region_masked_pointwise()
+        # import pdb; pdb.set_trace()
+        pointfeat_masked = region_masked_pointwise(pointfeat, region_mask)
         
         x1 = self.pointfeat_forward(pointfeat)
         x2 = self.pointfeat_masked_forward(pointfeat_masked)
 
-        x = self.bnfuse(self.convfuse(torch.cat((x1, x2), dim=-1))) # use global fuse feature
+        x = self.bnfuse(self.convfuse(torch.cat((x1, x2), dim=-1).unsqueeze(2))) # use global fuse feature
 
+        x = x.view(B, -1)
+        
         return x, trans, trans_feat
