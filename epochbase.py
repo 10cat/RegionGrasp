@@ -38,10 +38,10 @@ class Epoch(nn.Module):
         self.use_cuda = use_cuda
         self.device = torch.device("cuda:%d" % cuda_id if self.use_cuda and torch.cuda.is_available() else 'cpu')
         self.save_visual = save_visual
-        self.output_root = cfg.output_root
+        self.output_dir = cfg.output_dir
         self.model_root = cfg.model_root
         self.dataset = dataset
-        self.log_monitor = Monitor(log_folder_path=cfg.output_root)
+        self.log_monitor = Monitor(log_folder_path=cfg.output_dir)
         self.models = self.init_models()
         self.init_mano()
         self.init_optimizers()
@@ -90,7 +90,8 @@ class Epoch(nn.Module):
     def model_mode_setting(self):
         for model in self.models:
             model.train() if self.mode == 'train' else model.eval()
-            model.to('cuda') if self.use_cuda else model.to('cpu')
+            model.to(self.device) if self.use_cuda else model.to('cpu')
+            
 
     def to_device(self, tensor):
         if self.use_cuda:
@@ -230,7 +231,7 @@ class Epoch(nn.Module):
         batch_size = obj_vs.size(0)
         # import pdb; pdb.set_trace()
 
-        output_mesh_root = os.path.join(self.output_root, self.mode + '_meshes')
+        output_mesh_root = os.path.join(self.output_dir, self.mode + '_meshes')
         makepath(output_mesh_root)
         output_mesh_folder = os.path.join(output_mesh_root, 'batch_'+str(batch_id), f'epoch_{self.epoch}')
         makepath(output_mesh_folder)
@@ -339,6 +340,7 @@ class Epoch(nn.Module):
             self.load_checkpoints(checkpoints)
         self.epoch = epoch
         self.model_mode_setting()
+        # import pdb; pdb.set_trace()
         self.Losses, self.Metrics = AverageMeters(), AverageMeters()
         for idx, sample in enumerate(tqdm(self.dataloader, desc=f'{self.mode} epoch:{epoch}')):
             # if idx > 0:
@@ -374,7 +376,7 @@ class ValEpoch(Epoch):
     def save_checkpoints(self, epoch, best_val):
         if cfg.fit_cGrasp:
             metric_val = self.Metrics.average_meters['max_depth_ratio'].avg # TODO use max_depth_ratio as the main metrics
-            if best_val is not None and metric_val < best_val:
+            if best_val is not None and metric_val > 1 and metric_val < best_val:
                 checkpoint_path = os.path.join(self.model_root, f'bestmodel.pth')
                 torch.save({'epoch':epoch,
                         'best_val': best_val,
@@ -383,6 +385,8 @@ class ValEpoch(Epoch):
                         checkpoint_path)
                 best_val = metric_val
                 print("Saved the latest best model!")
+            elif best_val is None:
+                best_val = metric_val
 
         return best_val
 

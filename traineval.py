@@ -1,3 +1,4 @@
+from calendar import c
 import os
 import sys
 sys.path.append('.')
@@ -21,17 +22,16 @@ def train_val():
     valdataset = GrabNetDataset(config.dataset_dir, 'val', num_mask=cfg.num_mask)
     valloader = data.DataLoader(valdataset, batch_size=cfg.batch_size, shuffle=False)
 
-    trainer = TrainEpoch(trainloader, traindataset)
-
+    trainer = TrainEpoch(trainloader, traindataset, use_cuda=cfg.use_cuda, cuda_id=cfg.cuda_id)
     # import pdb; pdb.set_trace()
-
-    valer = ValEpoch(valloader, valdataset, mode='val')
+    valer = ValEpoch(valloader, valdataset, mode='val', use_cuda=cfg.use_cuda, cuda_id=cfg.cuda_id)
     # tester = ValEpoch(testloader, mode='test')
     best_val = None
 
     for epoch in range(cfg.start_epoch - 1, cfg.num_epoch):
         checkpoints, _ = trainer.one_epoch(epoch + 1, best_val=best_val)
         _, best_val = valer.one_epoch(epoch + 1, best_val=best_val, checkpoints=checkpoints)
+        torch.cuda.empty_cache()
         
     
     # tester.epoch(epoch, best_val=best_val)
@@ -59,8 +59,9 @@ if __name__ == "__main__":
 
         wandb.init(project="ConditionHOI",
                 name=cfg.exp_name,
-                config=OmegaConf.to_container(conf, resolve=True)) # omegaconf: resolve=True即可填写自动变量
-
+                config=OmegaConf.to_container(conf, resolve=True),
+                dir=os.path.join(cfg.output_root, 'wandb')) # omegaconf: resolve=True即可填写自动变量
+                # dir: set the absolute path for storing the metadata of each runs
     if cfg.mode == 'train':
         train_val()
     else:

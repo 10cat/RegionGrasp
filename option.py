@@ -11,10 +11,11 @@ class MyOptions:
     Base Configuration
     """
     w_wandb: bool = True
-    exp_name: str = 'cgrasp_1_debug1' # 1
-    note: str = 'changed the parameterization of standard variations to exp'
+    exp_name: str = 'cgrasp_1_debug2' # 1
+    note: str = 'debug: solve unconsistency of the std parameterization in models and losses -- exp'
     mode: str = 'train'
-    cuda_id: int = 1
+    use_cuda: bool = True
+    cuda_id: int = 0
     num_mask: int = 1
     num_obj_verts: int = 3000
     batch_size: int = 32
@@ -47,7 +48,7 @@ class MyOptions:
     VAE_enc_out_size: int = 64
     VAE_condition_size: int = 1024 # fusion layers output dim = 1024
     std_type: str = 'exp'
-    std_exp_beta: int = 0.5
+    std_exp_beta: float = 0.5
 
     """
     Loss Configuration
@@ -76,9 +77,10 @@ class MyOptions:
     """
     Root Path
     """
-    output_root: str = "/home/datassd/yilin/Outputs/ConditionHOI/"+exp_name
+    output_root: str = "/home/datassd/yilin/Outputs/ConditionHOI/"
+    output_dir: str = "/home/datassd/yilin/Outputs/ConditionHOI/"+exp_name
     mano_rh_path: str = f"/home/datassd/yilin/Codes/_toolbox/mano/models/MANO_RIGHT.pkl"
-    model_root: str= os.path.join(output_root, 'model')
+    model_root: str= os.path.join(output_dir, 'model')
     check_interval: int = 2
     visual_interval_val: int = 100
     visual_sample_interval: int = 4
