@@ -1,4 +1,6 @@
+from asyncio import FastChildWatcher
 import os
+from cv2 import fastNlMeansDenoisingColored
 import torch 
 from torch import optim
 from dataclasses import dataclass
@@ -11,16 +13,17 @@ class MyOptions:
     Base Configuration
     """
     w_wandb: bool = True
-    exp_name: str = 'cgrasp_1_debug2' # 1
-    note: str = 'debug: solve unconsistency of the std parameterization in models and losses -- exp'
+    exp_name: str = 'debug_penetrate_depth_o2h' # 1
+    note: str = 'debug -- penetration depth computation -- test for using o2h signed distance for computing penetration depth '
     mode: str = 'train'
     use_cuda: bool = True
     cuda_id: int = 0
     num_mask: int = 1
+    num_rhand_verts: int = 778
     num_obj_verts: int = 3000
     batch_size: int = 32
     start_epoch: int = 1
-    num_epoch: int = 30
+    num_epoch: int = 20
     forward_Condition: bool = False
     forward_cGrasp: bool = True
     fit_Condition: bool = False
@@ -71,6 +74,13 @@ class MyOptions:
     lambda_edge: float = 30 * (1. - kl_coef)
     vpe_path = "./config/verts_per_edge.npy"
     c_weights_path = "./config/rhand_weight.npy"
+
+
+    """
+    Metrics Configuration
+    """
+    use_h2osigned: bool = False
+    penetrate_threshold: float = 0.005
 
 
     

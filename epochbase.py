@@ -146,7 +146,7 @@ class Epoch(nn.Module):
         return outputs
 
     # @func_timer
-    def loss_compute(self, outputs, data):
+    def loss_compute(self, outputs, data, sample_ids=None):
         
         region, region_centers, obj_vs, obj_sdfs, rhand_vs = data
 
@@ -166,7 +166,18 @@ class Epoch(nn.Module):
         if cfg.fit_cGrasp:
             assert outputs['hand_params'] is not None
             # if self.use_cuda: self.cGraspVAELoss.to('cuda')
-            loss_cgrasp, dict_loss_cgrasp, signed_dists = self.cGraspVAELoss(outputs['hand_params'], outputs['sample_stats'], obj_vs, rhand_vs, region)
+            if cfg.use_h2osigned:
+                assert sample_ids is not None
+                # import pdb; pdb.set_trace()
+                sample_ids = sample_ids.reshape(-1).tolist()
+                obj_names = self.dataset.frame_objs[sample_ids]
+                # ObjMeshes = self.dataset.object_meshes[obj_names]
+                obj_mesh_faces = [torch.Tensor(self.dataset.object_meshes[name].faces).to(self.device) for name in obj_names]
+            else:
+                obj_mesh_faces = None
+            
+            
+            loss_cgrasp, dict_loss_cgrasp, signed_dists = self.cGraspVAELoss(outputs['hand_params'], outputs['sample_stats'], obj_vs, rhand_vs, region, obj_mesh_faces=obj_mesh_faces)
             # dict_loss_cgrasp stores the loss value for each sub loss terms in cGraspVAELoss
             dict_losses['total_loss_cgrasp'] = loss_cgrasp
         
@@ -276,7 +287,7 @@ class Epoch(nn.Module):
         self.init_losses() # losses initialization requires the repeated rhand faces
 
         outputs = self.model_forward(data_elements)
-        dict_losses, signed_dists = self.loss_compute(outputs, data_elements)
+        dict_losses, signed_dists = self.loss_compute(outputs, data_elements, sample_ids=sample['sample_idx'])
         if self.mode == 'train':
             self.model_update(dict_losses)
 
@@ -343,8 +354,8 @@ class Epoch(nn.Module):
         # import pdb; pdb.set_trace()
         self.Losses, self.Metrics = AverageMeters(), AverageMeters()
         for idx, sample in enumerate(tqdm(self.dataloader, desc=f'{self.mode} epoch:{epoch}')):
-            # if idx > 0:
-            #     break
+            if idx > 10:
+                break
             # if idx < len(self.dataloader) - 1:
             #     continue
             if self.mode != 'train':

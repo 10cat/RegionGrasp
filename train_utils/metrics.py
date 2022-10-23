@@ -1,3 +1,8 @@
+from multiprocessing.sharedctypes import Value
+import sys
+sys.path.append('.')
+sys.path.append('..')
+from option import MyOptions as cfg
 import torch 
 import torch.nn as nn
 from utils.utils import point2point_signed
@@ -18,7 +23,7 @@ class cGraspvaeMetrics(nn.Module):
         self.rh_f = rh_f
         self.device = device
 
-    def penetration(self, signed_dists):
+    def penetration(self, signed_dists, penetrate_th=cfg.penetrate_threshold):
         """
         Compute the max penetration depth between predicted hand mesh and object mesh / origin hand mesh and object mesh;
         
@@ -27,10 +32,39 @@ class cGraspvaeMetrics(nn.Module):
         - max penetration depth of origin mesh
         - ratio between the two
         """
-        o2h_signed_pred, o2h_signed = signed_dists
+        o2h_signed_pred, o2h_signed, h2o_signed, h2o_signed_pred = signed_dists
+        # (B, N1, 1) / (B, N2, 1)
 
-        max_depth_pred = o2h_signed_pred.min()
-        max_depth = o2h_signed.min()
+        batch_size = o2h_signed.shape[0]
+        obj_point_nb = o2h_signed.shape[1]
+        hand_point_nb = h2o_signed.shape[1]
+
+        # for signed < 0 as penetrate: take min as the max penetration depth
+        func_max_depth = lambda SignedDist: torch.min(SignedDist, dim=1)
+        # func_th_depth = lambda max_depths: max_depths[max_depths > penetrate_th] = 0.0
+        func_mean_depth = lambda max_depths: torch.mean(max_depths)
+
+        # use h2o or o2h for the penetration depth; h2o can be used only when h2o is signed
+        if cfg.use_h2osigned:
+            # import pdb; pdb.set_trace()
+            signed_min_pred = func_max_depth(h2o_signed_pred).values # (B, 1)
+            signed_min = func_max_depth(h2o_signed).values # (B, 1)
+            
+        else:
+            signed_min_pred = func_max_depth(o2h_signed_pred).values # (B, 1)
+            signed_min = func_max_depth(o2h_signed).values # (B, 1)
+
+        # import pdb; pdb.set_trace()
+
+        # given penetration threshold, set those under threshold to 0
+        signed_min_pred[signed_min_pred > penetrate_th] = 0.0
+        signed_min[signed_min > penetrate_th] = 0.0
+        
+        # TODO take batchmean: means of the penetration depths in this batch
+        max_depth_pred = func_mean_depth(signed_min_pred)
+        max_depth = func_mean_depth(signed_min)
+        # import pdb; pdb.set_trace()
+
         max_depth_ratio = max_depth_pred / max_depth
 
         return max_depth_pred, max_depth, max_depth_ratio
