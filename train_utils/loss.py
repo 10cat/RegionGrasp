@@ -7,8 +7,6 @@ from utils.utils import get_std, point2point_signed
 from pytorch3d.structures import Meshes
 import chamfer_distance as chd
 
-pip install --no-index --no-cache-dir pytorch3d -f https://dl.fbaipublicfiles.com/pytorch3d/packaging/wheels/py38_cu114_pyt191/download.html
-
 class ConditionNetLoss(nn.Module):
     def __init__(self):
         super(ConditionNetLoss, self).__init__()
@@ -117,7 +115,7 @@ class cGraspvaeLoss(nn.Module):
         if obj_mesh_faces is not None:
             # obj_mesh_faces = torch.Tensor(obj_mesh_faces)
             # obj_vs = obj_vs.tolist()
-            obj_vs_list = [obj_vs[i] for i in range(obj_vs.shape[0])]
+            obj_vs_list = [obj_vs[i] for i in range(obj_vs.shape[0])] # need to be consistent length list with obj_mesh_faces
             obj_normals = Meshes(verts=obj_vs_list, faces=obj_mesh_faces).to(self.device).verts_normals_packed().view(-1, cfg.num_obj_verts, 3)
         else:
             obj_normals = None
