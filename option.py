@@ -12,7 +12,8 @@ class MyOptions:
     """
     Base Configuration
     """
-    w_wandb: bool = True
+    w_wandb: bool = False
+    machine: str = '41'
     exp_name: str = 'debug_penetrate_depth_o2h' # 1
     note: str = 'debug -- penetration depth computation -- test for using o2h signed distance for computing penetration depth '
     mode: str = 'train'
@@ -80,16 +81,22 @@ class MyOptions:
     Metrics Configuration
     """
     use_h2osigned: bool = False
-    penetrate_threshold: float = 0.005
+    penetrate_threshold: float = -0.005
 
 
     
     """
     Root Path
     """
-    output_root: str = "/home/datassd/yilin/Outputs/ConditionHOI/"
-    output_dir: str = "/home/datassd/yilin/Outputs/ConditionHOI/"+exp_name
-    mano_rh_path: str = f"/home/datassd/yilin/Codes/_toolbox/mano/models/MANO_RIGHT.pkl"
+    if machine == '97':
+        output_root: str = "/home/datassd/yilin/Outputs/ConditionHOI/"
+        output_dir: str = "/home/datassd/yilin/Outputs/ConditionHOI/"+exp_name
+        mano_rh_path: str = f"/home/datassd/yilin/Codes/_toolbox/mano/models/MANO_RIGHT.pkl"
+    if machine == '41':
+        output_root: str = "/home/yilin/Outputs/ConditionHOI/"
+        output_dir: str = "/home/yilin/Outputs/ConditionHOI/"+exp_name
+        mano_rh_path: str = f"/home/yilin/smpl_models/mano/MANO_RIGHT.pkl"
+
     model_root: str= os.path.join(output_dir, 'model')
     check_interval: int = 2
     visual_interval_val: int = 100

@@ -27,17 +27,32 @@ JOINTS_NUM = 15
 """
 Filepath settings
 """
-DATASET_ROOT = "/home/datassd/yilin/GrabNet"
+machine = '41'
+
+if machine == '97':
+
+    DATASET_ROOT = "/home/datassd/yilin/GrabNet"
+
+    mano_dir = "/home/datassd/yilin/Codes/_toolbox/mano/models/MANO_RIGHT.pkl" # MANO right hand model path
+
+    dataset_visual_dir = "/home/datassd/yilin/Outputs/GrabNet_visual"
+
+    OUTPUT_ROOT = "/home/datassd/yilin/Outputs/ConditionHOI"
+
+if machine == '41':
+    DATASET_ROOT = "/home/yilin/GrabNet"
+
+    mano_dir = "/home/yilin/smpl_models/mano/MANO_RIGHT.pkl" # MANO right hand model path
+
+    dataset_visual_dir = "/home/yilin/Outputs/GrabNet_visual"
+
+    OUTPUT_ROOT = "/home/yilin/Outputs/ConditionHOI"
+
+
 
 dataset_dir = os.path.join(DATASET_ROOT, 'data')
 
 obj_mesh_dir = os.path.join(DATASET_ROOT, 'tools/object_meshes/decimate_meshes')
-
-mano_dir = "/home/datassd/yilin/Codes/_toolbox/mano/models/MANO_RIGHT.pkl" # MANO right hand model path
-
-dataset_visual_dir = "/home/datassd/yilin/Outputs/GrabNet_visual"
-
-OUTPUT_ROOT = "/home/datassd/yilin/Outputs/ConditionHOI"
 
 """
 Dataset Generation configuration
