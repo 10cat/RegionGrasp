@@ -7,8 +7,6 @@ from utils.utils import get_std, point2point_signed
 from pytorch3d.structures import Meshes
 import chamfer_distance as chd
 
-
-
 class ConditionNetLoss(nn.Module):
     def __init__(self):
         super(ConditionNetLoss, self).__init__()
@@ -92,7 +90,7 @@ class cGraspvaeLoss(nn.Module):
 
         return loss_kl
 
-    def forward(self, hand_params, sample_stats, obj_vs, rhand_vs, region):
+    def forward(self, hand_params, sample_stats, obj_vs, rhand_vs, region, obj_mesh_faces=None):
 
         B = rhand_vs.size(0)
 
@@ -111,6 +109,15 @@ class cGraspvaeLoss(nn.Module):
         rhand_vs = rhand_vs.transpose(2, 1)
         obj_vs = obj_vs.transpose(2, 1)
 
+        rh_normals_pred = Meshes(verts=rhand_vs_pred, faces=self.rh_f).to(self.device).verts_normals_packed().view(-1, cfg.num_rhand_verts, 3) # packed representation of the vertex normals
+        rh_normals = Meshes(verts=rhand_vs, faces=self.rh_f).to(self.device).verts_normals_packed().view(-1, cfg.num_rhand_verts, 3)
+        if obj_mesh_faces is not None:
+            # obj_mesh_faces = torch.Tensor(obj_mesh_faces)
+            # obj_vs = obj_vs.tolist()
+            obj_vs_list = [obj_vs[i] for i in range(obj_vs.shape[0])] # need to be consistent length list with obj_mesh_faces
+            obj_normals = Meshes(verts=obj_vs_list, faces=obj_mesh_faces).to(self.device).verts_normals_packed().view(-1, cfg.num_obj_verts, 3)
+        else:
+            obj_normals = None
         # import pdb; pdb.set_trace()
 
         rh_mesh_pred = Meshes(verts=rhand_vs_pred, faces=self.rh_f).to(self.device).verts_normals_packed().view(-1, 778, 3) # packed representation of the vertex normals
