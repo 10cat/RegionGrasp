@@ -66,7 +66,8 @@ class cGraspvaeLoss(nn.Module):
         weight = self.w_dist.clone()
         weight[~w_dist] = cfg.weight_contact # less weights for contact verts
         weight[w_dist_neg] = cfg.weight_penet # more weights for penetration verts
-        # conditioned region weights
+
+        # TODO conditioned region weights
         w_region = region > 0.
         # import pdb; pdb.set_trace()
         weight[w_region.squeeze(1)] = cfg.weight_region
@@ -92,7 +93,7 @@ class cGraspvaeLoss(nn.Module):
 
         return loss_kl
 
-    def forward(self, hand_params, sample_stats, obj_vs, rhand_vs, region):
+    def forward(self, hand_params, sample_stats, obj_vs, rhand_vs, region, obj_mesh_faces=None):
 
         B = rhand_vs.size(0)
 
@@ -101,7 +102,7 @@ class cGraspvaeLoss(nn.Module):
         else:
             import mano
             rh_model = mano.load(model_path=cfg.mano_rh_path,
-                                    model_type='mano',
+                                    modåel_type='mano',
                                       num_pca_comps=45,
                                       batch_size=B,
                                       flat_hand_mean=True)
@@ -111,18 +112,21 @@ class cGraspvaeLoss(nn.Module):
         rhand_vs = rhand_vs.transpose(2, 1)
         obj_vs = obj_vs.transpose(2, 1)
 
+        rh_normals_pred = Meshes(verts=rhand_vs_pred, faces=self.rh_f).to(self.device).verts_normals_packed().view(-1, cfg.num_rhand_verts, 3) # packed representation of the vertex normals
+        rh_normals = Meshes(verts=rhand_vs, faces=self.rh_f).to(self.device).verts_normals_packed().view(-1, cfg.num_rhand_verts, 3)
+        if obj_mesh_faces is not None:
+            # obj_mesh_faces = torch.Tensor(obj_mesh_faces)
+            # obj_vs = obj_vs.tolist()
+            obj_vs_list = [obj_vs[i] for i in range(obj_vs.shape[0])]
+            obj_normals = Meshes(verts=obj_vs_list, faces=obj_mesh_faces).to(self.device).verts_normals_packed().view(-1, cfg.num_obj_verts, 3)
+        else:
+            obj_normals = None
         # import pdb; pdb.set_trace()
-
-        rh_mesh_pred = Meshes(verts=rhand_vs_pred, faces=self.rh_f).to(self.device).verts_normals_packed().view(-1, 778, 3) # packed representation of the vertex normals
-        rh_mesh = Meshes(verts=rhand_vs, faces=self.rh_f).to(self.device).verts_normals_packed().view(-1, 778, 3)
-
-        # import pdb; pdb.set_trace()
-
-        o2h_signed, h2o, o_nearest_ids = point2point_signed(rhand_vs, obj_vs, rh_mesh)
-        o2h_signed_pred, h2o_pred, o_nearest_ids_pred = point2point_signed(rhand_vs_pred, obj_vs, rh_mesh_pred)
+        o2h_signed, h2o_signed, o_nearest_ids = point2point_signed(rhand_vs, obj_vs, rh_normals_pred, obj_normals)
+        o2h_signed_pred, h2o_signed_pred, o_nearest_ids_pred = point2point_signed(rhand_vs_pred, obj_vs, rh_normals, obj_normals)
 
         #### dist Loss ####
-        loss_dist_h, loss_dist_o = self.dist_loss(h2o, h2o_pred, o2h_signed, o2h_signed_pred, region)
+        loss_dist_h, loss_dist_o = self.dist_loss(h2o_signed, h2o_signed_pred, o2h_signed, o2h_signed_pred, region)
 
         #### KL Loss ####
         if sample_stats is not None: 
@@ -146,7 +150,7 @@ class cGraspvaeLoss(nn.Module):
         
         loss_total = torch.stack(list(dict_loss.values())).sum()
 
-        signed_dists = [o2h_signed_pred, o2h_signed]
+        signed_dists = [o2h_signed_pred, o2h_signed, h2o_signed, h2o_signed_pred]
         
         return loss_total, dict_loss, signed_dists
 
