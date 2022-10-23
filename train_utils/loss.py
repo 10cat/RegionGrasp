@@ -7,7 +7,7 @@ from utils.utils import get_std, point2point_signed
 from pytorch3d.structures import Meshes
 import chamfer_distance as chd
 
-
+pip install --no-index --no-cache-dir pytorch3d -f https://dl.fbaipublicfiles.com/pytorch3d/packaging/wheels/py38_cu114_pyt191/download.html
 
 class ConditionNetLoss(nn.Module):
     def __init__(self):

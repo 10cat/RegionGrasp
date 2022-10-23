@@ -9,14 +9,14 @@ import cv2
 import os
 from torch.utils import data
 from torch.utils.data._utils.collate import default_collate
-import open3d as o3d
+# import open3d as o3d
 from mano.model import load
 # from mano.utils import Mesh
 import trimesh
 import config
 from copy import deepcopy
 from trimesh import viewer
-from pycaster import pycaster
+# from pycaster import pycaster
 
 import mano
 
