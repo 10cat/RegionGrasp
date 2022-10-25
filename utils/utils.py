@@ -11,6 +11,7 @@ import chamfer_distance as chd
 import sys
 sys.path.append('.')
 sys.path.append('..')
+from chamfer_distance import ChamferDistance as ch_dist
 from option import MyOptions as cfg
 
 to_cpu = lambda tensor: tensor.detach().cpu().numpy() # 好！直接用lambda代入法一句话代替函数
@@ -307,7 +308,7 @@ def point2point_signed(x, y, x_normals=None, y_normals=None):
     if y.shape[0] != N or y.shape[2] != D:
         raise ValueError("y does not have the correct shape")
 
-    ch_dist = chd.ChamferDistance()
+    # ch_dist = chd.ChamferDistance()
 
     x_near, y_near, xid_near, yidx_near = ch_dist(x, y)
 
