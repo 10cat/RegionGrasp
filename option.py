@@ -13,8 +13,8 @@ class MyOptions:
     Base Configuration
     """
     w_wandb: bool = True
-    exp_name: str = 'debug_penetrate_depth_o2h' # 1
-    note: str = 'debug -- penetration depth computation -- test for using o2h signed distance for computing penetration depth '
+    exp_name: str = 'cgrasp_1_1' # 1
+    note: str = 'learning_rate 1e-4; revised penetration depth computation -- using o2h signed distance for computing penetration depth '
     mode: str = 'train'
     use_cuda: bool = True
     cuda_id: int = 0
@@ -23,14 +23,14 @@ class MyOptions:
     num_obj_verts: int = 3000
     batch_size: int = 32
     start_epoch: int = 1
-    num_epoch: int = 20
+    num_epoch: int = 40
     forward_Condition: bool = False
     forward_cGrasp: bool = True
     fit_Condition: bool = False
     fit_cGrasp: bool = True
     use_gtsdm: bool = False
 
-    learning_rate: float = 1e-3
+    learning_rate: float = 1e-4
     class optimizer_cond:
         type: str = 'adam'
     class optimizer_cgrasp:
