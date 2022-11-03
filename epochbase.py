@@ -1,5 +1,6 @@
 from copy import deepcopy
 import os
+os.environ['CUDA_VISIBLE_DEVICES'] = "1"
 import config
 import sys
 sys.path.append('.')
@@ -17,17 +18,16 @@ from utils.meters import AverageMeter, AverageMeters
 from utils.logger import Monitor
 from models.ConditionNet import ConditionNet
 from models.cGrasp_vae import cGraspvae
-from train_utils.loss import ConditionNetLoss, cGraspvaeLoss
-from train_utils.metrics import ConditionNetMetrics, cGraspvaeMetrics
+from traineval_utils.loss import ConditionNetLoss, cGraspvaeLoss
+from traineval_utils.metrics import ConditionNetMetrics, cGraspvaeMetrics
 from utils.utils import func_timer
 from utils.visualization import visual_hand, visual_obj
 from option import MyOptions as cfg
 import wandb
 
 to_dev = lambda tensor, device: tensor.to(device)
-to_gpu = lambda tensor: tensor.to('cuda')
+# to_gpu = lambda tensor: tensor.to('cuda')
 to_cpu = lambda tensor: tensor.detach().cpu()
-os.environ['CUDA_VISIBLE_DEVICES'] = "0,1"
 
 class Epoch(nn.Module):
     def __init__(self, dataloader, dataset, mode='train', use_cuda=True, cuda_id=0, save_visual=True):
@@ -354,8 +354,8 @@ class Epoch(nn.Module):
         # import pdb; pdb.set_trace()
         self.Losses, self.Metrics = AverageMeters(), AverageMeters()
         for idx, sample in enumerate(tqdm(self.dataloader, desc=f'{self.mode} epoch:{epoch}')):
-            if idx > 10:
-                break
+            # if idx > 10:
+            #     break
             # if idx < len(self.dataloader) - 1:
             #     continue
             if self.mode != 'train':

@@ -7,11 +7,11 @@ from functools import wraps
 import inspect
 import random
 import torch.nn.functional as F
-import chamfer_distance as chd
+# import chamfer_distance as chd
+from chamfer_distance import ChamferDistance as ch_dist
 import sys
 sys.path.append('.')
 sys.path.append('..')
-from chamfer_distance import ChamferDistance as ch_dist
 from option import MyOptions as cfg
 
 to_cpu = lambda tensor: tensor.detach().cpu().numpy() # 好！直接用lambda代入法一句话代替函数
