@@ -229,14 +229,13 @@ class GrabNetDataset(data.Dataset):
         # import pdb; pdb.set_trace()
 
         # numpy 2 torch
-        vertices = torch.from_numpy(obj_vertices).float()
-        region_mask = torch.from_numpy(region_mask_np).float()
-        region_centers = torch.from_numpy(region_centers).float()
+        vertices = torch.from_numpy(obj_vertices).float() # --> ["obj_verts"]
+        region_mask = torch.from_numpy(region_mask_np).float() # --> ["region_mask"]
+        region_centers = torch.from_numpy(region_centers).float() # --> ["region_centers"]
         # region_faces_ids = torch.tensor(region_faces_ids)
-        obj_sdf = torch.from_numpy(obj_sdf_np).reshape(-1, 1).float()
+        obj_sdf = torch.from_numpy(obj_sdf_np).reshape(-1, 1).float()# --> ["obj_sdf"]
         # obj_faces = torch.from_numpy(obj_faces).float()
-        sample_idx = torch.tensor([idx])
-        # hand_sdf = torch.from_numpy(sample['hand_obj_sdf'])
+        sample_idx = torch.tensor([idx]) # --> ["sample_idx"]
 
         return vertices, region_mask, region_centers, obj_sdf, sample_idx
 

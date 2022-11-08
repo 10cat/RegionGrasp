@@ -27,7 +27,7 @@ JOINTS_NUM = 15
 """
 Filepath settings
 """
-machine = '41'
+machine = '97'
 
 if machine == '97':
 

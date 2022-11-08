@@ -45,7 +45,16 @@ def evaluation(testloader):
 
 if __name__ == "__main__":
     import wandb
+    import argparse
     from omegaconf import OmegaConf
+
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--machine', type=str, required=True)
+
+    args = parser.parse_args()
+
+    MyOptions.machine = args.machine
+    config.machine = args.machine
 
     set_random_seed(1024)
 

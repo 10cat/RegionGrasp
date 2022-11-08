@@ -9,7 +9,9 @@ import time
 import tempfile
 import numpy as np
 import pybullet as p
-import skvideo.io as skvio
+# import skvideo.io as skvio
+# from array2gif import write_gif
+import imageio as imgio
 
 from utils.utils import makepath
 
@@ -26,9 +28,11 @@ def take_picture(renderer, width=256, height=256, conn_id=None):
     return rgba
 
 def write_video(frames, path):
-    skvio.vwrite(path, np.array(frames).astype(np.uint8))
+    # import pdb; pdb.set_trace()
+    # skvio.vwrite(path, np.array(frames).astype(np.uint8), backend='ffmpeg')
+    imgio.mimwrite(path, ims=frames, duration=0.5)
 
-def process_sample(sample_idx, sample, save_gif_folder=None, save_obj_folder=None, vhacd_exe=None, use_gui=False, wait_time=0, sample_vis_freq=10, save_all_steps=True):
+def process_sample(sample_idx, sample, save_gif_folder=None, save_obj_folder=None, vhacd_exe=None, use_gui=False, wait_time=0, sample_vis_freq=10, save_all_steps=False):
     if use_gui:
         conn_id = p.connect(p.GUI)
     else:
@@ -44,7 +48,6 @@ def process_sample(sample_idx, sample, save_gif_folder=None, save_obj_folder=Non
             save_hand_steps_folder = os.path.join(save_obj_folder, "{:08d}_hand".format(sample_idx))
             makepath(save_obj_steps_folder)
             makepath(save_hand_steps_folder)
-        makepath(save_video_path)
     else:
         save_video = False
         save_video_path = None
@@ -148,9 +151,18 @@ def run_simulation(hand_verts, hand_faces, obj_verts, obj_faces,
         # else:
         #     print(f"Succeeded vhacd decomp of {obj_tmp_fname}")
 
-        # TODO use built-in 'vhacd' function in pybullet
-        name_log = "pybullet_vhacd.txt"
-        p.vhacd(obj_tmp_fname, obj_tmp_fname, name_log)
+        #TODO directly use the built-in vhacd method in pybullet
+        log_name = "p_vhacd.txt"
+        p.vhacd(obj_tmp_fname, obj_tmp_fname, log_name)
+
+        ## (original: use vhacd_exe)
+        # if not vhacd(obj_tmp_fname, vhacd_exe, resolution=vhacd_resolution):
+        #     raise RuntimeError(
+        #         "Cannot compute convex hull "
+        #         "decomposition for {}".format(obj_tmp_fname)
+        #     )
+        # else:
+        #     print(f"Succeeded vhacd decomp of {obj_tmp_fname}")
         obj_collision_id = p.createCollisionShape(
             p.GEOM_MESH, fileName=obj_tmp_fname, physicsClientId=conn_id
         )
@@ -197,9 +209,9 @@ def run_simulation(hand_verts, hand_faces, obj_verts, obj_faces,
         else:
             renderer = p.ER_TINY_RENDERER
         save_video_path = "simulate_video" if save_video_path is None else save_video_path
-        makepath(save_video_path)
-        sample_idx = 0 if sample_idx is None else sample_idx
-        save_video_path = os.path.join(save_video_path, "{:08d}.gif".format(sample_idx))
+        # makepath(save_video_path)
+        # sample_idx = 0 if sample_idx is None else sample_idx
+        # save_video_path = os.path.join(save_video_path, "{:08d}.gif".format(sample_idx))
 
     for step_idx in range(num_iterations):
         p.stepSimulation(physicsClientId=conn_id)
@@ -291,7 +303,48 @@ def save_obj(filename, vertices, faces):
 
 
 if __name__ == "__main__":
-    from dataset.Dataset import GrabNetDataset
+    import sys
+    sys.path.append('.')
+    sys.path.append('..')
+    import argparse
     import config
+    from tqdm import tqdm
+    from option import MyOptions as cfg
+    from dataset.Dataset import GrabNetDataset
+    import mano
 
-    valset = GrabNetDataset(config.dataset_dir, 'val')
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--machine', type=str, required=True)
+
+    args = parser.parse_args()
+
+    cfg.machine = args.machine
+
+    rh_model = mano.load(model_path=cfg.mano_rh_path,
+                         model_type='mano',
+                         num_pca_comps=45,
+                         batch_size=cfg.batch_size,
+                         flat_hand_mean=True)
+    valset = GrabNetDataset(dataset_dir=config.dataset_dir, ds_name='val')
+    save_gif_folder = os.path.join(cfg.output_root, 'gt_sim', 'gif')
+    makepath(save_gif_folder)
+    save_obj_folder = os.path.join(cfg.output_root, 'gt_sim', 'obj')
+    makepath(save_obj_folder)
+
+    for idx in tqdm(range(valset.__len__())):
+        sample = valset.__getitem__(idx)
+        sim = {}
+        sim["hand_verts"] = np.array(sample['verts_rhand'])
+        sim["hand_faces"] = rh_model.faces
+        sim["obj_verts"] = np.array(sample['verts_obj'])
+        obj_name = valset.frame_objs[idx]
+        sim["obj_faces"] = valset.object_meshes[obj_name].faces
+
+        process_sample(sample_idx=idx,
+                       sample=sim,
+                       save_gif_folder=save_gif_folder,
+                       save_obj_folder=save_obj_folder
+                       )
+    
+
+    
