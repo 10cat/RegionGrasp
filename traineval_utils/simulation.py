@@ -134,19 +134,23 @@ def run_simulation(hand_verts, hand_faces, obj_verts, obj_faces,
     # add object
     use_vhacd = True
     if use_vhacd:
+        # convex hull decomposition 
         if verbose:
             print("Computing vhacd decomposition")
             time1 = time.time()
-        # convex hull decomposition 
         save_obj(obj_tmp_fname, obj_verts, obj_faces)
+        # (Original: apply vhacd with vhacd.exe running )
+        # if not vhacd(obj_tmp_fname, vhacd_exe, resolution=vhacd_resolution):
+        #     raise RuntimeError(
+        #         "Cannot compute convex hull "
+        #         "decomposition for {}".format(obj_tmp_fname)
+        #     )
+        # else:
+        #     print(f"Succeeded vhacd decomp of {obj_tmp_fname}")
 
-        if not vhacd(obj_tmp_fname, vhacd_exe, resolution=vhacd_resolution):
-            raise RuntimeError(
-                "Cannot compute convex hull "
-                "decomposition for {}".format(obj_tmp_fname)
-            )
-        else:
-            print(f"Succeeded vhacd decomp of {obj_tmp_fname}")
+        # TODO use built-in 'vhacd' function in pybullet
+        name_log = "pybullet_vhacd.txt"
+        p.vhacd(obj_tmp_fname, obj_tmp_fname, name_log)
         obj_collision_id = p.createCollisionShape(
             p.GEOM_MESH, fileName=obj_tmp_fname, physicsClientId=conn_id
         )
@@ -285,3 +289,9 @@ def save_obj(filename, vertices, faces):
         for f in faces + 1:  # Faces are 1-based, not 0-based in .obj files!
             fp.write("f %d %d %d\n" % (f[0], f[1], f[2])) # .obj files中的面储存格式
 
+
+if __name__ == "__main__":
+    from dataset.Dataset import GrabNetDataset
+    import config
+
+    valset = GrabNetDataset(config.dataset_dir, 'val')
