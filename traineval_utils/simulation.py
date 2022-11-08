@@ -314,7 +314,7 @@ if __name__ == "__main__":
     import mano
 
     parser = argparse.ArgumentParser()
-    parser.add_argument('--machine', type=str, required=True)
+    parser.add_argument('--machine', type=str, default='41')
 
     args = parser.parse_args()
 

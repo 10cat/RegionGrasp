@@ -426,6 +426,44 @@ class ValEpoch(Epoch):
         outputs['sample_stats'] = sample_stats # sample_stats = [p_mean, p_std]
         return outputs
 
+    # @func_timer
+    def one_batch(self, sample, idx, iter=10):
+        # read data
+        data_elements = self.read_data(sample)
+        # self.rh_f repeat according to the true batchsize, or may lead to bug on the last batch
+        B = data_elements[0].shape[0]
+        # import pdb; pdb.set_trace()
+        self.rh_f = self.rh_f_single.repeat(B, 1, 1).to(self.device).to(torch.long)
+        self.init_losses() # losses initialization requires the repeated rhand faces
+        outputs = self.model_forward(data_elements) # （B, ...）
+        dict_losses, signed_dists = self.loss_compute(outputs, data_elements, sample_ids=sample['sample_idx'])
+        if self.mode == 'train':
+            self.model_update(dict_losses)
+
+        hand_params = outputs['hand_params']
+        if B == cfg.batch_size:
+            rhand_pred = self.rh_model(**hand_params)
+        else:
+            import mano
+            rh_model = mano.load(model_path=cfg.mano_rh_path,
+                                    model_type='mano',
+                                      num_pca_comps=45,
+                                      batch_size=B,
+                                      flat_hand_mean=True)
+            rh_model = rh_model.to(self.device)
+            rhand_pred = rh_model(**hand_params)
+        rhand_vs_pred = rhand_pred.vertices
+        dict_metrics = self.metrics_compute(outputs, data_elements, signed_dists)
+        self.update_meters(dict_losses, dict_metrics)
+        if self.mode != 'train':
+            if idx % cfg.visual_interval_val == 0: self.visual(rhand_vs_pred, data_elements, sample_ids=sample['sample_idx'], batch_id=idx)
+        else:
+            if idx == 0: self.visual(rhand_vs_pred, data_elements, sample_ids=sample['sample_idx'], batch_id=idx)
+
+        # self.handparam_post()
+        # self.visual_post()
+        # self.lognotes()
+
     
 
 
