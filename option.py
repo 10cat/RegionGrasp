@@ -13,10 +13,10 @@ class MyOptions:
     Base Configuration
     """
     w_wandb: bool = False
-    machine: int = '97'
+    machine: int = '41'
     exp_name: str = 'debug_penetrate_depth_o2h' # 1
     note: str = 'debug -- penetration depth computation -- test for using o2h signed distance for computing penetration depth '
-    mode: str = 'train'
+    mode: str = 'eval'
     use_cuda: bool = True
     cuda_id: int = 0
     num_mask: int = 1

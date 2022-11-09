@@ -9,11 +9,12 @@ import numpy as np
 import torch
 from torch import Tensor, optim
 import torch.nn as nn
+import torch.nn.functional as F
 from tqdm import tqdm
 import mano
 import trimesh
 
-from utils.utils import makepath, retrieve_name
+from utils.utils import makepath, retrieve_name, edges_for
 from utils.meters import AverageMeter, AverageMeters
 from utils.logger import Monitor
 from models.ConditionNet import ConditionNet
@@ -276,6 +277,24 @@ class Epoch(nn.Module):
         
         return
 
+    def decode_batch_hand_params(self, outputs, batch_size):
+        hand_params = outputs['hand_params']
+        B = batch_size
+        if B == cfg.batch_size:
+            rhand_pred = self.rh_model(**hand_params)
+        else:
+            import mano
+            rh_model = mano.load(model_path=cfg.mano_rh_path,
+                                    model_type='mano',
+                                      num_pca_comps=45,
+                                      batch_size=B,
+                                      flat_hand_mean=True)
+            rh_model = rh_model.to(self.device)
+            rhand_pred = rh_model(**hand_params)
+        rhand_vs_pred = rhand_pred.vertices
+        return rhand_vs_pred
+
+
     # @func_timer
     def one_batch(self, sample, idx):
         # read data
@@ -291,19 +310,7 @@ class Epoch(nn.Module):
         if self.mode == 'train':
             self.model_update(dict_losses)
 
-        hand_params = outputs['hand_params']
-        if B == cfg.batch_size:
-            rhand_pred = self.rh_model(**hand_params)
-        else:
-            import mano
-            rh_model = mano.load(model_path=cfg.mano_rh_path,
-                                    model_type='mano',
-                                      num_pca_comps=45,
-                                      batch_size=B,
-                                      flat_hand_mean=True)
-            rh_model = rh_model.to(self.device)
-            rhand_pred = rh_model(**hand_params)
-        rhand_vs_pred = rhand_pred.vertices
+        rhand_vs_pred = self.decode_batch_hand_params(outputs, B)
         dict_metrics = self.metrics_compute(outputs, data_elements, signed_dists)
         self.update_meters(dict_losses, dict_metrics)
         if self.mode != 'train':
@@ -383,6 +390,10 @@ class TrainEpoch(Epoch):
 class ValEpoch(Epoch):
     def __init__(self, dataloader, dataset, mode='train', use_cuda=True, cuda_id=0, save_visual=True):
         super().__init__(dataloader, dataset, mode, use_cuda, cuda_id, save_visual)
+        self.v_weights = self.cGraspVAELoss.v_weights
+        self.v_weights2 = self.cGraspVAELoss.v_weights2
+        self.vpe = self.cGraspVAELoss.vpe
+        self.l1loss = self.cGraspVAELoss.LossL1
 
     def save_checkpoints(self, epoch, best_val):
         if cfg.fit_cGrasp:
@@ -406,10 +417,8 @@ class ValEpoch(Epoch):
         # model forward: 
         # 1) get condtion vector, along with train assisting cSDF_maps
         # 2) forward the cGraspvae model to obtain hand parameters as the key prediction
-        condition_vec, SD_maps, hand_params, sample_stats = None, None, None, None
+        condition_vec, SD_maps, hand_params, sample_stats, feats = None, None, None, None, None
         # if self.use_cuda: self.ConditionNet.to('cuda')
-        feats, SD_maps = self.ConditionNet.inference(obj_vs, region) # cSDF_maps = [pred_map_obj, pred_map_obj_masked]
-        condition_vec = feats[0]
         if cfg.fit_cGrasp:
             # TODO cGraspVAE inference
             # if self.use_cuda: self.cGraspVAE.to('cuda')
@@ -425,6 +434,75 @@ class ValEpoch(Epoch):
         outputs['hand_params'] = hand_params
         outputs['sample_stats'] = sample_stats # sample_stats = [p_mean, p_std]
         return outputs
+
+
+    def select_best_grasp(self, vs_pred_iters, vs_gt, outputs_iters_list):
+        vs_rec_errs = torch.mean(torch.einsum('bijk,j->bijk', torch.abs((vs_gt - vs_pred_iters)), self.v_weights2), dim=[2,3,4]) # dim should be (num_iters, B)
+        indices = int(torch.argmin(vs_rec_errs), dim=0) # dim (B,)
+        B = indices.shape[0]
+        outputs = {}
+        outputs_sample = outputs_iters_list[0]
+        keys = list(outputs_sample.keys())
+        for key in keys:
+            if outputs_sample[key] is None:
+                outputs[key] = None
+            elif key == 'hand_params':
+                outputs[key] = outputs_sample[key]
+                for batch_idx in range(B):
+                    iter_idx = indices[batch_idx]
+                    outputs[key]['global_orient'][batch_idx] = outputs_iters_list[iter_idx][key]['global_orient'][batch_idx] 
+                    outputs[key]['hand_pose'][batch_idx] = outputs_iters_list[iter_idx][key]['hand_pose'][batch_idx]
+                    outputs[key]['transl'][batch_idx] = outputs_iters_list[iter_idx][key]['transl'][batch_idx]
+                    outputs[key]['fullpose'][batch_idx] = outputs_iters_list[iter_idx][key]['fullpose'][batch_idx]
+
+            else:
+                outputs[key] = torch.zeros_like(outputs_sample[key])
+                for batch_idx in range(B):
+                    iter_idx = indices[batch_idx]
+                    outputs[key][batch_idx] = outputs_iters_list[iter_idx][key][batch_idx] 
+                    
+        return outputs
+
+    # @func_timer
+    def one_batch(self, sample, idx, num_iters=10):
+        
+        # read data
+        data_elements = self.read_data(sample)
+        # self.rh_f repeat according to the true batchsize, or may lead to bug on the last batch
+        B = data_elements[0].shape[0]
+        # import pdb; pdb.set_trace()
+        self.rh_f = self.rh_f_single.repeat(B, 1, 1).to(self.device).to(torch.long)
+        self.init_losses() # losses initialization requires the repeated rhand faces
+        
+        vs_pred_iters_list = []
+        outputs_iters_list = []
+        for i in range(num_iters):
+            outputs_iter = self.model_forward(data_elements)
+            rhand_vs_pred = self.decode_batch_hand_params(outputs_iter, B)
+            vs_pred_iters_list.append(rhand_vs_pred)
+            outputs_iters_list.append(outputs_iter)
+        vs_pred_iters = torch.cat(vs_pred_iters_list) # (num_iters, B, x, y, z)
+        vs_gt = data_elements[4] # gt verts, dim (B, x, y, z)
+        
+
+
+        dict_losses, signed_dists = self.loss_compute(outputs, data_elements, sample_ids=sample['sample_idx'])
+        if self.mode == 'train':
+            self.model_update(dict_losses)
+
+        hand_params = outputs['hand_params']
+        rhand_vs_pred = self.decode_batch_hand_params(outputs, B)
+        rhand_vs_pred = rhand_pred.vertices
+        dict_metrics = self.metrics_compute(outputs, data_elements, signed_dists)
+        self.update_meters(dict_losses, dict_metrics)
+        if self.mode != 'train':
+            if idx % cfg.visual_interval_val == 0: self.visual(rhand_vs_pred, data_elements, sample_ids=sample['sample_idx'], batch_id=idx)
+        else:
+            if idx == 0: self.visual(rhand_vs_pred, data_elements, sample_ids=sample['sample_idx'], batch_id=idx)
+
+        # self.handparam_post()
+        # self.visual_post()
+        # self.lognotes()
 
     
 
