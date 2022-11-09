@@ -137,6 +137,9 @@ def region_masked_pointwise(obj_pc, mask):
     obj_pc_masked = obj_pc * (mask)
     return obj_pc_masked
 
+def edges_for(x, vpe):
+    return (x[:, vpe[:, 0]] - x[:, vpe[:, 1]])
+
 def CRot2rotmat(pose):
     """
     Transform the rotation vector to rotation matrix

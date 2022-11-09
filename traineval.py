@@ -37,10 +37,11 @@ def train_val():
     # tester.epoch(epoch, best_val=best_val)
     # print(f"Done with experiment: {cfg.exp_name}")
 
-def evaluation(testloader):
+def evaluation(checkpoint):
     testdataset = GrabNetDataset(config.dataset_dir, 'test', num_mask=cfg.num_mask)
     testloader = data.DataLoader(testdataset, batch_size=cfg.batch_size, shuffle=False)
-    ValEpoch(testloader, testdataset)
+    tester = ValEpoch(testloader, testdataset, use_cuda=cfg.use_cuda, cuda_id=cfg.cuda_id)
+    tester.one_epoch(1, checkpoints=checkpoint)
 
 
 if __name__ == "__main__":
@@ -50,6 +51,7 @@ if __name__ == "__main__":
 
     parser = argparse.ArgumentParser()
     parser.add_argument('--machine', type=str, required=True)
+    parser.add_argument('--checkpoint', type=str, default=None)
 
     args = parser.parse_args()
 
@@ -74,7 +76,7 @@ if __name__ == "__main__":
     if cfg.mode == 'train':
         train_val()
     else:
-        evaluation()
+        evaluation(checkpoint=args.checkpoint)
 
     
 

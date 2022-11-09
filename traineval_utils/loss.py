@@ -1,3 +1,6 @@
+import sys
+sys.path.append('.')
+sys.path.append('..')
 import numpy as np
 import torch
 import torch.nn as nn
@@ -6,6 +9,7 @@ from option import MyOptions as cfg
 from utils.utils import get_std, point2point_signed
 from pytorch3d.structures import Meshes
 import chamfer_distance as chd
+from utils.utils import edges_for
 
 class ConditionNetLoss(nn.Module):
     def __init__(self):
@@ -46,12 +50,9 @@ class cGraspvaeLoss(nn.Module):
         self.rh_model = rh_model
         self.device = device
         self.LossL1 = torch.nn.L1Loss(reduction='mean')
-        self.v_weights = torch.from_numpy(np.load(cfg.c_weights_path)).to(torch.float32).to(self.device)
-        self.v_weights2 = torch.pow(self.v_weights, 1.0/2.5)
-        self.vpe = torch.from_numpy(np.load(cfg.vpe_path)).to(self.device).to(torch.long)
-
-    def edges_for(self, x, vpe):
-        return (x[:, vpe[:, 0]] - x[:, vpe[:, 1]])
+        self.v_weights = torch.from_numpy(np.load(cfg.c_weights_path)).to(torch.float32).to(self.device) # 这个到底是啥呀？ 能不能用在其他数据集上？
+        self.v_weights2 = torch.pow(self.v_weights, 1.0/2.5) # 这个到底是啥呀？ 能不能用在其他数据集上？
+        self.vpe = torch.from_numpy(np.load(cfg.vpe_path)).to(self.device).to(torch.long) # 这个到底是啥呀？ 能不能用在其他数据集上？
 
     def dist_loss(self, h2o, h2o_pred, o2h_signed, o2h_signed_pred, region):
         ## adaptive weight for penetration and contact verts
@@ -134,10 +135,10 @@ class cGraspvaeLoss(nn.Module):
             loss_kl = torch.tensor(0.0, dtype=float).to(self.device)
 
         #### verts Loss ####
-        loss_mesh_rec_w = cfg.lambda_mesh_rec_w * torch.mean(torch.einsum('ijk,j->ijk', torch.abs((rhand_vs - rhand_vs_pred)), self.v_weights))
+        loss_mesh_rec_w = cfg.lambda_mesh_rec_w * torch.mean(torch.einsum('ijk,j->ijk', torch.abs((rhand_vs - rhand_vs_pred)), self.v_weights2)) # should be v_weights2 instead of v_weights
 
         #### edge Loss ####
-        loss_edge = cfg.lambda_edge * self.LossL1(self.edges_for(rhand_vs_pred, self.vpe), self.edges_for(rhand_vs, self.vpe))
+        loss_edge = cfg.lambda_edge * self.LossL1(edges_for(rhand_vs_pred, self.vpe), edges_for(rhand_vs, self.vpe))
 
         dict_loss = {'loss_kl': loss_kl,
                      'loss_edge': loss_edge,
