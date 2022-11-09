@@ -26,3 +26,27 @@ def get_interpenetration_volume(sample_info, mode='voxels'):
 if __name__ == "__main__":
     from dataset.Dataset import GrabNetDataset
     import config
+
+    import sys
+    sys.path.append('.')
+    sys.path.append('..')
+    import argparse
+    import config
+    from tqdm import tqdm
+    from option import MyOptions as cfg
+    from dataset.Dataset import GrabNetDataset
+    import mano
+
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--machine', type=str, required=True)
+
+    args = parser.parse_args()
+
+    cfg.machine = args.machine
+
+    rh_model = mano.load(model_path=cfg.mano_rh_path,
+                         model_type='mano',
+                         num_pca_comps=45,
+                         batch_size=cfg.batch_size,
+                         flat_hand_mean=True)
+    valset = GrabNetDataset(dataset_dir=config.dataset_dir, ds_name='val')
