@@ -33,7 +33,6 @@ def train_val():
         _, best_val = valer.one_epoch(epoch + 1, best_val=best_val, checkpoints=checkpoints)
         torch.cuda.empty_cache()
         
-    
     # tester.epoch(epoch, best_val=best_val)
     # print(f"Done with experiment: {cfg.exp_name}")
 
