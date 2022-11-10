@@ -35,12 +35,19 @@ def get_interpenetration_volume(sample_info, mode='voxels_obj'):
 if __name__ == "__main__":
     from dataset.Dataset import GrabNetDataset
     import config
-    from option import MyOptions as cfg
-    import mano
+
+    import sys
+    sys.path.append('.')
+    sys.path.append('..')
     import argparse
+    import config
+    from tqdm import tqdm
+    from option import MyOptions as cfg
+    from dataset.Dataset import GrabNetDataset
+    import mano
 
     parser = argparse.ArgumentParser()
-    parser.add_argument('--machine', type=str, default='41')
+    parser.add_argument('--machine', type=str, required=True)
 
     args = parser.parse_args()
 

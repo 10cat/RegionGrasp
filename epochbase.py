@@ -46,6 +46,7 @@ class Epoch(nn.Module):
         self.models = self.init_models()
         self.init_mano()
         self.init_optimizers()
+        self.init_losses() # losses initialization requires the repeated rhand faces
         # import pdb; pdb.set_trace()
         
     
@@ -78,15 +79,18 @@ class Epoch(nn.Module):
                                       flat_hand_mean=True)
             self.rh_model = rh_model.to(self.device)
             self.rh_f_single = torch.from_numpy(self.rh_model.faces.astype(np.int32)).view(1, 3, -1)
-            # self.rh_f = rh_f.repeat(cfg.batch_size, 1, 1).to(self.device).to(torch.long)
+            self.rh_f = self.rh_f_single.repeat(cfg.batch_size, 1, 1).to(self.device).to(torch.long)
         
 
     def load_checkpoints(self, checkpoints=None):
         if checkpoints is not None:
-            self.ConditionNet.load_state_dict(checkpoints[0])
-            if len(checkpoints) > 1:
-                # import pdb; pdb.set_trace()
-                self.cGraspVAE.load_state_dict(checkpoints[1])
+            if cfg.mode == 'train':
+                self.ConditionNet.load_state_dict(checkpoints[0])
+                if len(checkpoints) > 1:
+                    # import pdb; pdb.set_trace()
+                    self.cGraspVAE.load_state_dict(checkpoints[1])
+            else:
+                self.cGraspVAE.load_state_dict(checkpoints['cGraspVAE_state_dict'])
 
     def model_mode_setting(self):
         for model in self.models:
@@ -302,8 +306,10 @@ class Epoch(nn.Module):
         # self.rh_f repeat according to the true batchsize, or may lead to bug on the last batch
         B = data_elements[0].shape[0]
         # import pdb; pdb.set_trace()
-        self.rh_f = self.rh_f_single.repeat(B, 1, 1).to(self.device).to(torch.long)
-        self.init_losses() # losses initialization requires the repeated rhand faces
+
+        if B != cfg.batch_size:
+            self.rh_f = self.rh_f_single.repeat(B, 1, 1).to(self.device).to(torch.long)
+            self.init_losses() # losses initialization requires the repeated rhand faces
 
         outputs = self.model_forward(data_elements)
         dict_losses, signed_dists = self.loss_compute(outputs, data_elements, sample_ids=sample['sample_idx'])
@@ -437,9 +443,11 @@ class ValEpoch(Epoch):
 
 
     def select_best_grasp(self, vs_pred_iters, vs_gt, outputs_iters_list):
-        vs_rec_errs = torch.mean(torch.einsum('bijk,j->bijk', torch.abs((vs_gt - vs_pred_iters)), self.v_weights2), dim=[2,3,4]) # dim should be (num_iters, B)
-        indices = int(torch.argmin(vs_rec_errs), dim=0) # dim (B,)
+        import pdb; pdb.set_trace()
+        vs_rec_errs = torch.mean(torch.einsum('bijk,j->bijk', torch.abs((vs_gt - vs_pred_iters)), self.v_weights2), dim=[2,3]) # dim should be (num_iters, B)
+        indices = torch.argmin(vs_rec_errs, dim=0) # dim (B,)
         B = indices.shape[0]
+        indices = indices.tolist()
         outputs = {}
         outputs_sample = outputs_iters_list[0]
         keys = list(outputs_sample.keys())
@@ -459,7 +467,8 @@ class ValEpoch(Epoch):
                 outputs[key] = torch.zeros_like(outputs_sample[key])
                 for batch_idx in range(B):
                     iter_idx = indices[batch_idx]
-                    outputs[key][batch_idx] = outputs_iters_list[iter_idx][key][batch_idx] 
+                    outputs[key][batch_idx] = outputs_iters_list[iter_idx][key][batch_idx]
+             
                     
         return outputs
 
@@ -474,17 +483,23 @@ class ValEpoch(Epoch):
         self.rh_f = self.rh_f_single.repeat(B, 1, 1).to(self.device).to(torch.long)
         self.init_losses() # losses initialization requires the repeated rhand faces
         
+        # ----- Select the best grasp w.r.t. ground truth ----- #
         vs_pred_iters_list = []
         outputs_iters_list = []
+        # import pdb; pdb.set_trace()
         for i in range(num_iters):
-            outputs_iter = self.model_forward(data_elements)
+            with torch.no_grad(): outputs_iter = self.model_forward(data_elements)
             rhand_vs_pred = self.decode_batch_hand_params(outputs_iter, B)
-            vs_pred_iters_list.append(rhand_vs_pred)
+            # rhand_vs_pred = rhand_vs_pred.transpose(2,1)
+            vs_pred_iters_list.append(rhand_vs_pred.unsqueeze(dim=0))
             outputs_iters_list.append(outputs_iter)
+            torch.cuda.empty_cache() # 因为需要在一个batch里面iterate很多次，所以
+
         vs_pred_iters = torch.cat(vs_pred_iters_list) # (num_iters, B, x, y, z)
         vs_gt = data_elements[4] # gt verts, dim (B, x, y, z)
-        
+        vs_gt = vs_gt.transpose(2, 1)
 
+        outputs = self.select_best_grasp(vs_pred_iters, vs_gt, outputs_iters_list)
 
         dict_losses, signed_dists = self.loss_compute(outputs, data_elements, sample_ids=sample['sample_idx'])
         if self.mode == 'train':
@@ -492,7 +507,7 @@ class ValEpoch(Epoch):
 
         hand_params = outputs['hand_params']
         rhand_vs_pred = self.decode_batch_hand_params(outputs, B)
-        rhand_vs_pred = rhand_pred.vertices
+        # rhand_vs_pred = rhand_pred.vertices
         dict_metrics = self.metrics_compute(outputs, data_elements, signed_dists)
         self.update_meters(dict_losses, dict_metrics)
         if self.mode != 'train':

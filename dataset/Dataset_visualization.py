@@ -175,16 +175,17 @@ if __name__ == "__main__":
     dataset_dir = "/home/datassd/yilin/GrabNet/data/"
 
     parser = argparse.ArgumentParser()
-    parser.add_argument('--visual_centers', action='store_false', default=True)
+    parser.add_argument('--ds_name', default='train')
+    parser.add_argument('--visual_centers', action='store_true', default=False)
     # parser.set_defaults(visual_centers=True)
     parser.add_argument('--one_sample', action='store_true', default=False)
     parser.add_argument('--one_region', action='store_true', default=False)
     args = parser.parse_args()
 
-    trainset = GrabNetObjVisual(dataset_dir=dataset_dir, ds_name='train', num_mask=1, one_sample=args.one_sample, one_region=args.one_region, visual_centers=args.visual_centers)
+    dataset = GrabNetObjVisual(dataset_dir=dataset_dir, ds_name=args.ds_name, num_mask=1, one_sample=args.one_sample, one_region=args.one_region, visual_centers=args.visual_centers)
 
-    obj_names = trainset.obj_names_list
+    obj_names = dataset.obj_names_list
 
     for obj_name in obj_names:
-        trainset.visual_obj_regions(obj_name)
+        dataset.visual_obj_regions(obj_name)
 
