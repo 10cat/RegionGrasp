@@ -76,7 +76,9 @@ if __name__ == "__main__":
     if cfg.mode == 'train':
         train_val()
     else:
-        evaluation(checkpoint=args.checkpoint)
+        checkpoint = torch.load(args.checkpoint)
+        # import pdb; pdb.set_trace()
+        evaluation(checkpoint=checkpoint)
 
     
 
