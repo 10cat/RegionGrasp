@@ -16,7 +16,8 @@ def visual_inter(hand_mesh, rh_fs, obj_mesh, obj_fs, output_folder, frame_name):
     hand_mesh.visual.face_colors[rh_fs] = colors_like(config.colors['red'])
     obj_mesh.visual.face_colors[obj_fs] = colors_like(config.colors['blue'])
     
-    output_path_hand = os.path.join()
+    output_path_hand = os.path.join(output_folder, frame_name+'_hand.ply')
+    output_path_obj = os.path.join(output_folder, frame_name+'_obj.ply')
     
     return
     
@@ -31,6 +32,12 @@ def m2m_intersect(m1, name1, m2, name2):
     """
     CollisionSys = trimesh.collision.CollisionManager()
     CollisionSys.add_object(name1, m1)
+    CollisionSys.add_object(name2, m2)
+    is_collision, names, ContactDatas_list = CollisionSys.in_collision_internal(return_name=True, return_data=True)
+    import pdb; pdb.set_trace()
+    
+    faces_m1_ids = [contact.index(name1) for contact in ContactDatas_list]
+    faces_m2_ids = [contact.index(name2) for contact in ContactDatas_list]
     
     
     return
