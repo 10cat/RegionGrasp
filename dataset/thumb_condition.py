@@ -10,6 +10,8 @@ import mano
 from mano.model import load
 from dataset.Dataset_origin import GrabNetDataset_orig
 from dataset.data_utils import m2m_intersect
+import matplotlib.pyplot as plt
+
 
 
 class ThumbConditionator():
@@ -56,27 +58,32 @@ class ContactDetector():
         super().__init__()
         
     def intersection_detect(self, hand_mesh, obj_mesh):
-        m2m_intersect(hand_mesh, 'hand', obj_mesh, 'obj')
+        ContactDict = m2m_intersect(hand_mesh, 'hand', obj_mesh, 'obj')
         
-        return
+        return ContactDict
     
-    def cluster_rings(self):
+    def cluster_rings(self, ContactDict):
+        depth_array = np.array(ContactDict['depth'])
+        import pdb;pdb.set_trace()
+        
+        
         return
         
     def run(self, hand_mesh, obj_mesh):
         
-        # TODO: I.-1.1 Mesh intersection detection on thumb region
-        self.intersection_detect(hand_mesh, obj_mesh)
-        # TODO: I.-1.2 Clustering intersection points into intersection rings
+        # NOTE: I.-1.1 Mesh intersection detection on thumb region
+        contact_dict = self.intersection_detect(hand_mesh, obj_mesh)
+        # NOTE: I.-1.2 Clustering intersection points into intersection rings
+        self.cluster_rings(contact_dict)
         
         # TODO: I.-1.3 Hand Mesh Segmentation based on rings
         
         # TODO: I.-1.4 Select the outer surface ring; all the surrounded -> contact faces
         
         
-        # TODO: I.-2 If thumb is not intersecting with object, threshold signed distance -> contact faces
+        # TODO: I.-2 If not intersecting with object, threshold signed distance -> contact faces
         
-        # TODO: I.-3 Annotate as thumb contact faces
+        
         return
 
 if __name__ == "__main__":
@@ -100,12 +107,12 @@ if __name__ == "__main__":
         
         #NOTE:下采样到2048点的物体顶点不能直接使用，需要从原模型获得全部顶点坐标
         obj_name = trainset.frame_objs[idx]
-        import pdb; pdb.set_trace()
+        # import pdb; pdb.set_trace()
         ObjMesh = trainset.object_meshes[obj_name]
         ## 先从原物体模型获得原物体顶点
         obj_verts_orig = ObjMesh.vertices 
         obj_trans = sample['trans_obj']
-        obj_rotmat = sample['root_orient_obj_rotmat']
+        obj_rotmat = sample['root_orient_obj_rotmat'][0]
         ## 通过旋转、平移转换的矩阵操作获得实际顶点的坐标
         obj_verts = np.matmul(obj_verts_orig, obj_rotmat) + obj_trans
         obj_faces = ObjMesh.faces
