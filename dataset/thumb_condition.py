@@ -56,7 +56,8 @@ class ContactDetector():
         super().__init__()
         
     def intersection_detect(self, hand_mesh, obj_mesh):
-        m2m_intersect(hand_mesh, obj_mesh)
+        m2m_intersect(hand_mesh, 'hand', obj_mesh, 'obj')
+        
         return
     
     def cluster_rings(self):
