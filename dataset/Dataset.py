@@ -1,11 +1,10 @@
 import math
-from multiprocessing.sharedctypes import Value
 import sys
 sys.path.append('.')
 sys.path.append('..')
 import numpy as np
 import torch
-import cv2
+# import cv2
 import os
 from torch.utils import data
 from torch.utils.data._utils.collate import default_collate
@@ -15,11 +14,10 @@ from mano.model import load
 import trimesh
 import config
 from copy import deepcopy
-from trimesh import viewer
+# from trimesh import viewer
 # from pycaster import pycaster
 
 import mano
-
 import time
 import random
 from utils.utils import func_timer, makepath

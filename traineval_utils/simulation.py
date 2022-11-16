@@ -12,6 +12,7 @@ import pybullet as p
 # import skvideo.io as skvio
 # from array2gif import write_gif
 import imageio as imgio
+from utils.utils import func_timer
 
 from utils.utils import makepath
 
@@ -32,6 +33,7 @@ def write_video(frames, path):
     # skvio.vwrite(path, np.array(frames).astype(np.uint8), backend='ffmpeg')
     imgio.mimwrite(path, ims=frames, duration=0.5)
 
+@func_timer
 def process_sample(sample_idx, sample, save_gif_folder=None, save_obj_folder=None, vhacd_exe=None, use_gui=False, wait_time=0, sample_vis_freq=10, save_all_steps=False):
     if use_gui:
         conn_id = p.connect(p.GUI)

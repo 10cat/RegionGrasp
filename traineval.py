@@ -39,7 +39,7 @@ def train_val():
 def evaluation(checkpoint):
     testdataset = GrabNetDataset(config.dataset_dir, 'test', num_mask=cfg.num_mask)
     testloader = data.DataLoader(testdataset, batch_size=cfg.batch_size, shuffle=False)
-    tester = ValEpoch(testloader, testdataset, use_cuda=cfg.use_cuda, cuda_id=cfg.cuda_id)
+    tester = ValEpoch(testloader, testdataset, mode='test', use_cuda=cfg.use_cuda, cuda_id=cfg.cuda_id)
     tester.one_epoch(1, checkpoints=checkpoint)
 
 

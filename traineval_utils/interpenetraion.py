@@ -20,7 +20,7 @@ def intersect_vox_hand(hand_mesh, obj_mesh, pitch=0.01):
     volume = inside.sum() * np.power(pitch, 3)
     return volume
 
-
+from utils.utils import func_timer
 def get_interpenetration_volume(sample_info, mode='voxels_obj'):
     hand_mesh = trimesh.Trimesh(vertices=sample_info['hand_verts'], faces=sample_info['hand_faces'])
     obj_mesh = trimesh.Trimesh(vertices=sample_info['obj_verts'], faces=sample_info['obj_faces'])

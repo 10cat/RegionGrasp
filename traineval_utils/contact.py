@@ -6,6 +6,7 @@ import numpy as np
 import torch
 import trimesh
 
+from utils.utils import func_timer
 def get_contact_area(sample_info, pene_th=0.005, contact_th=-0.005):
     """
     Parameters:

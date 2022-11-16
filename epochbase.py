@@ -1,10 +1,12 @@
 from copy import deepcopy
 import os
-os.environ['CUDA_VISIBLE_DEVICES'] = "1"
-import config
 import sys
 sys.path.append('.')
 sys.path.append('..')
+from option import MyOptions as cfg
+os.environ['CUDA_VISIBLE_DEVICES'] = cfg.visible_device
+import config
+
 import numpy as np
 import torch
 from torch import Tensor, optim
@@ -23,7 +25,7 @@ from traineval_utils.loss import ConditionNetLoss, cGraspvaeLoss
 from traineval_utils.metrics import ConditionNetMetrics, cGraspvaeMetrics
 from utils.utils import func_timer
 from utils.visualization import visual_hand, visual_obj
-from option import MyOptions as cfg
+# from option import MyOptions as cfg
 import wandb
 
 to_dev = lambda tensor, device: tensor.to(device)
@@ -443,7 +445,7 @@ class ValEpoch(Epoch):
 
 
     def select_best_grasp(self, vs_pred_iters, vs_gt, outputs_iters_list):
-        import pdb; pdb.set_trace()
+        # import pdb; pdb.set_trace()
         vs_rec_errs = torch.mean(torch.einsum('bijk,j->bijk', torch.abs((vs_gt - vs_pred_iters)), self.v_weights2), dim=[2,3]) # dim should be (num_iters, B)
         indices = torch.argmin(vs_rec_errs, dim=0) # dim (B,)
         B = indices.shape[0]
@@ -471,6 +473,9 @@ class ValEpoch(Epoch):
              
                     
         return outputs
+
+    def test_metrics(self):
+        return
 
     # @func_timer
     def one_batch(self, sample, idx, num_iters=10):
@@ -501,15 +506,30 @@ class ValEpoch(Epoch):
 
         outputs = self.select_best_grasp(vs_pred_iters, vs_gt, outputs_iters_list)
 
-        dict_losses, signed_dists = self.loss_compute(outputs, data_elements, sample_ids=sample['sample_idx'])
-        if self.mode == 'train':
-            self.model_update(dict_losses)
+        #--- LOSS compute ----#
+        if self.mode != 'test': # validation阶段计算loss是有必要的 -> 监视过拟合情况；test阶段就没有必要 
+            dict_losses, signed_dists = self.loss_compute(outputs, data_elements, sample_ids=sample['sample_idx'])
+            if self.mode == 'train':
+                self.model_update(dict_losses)
 
-        hand_params = outputs['hand_params']
+        # hand_params = outputs['hand_params']
         rhand_vs_pred = self.decode_batch_hand_params(outputs, B)
         # rhand_vs_pred = rhand_pred.vertices
+
+        #--- Metrics compute ----#
+        # 目前可以进行batch计算的metrics: 
+        #  -- interpenetration depth => 几何结构合理性指标
+        #  -- interpenetration volume （？）=> 几何结构合理性指标
+        # 目前不可以进行batch计算的metrics：
+        #  -- simulation displacement => 物理合理性指标
+        ## 
         dict_metrics = self.metrics_compute(outputs, data_elements, signed_dists)
         self.update_meters(dict_losses, dict_metrics)
+        ## TODO 只有test阶段计算没有batch operating的指标
+        if self.mode == 'test':
+            self.update_meters()
+
+        # --- Visualization --- #
         if self.mode != 'train':
             if idx % cfg.visual_interval_val == 0: self.visual(rhand_vs_pred, data_elements, sample_ids=sample['sample_idx'], batch_id=idx)
         else:

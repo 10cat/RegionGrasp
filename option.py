@@ -14,10 +14,11 @@ class MyOptions:
     """
     w_wandb: bool = False
     machine: int = '97'
-    exp_name: str = 'debug_penetrate_depth_o2h' # 1
+    exp_name: str = 'eval_cgrasp_1_1_epoch40' # 1
     note: str = 'debug -- penetration depth computation -- test for using o2h signed distance for computing penetration depth '
     mode: str = 'eval'
     use_cuda: bool = True
+    visible_device: str="0"
     cuda_id: int = 0
     num_mask: int = 1
     num_rhand_verts: int = 778

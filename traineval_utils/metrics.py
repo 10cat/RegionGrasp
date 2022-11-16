@@ -1,4 +1,4 @@
-from multiprocessing.sharedctypes import Value
+import os
 import sys
 sys.path.append('.')
 sys.path.append('..')
@@ -7,6 +7,7 @@ import torch
 import torch.nn as nn
 from utils.utils import point2point_signed
 from pytorch3d.structures import Meshes
+from traineval_utils import simulation, interpenetraion, contact
 
 class ConditionNetMetrics(nn.Module):
     def __init__(self):
@@ -89,4 +90,20 @@ class cGraspvaeMetrics(nn.Module):
                         'max_depth_pred': max_depth_pred}
 
         return dict_metrics
+
+    def test_forward(self, sample_info, sample_idx):
+        """
+        Parameters:
+        - sample_info: (dict), value_dtype = numpy_array
+        ----------------
+        Returns:
+        - metrics: (AverageMeters), value_dtype = (AverageMeter)
+        """
+        save_gif_folder = os.path.join(cfg.output_dir, )
+        sim_dist = simulation.process_sample(sample_idx, sample_info, save_gif_folder=cfg.output_dir, save_all_steps=True)
+        
+
+
+
+        return
 
