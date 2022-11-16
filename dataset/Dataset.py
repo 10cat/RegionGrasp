@@ -25,11 +25,11 @@ import random
 from utils.utils import func_timer, makepath
 from utils.visualization import visual_sdf, visual_obj_contact_regions
 # from vedo import show
+
 class GrabNetDataset(data.Dataset):
     @func_timer
     def __init__(self,
                  dataset_dir,
-                #  config,
                  ds_name='train',
                  dtype=torch.float32,
                  only_params = False,
