@@ -10,7 +10,12 @@ from utils.visualization import colors_like
 import matplotlib.pyplot as plt
 
 
-def visual_inter(hand_mesh, rh_fs, obj_mesh, obj_fs, output_folder, frame_name):
+def visual_inter(hand_mesh, 
+                 rh_fs, 
+                 obj_mesh, 
+                 obj_fs, 
+                 output_folder, 
+                 frame_name):
     hand_mesh.visual.face_colors = colors_like(config.colors['skin'])
     obj_mesh.visual.face_colors = colors_like(config.colors['grey'])
     
@@ -19,6 +24,9 @@ def visual_inter(hand_mesh, rh_fs, obj_mesh, obj_fs, output_folder, frame_name):
     
     output_path_hand = os.path.join(output_folder, frame_name+'_hand.ply')
     output_path_obj = os.path.join(output_folder, frame_name+'_obj.ply')
+    
+    hand_mesh.export(output_path_hand)
+    obj_mesh.export(output_path_obj)
     
     return
 
@@ -30,12 +38,17 @@ def visual_hist(array):
     plt.show()
     plt.close()
     
-def visual_sort(array):
-    array_sort = np.sort(array)
-    plt.figure()
-    plt.plot(array_sort)
-    plt.show()
-    plt.close()
+def visual_sort(array, plot):
+    # array_sort = np.sort(array)
+    array_uni = np.array(list(set(array)))
+    array_sort = np.sort(array_uni)
+    th = cluster_threshold(array_sort)
+    if plot:
+        plt.figure()
+        plt.plot(array_sort)
+        plt.axhline(y=th, color='r', label='threshold')
+        plt.show()
+        plt.close()
 
 def cluster_threshold(sorted_array):
     threshold = None
@@ -44,14 +57,15 @@ def cluster_threshold(sorted_array):
         pre_value = sorted_array[ idx - 1 ] if idx > 0 else value
         post_value = sorted_array[ idx + 1 ] if idx < (sorted_array.shape[0] - 1) else value
         pre_diff = value - pre_value
-        post_diff = post_diff - value
+        post_diff = post_value - value
         diff = abs( post_diff - pre_diff )
-        diff_sign = np.sign(post_diff - pre_diff)
+        diff_pos = (post_diff - pre_diff) > 0
         if diff > diff_max: 
             diff_max = diff
-            diff_sign = diff_sign
+            diff_pos = diff_pos
             diff_max_idx = idx
-    if diff_sign > 0:
+    # import pdb; pdb.set_trace()
+    if diff_pos:
         threshold = (sorted_array[diff_max_idx] + sorted_array[diff_max_idx+1]) / 2
     else:
         threshold = (sorted_array[diff_max_idx] + sorted_array[diff_max_idx-1]) / 2
