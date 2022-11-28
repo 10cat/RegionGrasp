@@ -9,9 +9,10 @@ import trimesh
 import mano
 from mano.model import load
 from dataset.Dataset_origin import GrabNetDataset_orig
-from dataset.data_utils import m2m_intersect, visual_hist, visual_inter, visual_sort
-from utils.utils import makepath
+from dataset.data_utils import m2m_intersect, visual_hist, visual_inter, visual_sort, faces2verts_no_rep, inner_verts_detect
+from utils.utils import func_timer, makepath
 import matplotlib.pyplot as plt
+from tqdm import tqdm
 
 
 
@@ -22,9 +23,9 @@ class ThumbConditionator():
         self.Contactor = ContactDetector(visual_folder=visual_folder, plot=plot)
         
     def contact_annot(self, hand_mesh, obj_mesh, frame_name):
-        self.Contactor.run(hand_mesh, obj_mesh, frame_name=frame_name)
+        obj_contact_face_ids = self.Contactor.run(hand_mesh, obj_mesh, frame_name=frame_name)
         
-        return
+        return obj_contact_face_ids
     
     def center_point(self):
         return
@@ -99,24 +100,74 @@ class ContactDetector():
         # visual_sort(depth_array, plot=self.plot)
         
         return
+
+
+    @func_timer
+    def fill_interior(self, hand_mesh, obj_mesh, ContactDict):
+        """without cluster"""
+        face_ids = ContactDict['face_index']['obj']
+        face_ids = list(set(face_ids))
+        obj_faces = obj_mesh.faces[face_ids]
         
+        # TODO: find the inner contour of the face by signed distance
+        vert_ids = faces2verts_no_rep(obj_faces)
+        inner_indices = inner_verts_detect(hand_mesh, obj_mesh, vert_ids)
+        inner_vert_ids = [vert_ids[id] for id in inner_indices]
+        # TODO: BFS search for interior faces;
+        ## 更新对象： face_ids (list)
+        verts_in_search = inner_vert_ids
+        iter_num = 1
+        print("Start BFS search!")
+        while(verts_in_search):
+            new_face_ids = []
+            for vid in tqdm(verts_in_search, desc=f'depth: {iter_num}'):
+                v_fids = obj_mesh.vertex_faces[vid] # returns: (m,) m = max number of faces for a single vertex in the mesh, padded with -1 
+                v_fids = v_fids[v_fids > 0] # unpadded
+                for fid in v_fids:
+                    if fid not in face_ids:
+                        face = obj_mesh.faces[fid]
+                        vids = face.reshape(-1).tolist()
+                        inners = inner_verts_detect(hand_mesh, obj_mesh, vids)
+                        if len(inners) < len(vids):
+                            continue
+                        face_ids.append(fid)
+                        new_face_ids.append(fid)
+            # import pdb; pdb.set_trace()
+            if new_face_ids:
+                new_obj_faces = obj_mesh.faces[new_face_ids]
+                new_vert_ids = faces2verts_no_rep(new_obj_faces)
+                verts_in_search = new_vert_ids
+            else:
+                verts_in_search = [] 
+            
+            iter_num += 1
+        
+        
+        
+        return face_ids
+    
     def run(self, hand_mesh, obj_mesh, frame_name):
         # NOTE: I.-1.1 Mesh intersection detection on thumb region
         contact_dict = self.intersection_detect(hand_mesh, obj_mesh)
+        
         
         visual_inter(hand_mesh, contact_dict['face_index']['hand'], 
                      obj_mesh, contact_dict['face_index']['obj'], 
                      output_folder=self.visual_folder, 
                      frame_name=frame_name)
         
-        # NOTE: I.-1.2 Clustering intersection points into intersection rings
-        self.cluster_rings(contact_dict, obj_mesh)
-        
+        obj_contact_face_ids = self.fill_interior(hand_mesh, obj_mesh, contact_dict)
         
         visual_inter(hand_mesh, contact_dict['face_index']['hand'], 
-                     obj_mesh, contact_dict['face_index']['obj'], 
+                     obj_mesh, obj_contact_face_ids, 
                      output_folder=self.visual_folder, 
-                     frame_name=frame_name+'_cluster')
+                     frame_name=frame_name+'_filled')
+        
+        # NOTE: I.-1.2 Clustering intersection points into intersection rings
+        # self.cluster_rings(contact_dict, obj_mesh)
+        
+        
+        
         
         # TODO: I.-1.3 Hand Mesh Segmentation based on rings
         
@@ -126,7 +177,7 @@ class ContactDetector():
         # TODO: I.-2 If not intersecting with object, threshold signed distance -> contact faces
         
         
-        return
+        return obj_contact_face_ids
 
 if __name__ == "__main__":
     import argparse

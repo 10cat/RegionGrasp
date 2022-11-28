@@ -120,4 +120,16 @@ def m2m_intersect(m1, name1, m2, name2):
         contact_to_dict(ContactDict, contact, name1, name2)
         
     return ContactDict
+    
+
+def faces2verts_no_rep(faces):
+    verts = faces.reshape(-1).tolist()
+    verts_no_rep = list(set(verts))
+    return verts_no_rep
+
+def inner_verts_detect(mesh_dest, mesh_orig, vert_ids):
+    verts = mesh_orig.vertices[vert_ids]
+    signed_dists = trimesh.proximity.signed_distance(mesh_dest, verts)
+    inner_indices = np.where(signed_dists > 0)[0].tolist()
+    return inner_indices
 
