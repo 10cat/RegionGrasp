@@ -1,6 +1,12 @@
 import os
+import numpy as np
 import torch
 import torch.nn as nn
+
+def decode_hand_comp(dict, part):
+    faces = dict[part][0]
+    verts = dict[part][1]
+    return faces, verts
 
 """
 Some constant configuration settings
@@ -23,13 +29,12 @@ colors = {
 
 JOINTS_NUM = 15
 
-thumb_vertices = [697, 698, 699, 700, 701, 702, 703, 704, 705, 706, 707,
-                      708, 709, 710, 711, 712, 713, 714,
-                      715, 716, 717, 718, 719, 720, 721, 722, 723, 724,
-                      725, 726, 727, 728, 729, 730, 731, 732, 733, 734, 735, 736, 737,
-                      738, 739, 740, 741, 742, 743, 744, 745, 746, 747, 748, 749, 750,
-                      751, 752, 753, 754, 755, 756, 757, 758, 759, 760, 761, 762, 763,
-                      764, 765, 766, 767, 768]
+hand_comp_npz = np.load('dataset/tools/hand_comp.npz', allow_pickle=True)
+hand_comp_object = hand_comp_npz['arr_0']
+hand_comp = hand_comp_object.tolist()
+hand_comp_colors=['green', 'blue', 'purple', 'yellow', 'orange', 'red'] # 'thumb', 'index', 'middle', 'fourth', 'small'
+
+   
 
 """
 Filepath settings

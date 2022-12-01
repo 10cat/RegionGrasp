@@ -6,7 +6,6 @@ sys.path.append('..')
 from option import MyOptions as cfg
 os.environ['CUDA_VISIBLE_DEVICES'] = cfg.visible_device
 import config
-
 import numpy as np
 import torch
 from torch import Tensor, optim
