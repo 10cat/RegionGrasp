@@ -192,27 +192,31 @@ if __name__ == "__main__":
     rh_faces = mano_model.f
     hand_mesh = trimesh.Trimesh(vertices=rh_verts, faces=rh_faces)
     
-    thumb_faces = find_surrounded_faces(config.thumb_vertices, hand_mesh)
-    index_faces = find_surrounded_faces(config.indexfinger_vertices, hand_mesh)
-    middle_faces = find_surrounded_faces(config.middlefinger_vertices, hand_mesh)
-    fourth_faces = find_surrounded_faces(config.fourthfinger_vertices, hand_mesh)
-    small_faces = find_surrounded_faces(config.smallfinger_vertices, hand_mesh)
+    # thumb_faces = find_surrounded_faces(config.thumb_vertices, hand_mesh)
+    # index_faces = find_surrounded_faces(config.indexfinger_vertices, hand_mesh)
+    # middle_faces = find_surrounded_faces(config.middlefinger_vertices, hand_mesh)
+    # fourth_faces = find_surrounded_faces(config.fourthfinger_vertices, hand_mesh)
+    # small_faces = find_surrounded_faces(config.smallfinger_vertices, hand_mesh)
+    # thumb_faces = [1231, 1232, 1233, 1234, 1239, 1240, 1242, 1243, 1244, 1251, 1259, 1260, 1261, 1262, 1263, 1264, 1265, 1266, 1279, 1280, 1287, 1289, 1290, 1295, 1296, 1297, 1298, 1299, 1300, 1301, 1302, 1303, 1304, 1305, 1306, 1307, 1308, 1311, 1312, 1313, 1314, 1315, 1316, 1317, 1318, 1319, 1320, 1321, 1322, 1323, 1324, 1325, 1326, 1329, 1330, 1333, 1334, 1335, 1336, 1337, 1338, 1339, 1340, 1341, 1342, 1344, 1345, 1346, 1347, 1348, 1349, 1350, 1351, 1352, 1353, 1354, 1355, 1356, 1357, 1358, 1359, 1360, 1361, 1362, 1363, 1364, 1365, 1366, 1367, 1368, 1369, 1370, 1371, 1372, 1373, 1374, 1375, 1376, 1377, 1378, 1379, 1380, 1381, 1382]
+    thumb_faces = [1295, 1296, 1297, 1298, 1299, 1300, 1301, 1302, 1303, 1304, 1305, 1306, 1307, 1308, 1311, 1312, 1313, 1314, 1315, 1316, 1317, 1318, 1319, 1320, 1321, 1322, 1323, 1324, 1325, 1326, 1329, 1330, 1333, 1334, 1335, 1336, 1337, 1338, 1339, 1340, 1341, 1342, 1344, 1345, 1346, 1347, 1348, 1349, 1350, 1351, 1352, 1353, 1354, 1355, 1356, 1357, 1358, 1359, 1360, 1361, 1362, 1363, 1364, 1365, 1366, 1367, 1368, 1369, 1370, 1371, 1372, 1373, 1374, 1375, 1376, 1377, 1378, 1379, 1380, 1381, 1382]
     
     visual_mesh(hand_mesh, 
                 bg_color='skin', 
-                mark_region=[thumb_faces, index_faces, middle_faces, fourth_faces, small_faces], 
-                mark_color=['green', 'blue', 'purple', 'yellow', 'orange'])
+                mark_region=[thumb_faces], 
+                mark_color=['green'])
     
     # hand_mesh.show()
+    output_path = "thumb.ply"
+    hand_mesh.export(output_path)
     
-    hand_comp = {'thumb':[thumb_faces, config.thumb_vertices], 
-                 'index': [index_faces, config.indexfinger_vertices], 
-                 'middle': [middle_faces, config.middlefinger_vertices], 
-                 'fourth': [fourth_faces, config.fourthfinger_vertices], 
-                 'small': [small_faces, config.smallfinger_vertices]}
+    # hand_comp = {'thumb':[thumb_faces, config.thumb_vertices], 
+    #              'index': [index_faces, config.indexfinger_vertices], 
+    #              'middle': [middle_faces, config.middlefinger_vertices], 
+    #              'fourth': [fourth_faces, config.fourthfinger_vertices], 
+    #              'small': [small_faces, config.smallfinger_vertices]}
     
-    output_path = 'dataset/tools/hand_comp.npz'
-    np.savez(output_path, hand_comp, allow_pickle=True)
+    # output_path = 'dataset/tools/hand_comp.npz'
+    # np.savez(output_path, hand_comp, allow_pickle=True)
     
     
     
