@@ -14,21 +14,43 @@ from utils.utils import func_timer, makepath
 import matplotlib.pyplot as plt
 from tqdm import tqdm
 
+def create_annot_folders(ds):
+    ds.annotate_path = os.path.join(ds.ds_path, 'data_annot')
+    ds.data_path = os.path.join(ds.ds_path, 'data')
+    makepath(ds.annotate_path)
+    for i in range(10):
+        # create sub folders that indicate the subject names
+        # if self.ds_name != 'train' and i == 8:
+        #     continue
+        # if i == 8:
+            # import pdb; pdb.set_trace()
+        name_subfolder = 's' + str(i+1)
+        annotate_sub_path = os.path.join(ds.annotate_path, name_subfolder)
+        
+        makepath(annotate_sub_path)
 
+        # create sub-sub folders that indicate the obj names and action names
+        data_sub_path = os.path.join(ds.data_path, name_subfolder)
+        for dir in os.listdir(data_sub_path):
+            makepath(os.path.join(annotate_sub_path, dir))
+                
 class ThumbConditionator():
-    def __init__(self, visual_folder, plot=False):
+    def __init__(self, visual_folder, annot_fnames, plot=False, visual_freq=500):
         super().__init__()
         # self.thumb_verts = config.thumb_vertices
         self.visual_folder = visual_folder
+        self.annot_fnames = annot_fnames
         self.plot = plot
-        self.Contactor = ContactDetector(visual_folder=visual_folder, plot=plot)
+        self.visual_freq = visual_freq
+        self.Contactor = ContactDetector(visual_folder=visual_folder, plot=plot, visual_freq=visual_freq)
         
-    def contact_annot(self, hand_mesh, obj_mesh, frame_name):
-        obj_contact_face_ids = self.Contactor.run(hand_mesh, obj_mesh, frame_name=frame_name)
+    def contact_annot(self, hand_mesh, obj_mesh, frame_name, idx):
+        obj_contact_face_ids = self.Contactor.run(hand_mesh, obj_mesh, frame_name=frame_name, idx=idx)
         
         return obj_contact_face_ids
     
-    def thumb_condition_region(self, obj_mesh, face_ids_dict, frame_name, region_depth=3):
+    @func_timer
+    def thumb_condition_region(self, obj_mesh, face_ids_dict, frame_name, idx, region_depth=3):
         # 'center'-> contact region detect返回的obj_face_ids列表最后一个
         # NOTE: contact region determination采用BFS向内查询添加面，所以返回的obj_face_ids列表最后的一个面一定是区域中心
         thumb_obj_faces = face_ids_dict['thumb']
@@ -59,31 +81,34 @@ class ThumbConditionator():
         }
         # import pdb; pdb.set_trace()
         # test visualization result
-        visual_mesh_region(obj_mesh, thumb_condition['faces'], 'pink')
-        visual_mesh_region(obj_mesh, thumb_condition['center'], 'yellow')
-        output_path = os.path.join(self.visual_folder, frame_name + '_filled_obj_cond.ply')
-        obj_mesh.export(output_path)
+        if idx % 500 == 0:
+            visual_mesh_region(obj_mesh, thumb_condition['faces'], 'pink')
+            visual_mesh_region(obj_mesh, thumb_condition['center'], 'yellow')
+            output_path = os.path.join(self.visual_folder, frame_name + '_filled_obj_cond.ply')
+            obj_mesh.export(output_path)
         # import pdb; pdb.set_trace()
         
         return thumb_condition
     
-    def save_annotate(self, contact_faces_dict, thumb_condition_dict):
+    @func_timer
+    def save_annotate(self, contact_faces_dict, thumb_condition_dict, idx):
         save_dict = {
             'contact': contact_faces_dict,
             'thumb_cond': thumb_condition_dict
         }
-        
+        annot_fname = self.annot_fnames[idx]
+        np.save(annot_fname, save_dict, allow_pickle=True)
         
         return
     
-    def run(self, hand_verts, hand_faces, obj_verts, obj_faces, frame_name):
+    def run(self, hand_verts, hand_faces, obj_verts, obj_faces, frame_name, idx):
         HandMesh = trimesh.Trimesh(vertices=hand_verts, faces=hand_faces)
         ObjMesh = trimesh.Trimesh(vertices=obj_verts, faces=obj_faces)
         
         # I.Contact Region Determination
-        o_contact_face_ids_dict = self.contact_annot(HandMesh, ObjMesh, frame_name)
+        o_contact_face_ids_dict = self.contact_annot(HandMesh, ObjMesh, frame_name, idx)
         
-        thumb_condition_dict = self.thumb_condition_region(ObjMesh, o_contact_face_ids_dict, frame_name)
+        thumb_condition_dict = self.thumb_condition_region(ObjMesh, o_contact_face_ids_dict, frame_name, idx)
         
         # II. Select one 'center' of the contact region
         # self.center_point()
@@ -92,16 +117,17 @@ class ThumbConditionator():
         # self.condition_region()
         
         # IV. 转换成可以存储的标注形式 + 存储标注
-        self.save_annotate()
+        self.save_annotate(o_contact_face_ids_dict, thumb_condition_dict, idx)
         
         
         return
     
 class ContactDetector():
-    def __init__(self, visual_folder, plot):
+    def __init__(self, visual_folder, plot, visual_freq):
         super().__init__()
         self.visual_folder = visual_folder
         self.plot = plot
+        self.visual_freq = visual_freq
         self.hand_comps_name = ['thumb', 'index', 'middle', 'fourth', 'small', 'palm']
         
     def intersection_detect(self, hand_mesh, obj_mesh):
@@ -198,11 +224,12 @@ class ContactDetector():
         verts_in_search = inner_vert_ids
         verts_comps = inner_vert_comps
         iter_num = 1
-        print("Start BFS search!")
+        # print("Start BFS search!")
         while(verts_in_search):
             new_vert_ids = [] # need a vert list
             new_vert_comps = []
-            for idx, vid in enumerate(tqdm(verts_in_search, desc=f'depth: {iter_num}')):
+            # for idx, vid in enumerate(tqdm(verts_in_search, desc=f'depth: {iter_num}')):
+            for idx, vid in enumerate(verts_in_search):
                 v_fids = obj_mesh.vertex_faces[vid] # returns: (m,) m = max number of faces for a single vertex in the mesh, padded with -1 
                 v_fids = v_fids[v_fids > 0] # unpadded
                 for fid in v_fids:
@@ -237,7 +264,7 @@ class ContactDetector():
             
         return face_ids_dict
     
-    def run(self, hand_mesh, obj_mesh, frame_name):
+    def run(self, hand_mesh, obj_mesh, frame_name, idx):
         # NOTE: I.-1.1 Mesh intersection detection on thumb region
         contact_dict = self.intersection_detect(hand_mesh, obj_mesh)
         
@@ -268,14 +295,15 @@ class ContactDetector():
         #         obj_contact_face_ids[comp] = []
         
         # NOTE: visualize
-        mark_colors = config.hand_comp_colors   
-        h_face_ids = list(contact_dict['face_index']['hand'].values())
-        obj_contact_face_ids = list(o_contact_face_ids_dict.values())
-        visual_inter(hand_mesh, h_face_ids, mark_colors,
-                     obj_mesh, obj_contact_face_ids, mark_colors, 
-                     output_folder=self.visual_folder, 
-                     frame_name=frame_name+'_filled')
-        import pdb; pdb.set_trace()
+        if idx % self.visual_freq == 0:
+            mark_colors = config.hand_comp_colors   
+            h_face_ids = list(contact_dict['face_index']['hand'].values())
+            obj_contact_face_ids = list(o_contact_face_ids_dict.values())
+            visual_inter(hand_mesh, h_face_ids, mark_colors,
+                        obj_mesh, obj_contact_face_ids, mark_colors, 
+                        output_folder=self.visual_folder, 
+                        frame_name=frame_name+'_filled')
+            # import pdb; pdb.set_trace()
         
         # NOTE: I.-1.2 Clustering intersection points into intersection rings
         # self.cluster_rings(contact_dict, obj_mesh)
@@ -294,7 +322,8 @@ class ContactDetector():
 if __name__ == "__main__":
     import argparse
     parser = argparse.ArgumentParser()
-    parser.add_argument('--ds_name', required=True)
+    parser.add_argument('--ds_name', type=str, required=True)
+    parser.add_argument('--visual_freq', type=int, default=500)
     parser.add_argument('--plot', action='store_true', default=False)
     args = parser.parse_args()
     
@@ -311,9 +340,12 @@ if __name__ == "__main__":
     visual_folder = os.path.join(config.dataset_visual_dir, 'thumb_condition', 'intersect')
     makepath(visual_folder)
     
-    Conditionator = ThumbConditionator(visual_folder=visual_folder, plot=args.plot)
+    create_annot_folders(dataset)
+    annot_frame_names = [os.path.join(dataset.ds_root, fname.replace('data', 'data_annot').replace('npz', 'npy')) for fname in dataset.frame_names_orig]
     
-    for idx in range(dataset.__len__()):
+    Conditionator = ThumbConditionator(visual_folder=visual_folder, annot_fnames=annot_frame_names, plot=args.plot, visual_freq=args.visual_freq)
+    
+    for idx in tqdm(range(dataset.__len__()), desc=f'{args.ds_name}'):
         
         sample = dataset.__getitem__(idx)
         hand_faces = rh_model.faces
@@ -333,7 +365,7 @@ if __name__ == "__main__":
         obj_faces = ObjMesh.faces
         
         frame_name = str(idx) + '_' + obj_name
-        Conditionator.run(hand_verts, hand_faces, obj_verts, obj_faces, frame_name)
+        Conditionator.run(hand_verts, hand_faces, obj_verts, obj_faces, frame_name, idx)
         
         
         

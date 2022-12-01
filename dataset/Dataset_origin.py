@@ -37,6 +37,7 @@ class GrabNetDataset_orig(data.Dataset):
         
         frame_names = np.load(os.path.join(self.ds_path, 'frame_names.npz'))['frame_names'] # 所有sample的标注信息.npz文件的相对路径
         # import pdb; pdb.set_trace()
+        self.frame_names_orig = frame_names
         
         ## 将frame_names相对路径拼接成绝对路径
         frame_names_list = []
