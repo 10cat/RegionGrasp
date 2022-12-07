@@ -1,3 +1,4 @@
+from copy import deepcopy
 import os
 import sys
 sys.path.append('.')
@@ -53,7 +54,10 @@ class ThumbConditionator():
     def thumb_condition_region(self, obj_mesh, face_ids_dict, frame_name, idx, region_depth=3):
         # 'center'-> contact region detect返回的obj_face_ids列表最后一个
         # NOTE: contact region determination采用BFS向内查询添加面，所以返回的obj_face_ids列表最后的一个面一定是区域中心
+        # import pdb; pdb.set_trace()
         thumb_obj_faces = face_ids_dict['thumb']
+        if not thumb_obj_faces:
+            return
         center_face_id = thumb_obj_faces[-1]
         center_face = obj_mesh.faces[center_face_id]
         vertex_ids = center_face.reshape(-1).tolist()
@@ -81,11 +85,19 @@ class ThumbConditionator():
         }
         # import pdb; pdb.set_trace()
         # test visualization result
-        if idx % 500 == 0:
+        if idx % self.visual_freq == 0:
             visual_mesh_region(obj_mesh, thumb_condition['faces'], 'pink')
-            visual_mesh_region(obj_mesh, thumb_condition['center'], 'yellow')
+            visual_mesh_region(obj_mesh, thumb_condition['center'], 'red')
             output_path = os.path.join(self.visual_folder, frame_name + '_filled_obj_cond.ply')
             obj_mesh.export(output_path)
+            # visual thumb condition only
+            obj_mesh_cond = deepcopy(obj_mesh)
+            visual_mesh(obj_mesh_cond, 'grey', thumb_condition['center'], 'red')
+            obj_mesh_cond.export(os.path.join(self.visual_folder, frame_name + '_obj_cond_center.ply'))
+            visual_mesh(obj_mesh_cond, 'grey', thumb_condition['faces'], 'pink')
+            visual_mesh_region(obj_mesh_cond, thumb_condition['center'], 'red')
+            obj_mesh_cond.export(os.path.join(self.visual_folder, frame_name + '_obj_cond.ply'))
+            
         # import pdb; pdb.set_trace()
         
         return thumb_condition
@@ -297,6 +309,14 @@ class ContactDetector():
         
         # divide contact regions based on hand component
         self.group_by_hand_comp(contact_dict)
+        # NOTE: visual the intersection rings
+        mark_colors = config.hand_comp_colors
+        h_face_ids = list(contact_dict['face_index']['hand'].values())
+        o_face_ids = list(contact_dict['face_index']['obj'].values())
+        visual_inter(hand_mesh, h_face_ids, mark_colors, 
+                     obj_mesh, o_face_ids, mark_colors, 
+                     self.visual_folder, 
+                     frame_name)
         
         # TODO: combine the obj_face_ids for BFS convenience, but with comp marks
         o_face_ids_dict = contact_dict['face_index']['obj']
@@ -316,8 +336,7 @@ class ContactDetector():
         #         obj_contact_face_ids[comp] = []
         
         # NOTE: visualize
-        if idx % self.visual_freq == 0:
-            mark_colors = config.hand_comp_colors   
+        if idx % self.visual_freq == 0:   
             h_face_ids = list(contact_dict['face_index']['hand'].values())
             obj_contact_face_ids = list(o_contact_face_ids_dict.values())
             visual_inter(hand_mesh, h_face_ids, mark_colors,
@@ -370,6 +389,9 @@ if __name__ == "__main__":
     
     for idx in tqdm(range(dataset.__len__()), desc=f'{args.ds_name}'):
         
+        if idx % args.visual_freq != 0:
+            continue
+        
         sample = dataset.__getitem__(idx)
         hand_faces = rh_model.faces
         hand_verts = sample['verts_rhand']
@@ -390,10 +412,13 @@ if __name__ == "__main__":
         frame_name = str(idx) + '_' + obj_name
         Conditionator.run(hand_verts, hand_faces, obj_verts, obj_faces, frame_name, idx)
         
+        # TODO: text log process
+        # f = open(log_file, 'w')
+        # f.write(f"Sample {idx} done!")
+        # f.close()
         
-        f = open(log_file, 'w')
-        f.write(f"Sample {idx} done!")
-        f.close()
+        
+        
             
         
         

@@ -46,9 +46,12 @@ machine = '97'
 if machine == '97':
 
     DATASET_ROOT = "/home/datassd/yilin/GrabNet"
+    GrabNet_ROOT = "/home/datassd/yilin/GrabNet"
 
     mano_dir = "/home/datassd/yilin/Codes/_toolbox/mano/models/MANO_RIGHT.pkl" # MANO right hand model path
 
+    visual_root = "/home/datassd/yilin/Outputs"
+    
     dataset_visual_dir = "/home/datassd/yilin/Outputs/GrabNet_visual"
 
     OUTPUT_ROOT = "/home/datassd/yilin/Outputs/ConditionHOI"
@@ -57,8 +60,10 @@ if machine == '41':
     DATASET_ROOT = "/home/yilin/GrabNet"
 
     mano_dir = "/home/yilin/smpl_models/mano/MANO_RIGHT.pkl" # MANO right hand model path
-
-    dataset_visual_dir = "/home/yilin/Outputs/GrabNet_visual"
+    
+    visual_root = "/ssd_data/Outputs"
+    
+    dataset_visual_dir = "/ssd_data/Outputs/GrabNet_visual"
 
     OUTPUT_ROOT = "/home/yilin/Outputs/ConditionHOI"
 

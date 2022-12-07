@@ -13,8 +13,7 @@ from dataset.data_utils import m2m_intersect, visual_hist, visual_inter, visual_
 from utils.utils import func_timer, makepath
 import matplotlib.pyplot as plt
 from tqdm import tqdm
-
-
+                
 if __name__ == "__main__":
     import argparse
     parser = argparse.ArgumentParser()
@@ -56,9 +55,12 @@ if __name__ == "__main__":
         obj_verts = np.matmul(obj_verts_orig, obj_rotmat) + obj_trans
         obj_faces = ObjMesh.faces
         
-        sdf_annot_file = np.load(annot_frame_names[idx], allow_pickle=True)
-        # import pdb; pdb.set_trace()
+        filename = annot_frame_names[idx]
+        
+        sdf_annot_file = np.load(filename, allow_pickle=True)
+        
         sdf_annot = sdf_annot_file.tolist()
+        # import pdb; pdb.set_trace()
         if 'obj_faces_ids' in list(sdf_annot.keys()):
             centers = sdf_annot['obj_faces_ids']
         else:
@@ -69,9 +71,9 @@ if __name__ == "__main__":
         
         condition_centers = []
         condition_candidates = []
-        for idx, face in enumerate(closest_faces):
+        for fid, face in enumerate(closest_faces):
             if face in config.thumb_center:
-                condition_centers.append(idx)
+                condition_centers.append(fid)
         # import pdb; pdb.set_trace()
         
         # sdf_annot['centers'] = sdf_annot['obj_faces_ids']
@@ -80,10 +82,12 @@ if __name__ == "__main__":
             del sdf_annot['obj_faces_ids']
         sdf_annot['thumb_center_ids'] = condition_centers
         
-        np.save(annot_frame_names[idx], sdf_annot)
+        np.save(filename, sdf_annot)
         
-        # sdf_annot = np.load('test.npy', allow_pickle=True)
-        # import pdb;pdb.set_trace()
+        # sdf_annot_file_0 = np.load(annot_frame_names[idx], allow_pickle=True)
+        # sdf_annot_0 = sdf_annot_file_0.tolist()
+        # # import pdb; pdb.set_trace()
+        # assert 'thumb_center_ids' in list(sdf_annot.keys())
         # sdf_annot.keys()
                 
         

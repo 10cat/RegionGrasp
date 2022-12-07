@@ -38,13 +38,18 @@ def load_mano_model(model_path, is_rhand=True, ext='pkl'):
     data_struct = Struct(**model_data)
     return data_struct
 
+
+def copy_folders_path(root, old_folder_name, new_folder_name):
+    new_folder_path = os.path.join(root, new_folder_name)
+    old_folder_path = os.path.join(root, old_folder_name)
+
 def visual_mesh_region(mesh, fs, color):
     mesh.visual.face_colors[fs] = colors_like(config.colors[color])
 
 def visual_mesh(mesh, bg_color='grey', mark_region=None, mark_color='yellow'):
     mesh.visual.face_colors = colors_like(config.colors[bg_color])
     if mark_region:
-        if isinstance(mark_region[0], list):
+        if isinstance(mark_region, list) and isinstance(mark_region[0], list):
             assert isinstance(mark_color, list), "Parameter 'mark_color' must match the type of 'mark_region'!"
             for idx, region in enumerate(mark_region):
                 visual_mesh_region(mesh, region, mark_color[idx])
