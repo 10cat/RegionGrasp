@@ -46,6 +46,7 @@ machine = '97'
 if machine == '97':
 
     DATASET_ROOT = "/home/datassd/yilin/GrabNet"
+    GrabNet_ROOT = "/home/datassd/yilin/GrabNet"
 
     mano_dir = "/home/datassd/yilin/Codes/_toolbox/mano/models/MANO_RIGHT.pkl" # MANO right hand model path
 

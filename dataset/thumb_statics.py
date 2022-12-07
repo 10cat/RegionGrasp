@@ -1,4 +1,3 @@
-from copy import deepcopy
 import os
 import sys
 sys.path.append('.')
@@ -54,10 +53,7 @@ class ThumbConditionator():
     def thumb_condition_region(self, obj_mesh, face_ids_dict, frame_name, idx, region_depth=3):
         # 'center'-> contact region detect返回的obj_face_ids列表最后一个
         # NOTE: contact region determination采用BFS向内查询添加面，所以返回的obj_face_ids列表最后的一个面一定是区域中心
-        # import pdb; pdb.set_trace()
         thumb_obj_faces = face_ids_dict['thumb']
-        if not thumb_obj_faces:
-            return
         center_face_id = thumb_obj_faces[-1]
         center_face = obj_mesh.faces[center_face_id]
         vertex_ids = center_face.reshape(-1).tolist()
@@ -85,23 +81,21 @@ class ThumbConditionator():
         }
         # import pdb; pdb.set_trace()
         # test visualization result
-        if idx % self.visual_freq == 0:
+        if idx % 500 == 0:
             visual_mesh_region(obj_mesh, thumb_condition['faces'], 'pink')
-            visual_mesh_region(obj_mesh, thumb_condition['center'], 'red')
+            visual_mesh_region(obj_mesh, thumb_condition['center'], 'yellow')
             output_path = os.path.join(self.visual_folder, frame_name + '_filled_obj_cond.ply')
             obj_mesh.export(output_path)
-            # visual thumb condition only
-            obj_mesh_cond = deepcopy(obj_mesh)
-            visual_mesh(obj_mesh_cond, 'grey', thumb_condition['center'], 'red')
-            obj_mesh_cond.export(os.path.join(self.visual_folder, frame_name + '_obj_cond_center.ply'))
-            visual_mesh(obj_mesh_cond, 'grey', thumb_condition['faces'], 'pink')
-            visual_mesh_region(obj_mesh_cond, thumb_condition['center'], 'red')
-            obj_mesh_cond.export(os.path.join(self.visual_folder, frame_name + '_obj_cond.ply'))
-            
         # import pdb; pdb.set_trace()
         
         return thumb_condition
     
+    def thumb_count(self, hand_mesh, obj_mesh):
+        ContactDict = self.Contactor.intersection_detect(hand_mesh, obj_mesh)
+        self.Contactor.group_by_hand_comp(ContactDict)
+        hand_contact_faces = ContactDict['face_index']['hand']
+        
+        return hand_contact_faces
     # @func_timer
     def save_annotate(self, contact_faces_dict, thumb_condition_dict, idx):
         save_dict = {
@@ -117,22 +111,10 @@ class ThumbConditionator():
         HandMesh = trimesh.Trimesh(vertices=hand_verts, faces=hand_faces)
         ObjMesh = trimesh.Trimesh(vertices=obj_verts, faces=obj_faces)
         
-        # I.Contact Region Determination
-        o_contact_face_ids_dict = self.contact_annot(HandMesh, ObjMesh, frame_name, idx)
+        hand_contact_faces = self.thumb_count(HandMesh, ObjMesh)
+        thumb_contact_faces = hand_contact_faces['thumb']
         
-        thumb_condition_dict = self.thumb_condition_region(ObjMesh, o_contact_face_ids_dict, frame_name, idx)
-        
-        # II. Select one 'center' of the contact region
-        # self.center_point()
-        
-        # III. Select the 'smallest' 'neighborhood' as the condition region
-        # self.condition_region()
-        
-        # IV. 转换成可以存储的标注形式 + 存储标注
-        self.save_annotate(o_contact_face_ids_dict, thumb_condition_dict, idx)
-        
-        
-        return
+        return thumb_contact_faces
     
 class ContactDetector():
     def __init__(self, visual_folder, plot, visual_freq):
@@ -309,19 +291,13 @@ class ContactDetector():
         
         # divide contact regions based on hand component
         self.group_by_hand_comp(contact_dict)
-        # NOTE: visual the intersection rings
-        mark_colors = config.hand_comp_colors
-        h_face_ids = list(contact_dict['face_index']['hand'].values())
-        o_face_ids = list(contact_dict['face_index']['obj'].values())
-        visual_inter(hand_mesh, h_face_ids, mark_colors, 
-                     obj_mesh, o_face_ids, mark_colors, 
-                     self.visual_folder, 
-                     frame_name)
         
         # TODO: combine the obj_face_ids for BFS convenience, but with comp marks
         o_face_ids_dict = contact_dict['face_index']['obj']
+        h_face_ids_dict = contact_dict['face_index']['hand']
             
-        o_contact_face_ids_dict = self.fill_interior(hand_mesh, obj_mesh, o_face_ids_dict)
+        # o_contact_face_ids_dict = self.fill_interior(hand_mesh, obj_mesh, o_face_ids_dict)
+        o_contact_face_ids_dict = o_face_ids_dict
         
         
         # obj_contact_face_ids = {}
@@ -336,13 +312,14 @@ class ContactDetector():
         #         obj_contact_face_ids[comp] = []
         
         # NOTE: visualize
-        if idx % self.visual_freq == 0:   
-            h_face_ids = list(contact_dict['face_index']['hand'].values())
-            obj_contact_face_ids = list(o_contact_face_ids_dict.values())
-            visual_inter(hand_mesh, h_face_ids, mark_colors,
-                        obj_mesh, obj_contact_face_ids, mark_colors, 
-                        output_folder=self.visual_folder, 
-                        frame_name=frame_name+'_filled')
+        # if idx % self.visual_freq == 0:
+        #     mark_colors = config.hand_comp_colors   
+        #     h_face_ids = list(contact_dict['face_index']['hand'].values())
+        #     obj_contact_face_ids = list(o_contact_face_ids_dict.values())
+        #     visual_inter(hand_mesh, h_face_ids, mark_colors,
+        #                 obj_mesh, obj_contact_face_ids, mark_colors, 
+        #                 output_folder=self.visual_folder, 
+        #                 frame_name=frame_name+'_filled')
             # import pdb; pdb.set_trace()
         
         # NOTE: I.-1.2 Clustering intersection points into intersection rings
@@ -386,11 +363,8 @@ if __name__ == "__main__":
     Conditionator = ThumbConditionator(visual_folder=visual_folder, annot_fnames=annot_frame_names, plot=args.plot, visual_freq=args.visual_freq)
     
     log_file = 'annot.txt'
-    
+    thumb_contact = []
     for idx in tqdm(range(dataset.__len__()), desc=f'{args.ds_name}'):
-        
-        if idx % args.visual_freq != 0:
-            continue
         
         sample = dataset.__getitem__(idx)
         hand_faces = rh_model.faces
@@ -410,14 +384,14 @@ if __name__ == "__main__":
         obj_faces = ObjMesh.faces
         
         frame_name = str(idx) + '_' + obj_name
-        Conditionator.run(hand_verts, hand_faces, obj_verts, obj_faces, frame_name, idx)
+        thumb_contact_sample = Conditionator.run(hand_verts, hand_faces, obj_verts, obj_faces, frame_name, idx)
+        thumb_contact = list(set(thumb_contact + thumb_contact_sample))
         
-        # TODO: text log process
-        # f = open(log_file, 'w')
-        # f.write(f"Sample {idx} done!")
-        # f.close()
+        if idx % 500 == 0:
+            import pdb; pdb.set_trace()
         
-        
+    print(f"Final thumb contact faces: {thumb_contact}")
+    print(f"Difference: {list(set(config.hand_comp['thumb'][0]) - set(thumb_contact))}")
         
             
         
