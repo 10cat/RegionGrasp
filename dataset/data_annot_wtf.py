@@ -36,8 +36,8 @@ if __name__ == "__main__":
                     num_pca_comps=45, 
                     flat_hand_mean=True)
     if args.dataset == "GrabNet":
-        dataset = GrabNetDataset_orig(dataset_root, ds_name=args.ds_name, dtype=np.float32, obj_meshes_folder='decimate_meshes')
-    visual_folder = os.path.join(output_root, 'thumb_condition', 'Annotations', args.ds_name)
+        dataset = GrabNetDataset_orig(dataset_root, ds_name=args.ds_name, obj_meshes_folder='decimate_meshes', dtype=np.float32)
+    visual_folder = os.path.join(output_root, 'thumb_condition', 'Annotations_wtf', args.ds_name)
     makepath(visual_folder)
     
     annot_frame_names = [os.path.join(dataset.ds_root, fname.replace('data', 'data_sdf').replace('npz', 'npy')) for fname in dataset.frame_names_orig]
@@ -67,28 +67,18 @@ if __name__ == "__main__":
         
         sdf_annot_file = np.load(annot_frame_names[idx], allow_pickle=True)
         sdf_annot = sdf_annot_file.tolist()
-        # import pdb; pdb.set_trace()
+        
         
         center_ids = sdf_annot['thumb_center_ids']
         centers = sdf_annot['candidate_centers']
         candidates = sdf_annot['candidates']
+        import pdb; pdb.set_trace()
         
-        if args.ds_name == 'train':
-            visual_folder_idx = os.path.join(visual_folder, f'frame_{idx}_{obj_name}')
-            makepath(visual_folder_idx)
-        visual_mesh(HandMesh, bg_color='skin')
-        HandMesh.export(os.path.join(visual_folder_idx, f'{idx}_hand.ply'))
+        visual_mesh(ObjMesh, bg_color='grey', mark_region=candidates[0], mark_color='pink')
+        visual_mesh_region(ObjMesh, fs=centers[0], color='red')
         
-        if center_ids:
-            for cid, center in enumerate(center_ids):
-                visual_mesh(ObjMesh, bg_color='grey', mark_region=candidates[center], mark_color='pink')
-                visual_mesh_region(ObjMesh, centers[center], 'red')
-                ObjMesh.export(os.path.join(visual_folder_idx, f'{cid}_{obj_name}.ply'))
-        # import pdb; pdb.set_trace()
-        else:
-            visual_mesh(ObjMesh, bg_color='grey')
-            ObjMesh.export(os.path.join(visual_folder_idx, f'{obj_name}.ply'))
-            print("No thumb region contact annotations!")
+        obj_out_path = os.path.join(visual_folder, f'{obj_name}.ply')
+        ObjMesh.export(obj_out_path)
             
         
         
