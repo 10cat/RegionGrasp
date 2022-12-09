@@ -41,7 +41,7 @@ thumb_center = [1295, 1296, 1297, 1298, 1299, 1300, 1301, 1302, 1303, 1304, 1305
 """
 Filepath settings
 """
-machine = '97'
+machine = '41'
 
 if machine == '97':
 
@@ -57,15 +57,15 @@ if machine == '97':
     OUTPUT_ROOT = "/home/datassd/yilin/Outputs/ConditionHOI"
 
 if machine == '41':
-    DATASET_ROOT = "/home/yilin/GrabNet"
+    DATASET_ROOT = "/ssd_data/yilin/GrabNet"
 
     mano_dir = "/home/yilin/smpl_models/mano/MANO_RIGHT.pkl" # MANO right hand model path
     
-    visual_root = "/ssd_data/Outputs"
+    visual_root = "/ssd_data/yilin/Outputs"
     
-    dataset_visual_dir = "/ssd_data/Outputs/GrabNet_visual"
+    dataset_visual_dir = "/ssd_data/yilin/Outputs/GrabNet_visual"
 
-    OUTPUT_ROOT = "/home/yilin/Outputs/ConditionHOI"
+    OUTPUT_ROOT = "/ssd_data/yilin/Outputs/ConditionHOI"
 
 
 

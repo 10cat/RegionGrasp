@@ -116,7 +116,7 @@ class Epoch(nn.Module):
         rhand_vs = self.to_device(sample['verts_rhand'].transpose(2,1))
 
         # import pdb; pdb.set_trace()
-        # region = sample['region_mask'].transpose(2,1).to('cuda')
+        # #region = sample['region_mask'].transpose(2,1).to('cuda')
 
         return [region, region_centers, obj_vs, obj_sdfs, rhand_vs]
 
@@ -269,7 +269,7 @@ class Epoch(nn.Module):
             obj_mesh = trimesh.base.Trimesh(vertices=obj_vs[idx], faces=ObjMesh.faces)
 
             region_faces_ids = self.dataset.region_face_ids[str(int(sample_idx))]
-            # region_centers = region_centers.tolist()
+            # #region_centers = region_centers.tolist()
 
             visual_obj(obj_mesh, region_faces_ids=region_faces_ids)
             visual_hand(rhand_mesh)

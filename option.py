@@ -95,9 +95,9 @@ class MyOptions:
         output_dir: str = "/home/datassd/yilin/Outputs/ConditionHOI/"+exp_name
         mano_rh_path: str = f"/home/datassd/yilin/Codes/_toolbox/mano/models/MANO_RIGHT.pkl"
     if machine == '41':
-        dataset_dir: str = "/home/yilin/GrabNet"
-        output_root: str = "/home/yilin/Outputs/ConditionHOI/"
-        output_dir: str = "/home/yilin/Outputs/ConditionHOI/"+exp_name
+        dataset_dir: str = "/ssd_data/yilin/GrabNet"
+        output_root: str = "/ssd_data/yilin/Outputs/ConditionHOI/"
+        output_dir: str = "/ssd_data/yilin/Outputs/ConditionHOI/"+exp_name
         mano_rh_path: str = f"/home/yilin/smpl_models/mano/MANO_RIGHT.pkl"
 
     model_root: str= os.path.join(output_dir, 'model')

@@ -102,6 +102,7 @@ class GrabNetDataset(data.Dataset):
             self.load_on_ram = True
 
         if self.ds_name != 'train':
+            # FIXME: 在 val/test的时候，选取的mask_center_ids应该是确定的, 而不是每次都random生成
             self.mask_center_ids = np.random.random(self.__len__())
         else:
             self.mask_center_ids = None
@@ -160,7 +161,8 @@ class GrabNetDataset(data.Dataset):
         
         # import pdb; pdb.set_trace()
         candidates = sample['candidates']
-        candidate_centers = obj_faces[sample['obj_faces_ids'].tolist()] # all the candidate centers
+        candidate_centers = obj_faces[sample['obj_faces_ids'].tolist()] # all the candidate centers 
+        
         if self.ds_name == "train":
             chosen_idx = int(np.random.choice(candidate_centers.shape[0]))
         else:
@@ -182,7 +184,7 @@ class GrabNetDataset(data.Dataset):
             region_faces_ids = region_faces_ids + candidates[i]
         # import pdb; pdb.set_trace()
         # centers = np.arange(start, end)
-        # region_centers = candidate_centers[centers]
+        
         region_centers = sample['obj_faces_ids'][start:end]
 
         region_faces = obj_faces[region_faces_ids]
@@ -230,7 +232,7 @@ class GrabNetDataset(data.Dataset):
         vertices = torch.from_numpy(obj_vertices).float() # --> ["obj_verts"]
         region_mask = torch.from_numpy(region_mask_np).float() # --> ["region_mask"]
         region_centers = torch.from_numpy(region_centers).float() # --> ["region_centers"]
-        # region_faces_ids = torch.tensor(region_faces_ids)
+        
         obj_sdf = torch.from_numpy(obj_sdf_np).reshape(-1, 1).float()# --> ["obj_sdf"]
         # obj_faces = torch.from_numpy(obj_faces).float()
         sample_idx = torch.tensor([idx]) # --> ["sample_idx"]

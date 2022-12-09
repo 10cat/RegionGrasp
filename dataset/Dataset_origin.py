@@ -14,8 +14,6 @@ from copy import deepcopy
 
 import random
 from utils.utils import func_timer, makepath
-
-
         
         
 class GrabNetDataset_orig(data.Dataset):
@@ -103,19 +101,19 @@ class GrabNetDataset_orig(data.Dataset):
             data = self.npz_np2torch(data)
         return data
     
-    def get_frames_data(self, idx):
+    def get_frames_data(self, idx, frame_names):
         """
         读取frame_names里面提供的直接可用于训练的参数：
         object_verts(下采样至2048) / rhand_verts / rhand_verts_f / bps_object
         """
         # idx不是int就是list
         if isinstance(idx, int):
-            data = self.get_npz_data(self.frame_names[idx], to_torch=self.to_torch)
+            data = self.get_npz_data(frame_names[idx], to_torch=self.to_torch)
             # TODO: add index component to each data sample
             data['index'] = idx 
             return data
         
-        frame_names = self.frame_names[idx] # 获得多个frame_names
+        frame_names = frame_names[idx] # 获得多个frame_names
         from_disk = []
         for f in frame_names:
             from_disk.append(self.get_npz_data(f, to_torch=self.to_torch))
@@ -131,7 +129,7 @@ class GrabNetDataset_orig(data.Dataset):
         data_out = {k: self.ds[k][idx] for k in self.ds.keys()}
         # import pdb; pdb.set_trace()
         if not self.only_params:
-            data = self.get_frames_data(idx)
+            data = self.get_frames_data(idx, self.frame_names)
             # import pdb; pdb.set_trace()
             data_out.update(data)
             
