@@ -5,14 +5,65 @@ sys.path.append('..')
 import numpy as np
 import torch
 import trimesh
+import mano
+from mano.model import load
 import config
 from utils.visualization import colors_like
 import matplotlib.pyplot as plt
+
+
 
 class Struct(object):
     def __init__(self, **kwargs):
         for key, val in kwargs.items():
             setattr(self, key, val)
+
+class MeshTransform():
+    def __init__(self, ds_name):
+        self.ds_name = ds_name
+    def get_params(self, sample):
+        if self.ds_name == "GrabNet":
+            trans = sample['trans_obj']
+            rotmat = sample['root_orient_obj_rotmat'][0]
+            return trans, rotmat
+    def self_centric(self, verts_orig, sample):
+        obj_trans, obj_rotmat = self.get_params(sample)
+        verts = np.matmul(verts_orig, obj_rotmat) + obj_trans
+        return verts
+    def __call__(self, mesh_orig, sample):
+        verts_orig = mesh_orig.vertices
+        faces = mesh_orig.faces
+        if self.ds_name == "GrabNet":
+            verts = self.self_centric(verts_orig, sample)
+        mesh = trimesh.Trimesh(vertices=verts, faces=faces)
+        return mesh
+    
+class MeshInitialize():
+    def __init__(self, dataset, ds_name):
+        self.dataset = dataset
+        self.ds_name = ds_name
+        self.mano_path = config.mano_dir
+        self.rh_model = load(model_path=self.mano_path, 
+                             is_rhand=True, 
+                             num_pca_comps=45, 
+                             flat_hand_mean=True)
+    def hand_mesh(self, sample):
+        verts = sample['verts_rhand']
+        faces = self.rh_model.faces
+        mesh = trimesh.Trimesh(vertices=verts, faces=faces)
+        return mesh
+    
+    def obj_mesh(self, sample):
+        idx = sample['index']
+        obj_name = self.dataset.frame_objs[idx]
+        mesh = self.dataset.object_meshes[obj_name]
+        return mesh
+    
+    def __call__(self, sample):
+        HandMesh = self.hand_mesh(sample)
+        ObjMesh = self.obj_mesh(sample)
+        return HandMesh, ObjMesh
+        
             
 def load_mano_model(model_path, is_rhand=True, ext='pkl'):
     import os.path as osp
@@ -42,6 +93,8 @@ def load_mano_model(model_path, is_rhand=True, ext='pkl'):
 def copy_folders_path(root, old_folder_name, new_folder_name):
     new_folder_path = os.path.join(root, new_folder_name)
     old_folder_path = os.path.join(root, old_folder_name)
+
+        
 
 def visual_mesh_region(mesh, fs, color):
     mesh.visual.face_colors[fs] = colors_like(config.colors[color])

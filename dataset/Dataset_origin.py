@@ -15,12 +15,16 @@ from copy import deepcopy
 import random
 from utils.utils import func_timer, makepath
 
-    
+
+        
+        
 class GrabNetDataset_orig(data.Dataset):
     @func_timer
     def __init__(self,
                  dataset_root,
                  ds_name='train',
+                 frame_names_file = 'frame_names.npz',
+                 grabnet_thumb = False,
                  obj_meshes_folder = 'contact_meshes',
                  output_root = None,
                  dtype=torch.float32,
@@ -35,7 +39,7 @@ class GrabNetDataset_orig(data.Dataset):
         self.output_root = output_root
         self.only_params = only_params
         
-        frame_names = np.load(os.path.join(self.ds_path, 'frame_names.npz'))['frame_names'] # 所有sample的标注信息.npz文件的相对路径
+        frame_names = np.load(os.path.join(self.ds_path, frame_names_file))['frame_names'] # 所有sample的标注信息.npz文件的相对路径
         # import pdb; pdb.set_trace()
         self.frame_names_orig = frame_names
         
@@ -74,7 +78,10 @@ class GrabNetDataset_orig(data.Dataset):
             self.to_torch = True
             
         ## 读取grabnet_[ds_name].npz中提供的所有sample基本参数：mano参数 / hand pose参数 / object pose参数
-        self.ds = self.get_npz_data(os.path.join(self.ds_path, 'grabnet_%s.npz'%ds_name), to_torch=self.to_torch)
+        if grabnet_thumb:
+            self.ds = self.get_npz_data(os.path.join(self.ds_path, 'grabnet_%s_thumb.npz'%ds_name), to_torch=self.to_torch)
+        else:
+            self.ds = self.get_npz_data(os.path.join(self.ds_path, 'grabnet_%s.npz'%ds_name), to_torch=self.to_torch)
         
         
     def load_obj_meshes(self):
@@ -104,6 +111,8 @@ class GrabNetDataset_orig(data.Dataset):
         # idx不是int就是list
         if isinstance(idx, int):
             data = self.get_npz_data(self.frame_names[idx], to_torch=self.to_torch)
+            # TODO: add index component to each data sample
+            data['index'] = idx 
             return data
         
         frame_names = self.frame_names[idx] # 获得多个frame_names
