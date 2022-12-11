@@ -43,7 +43,7 @@ if __name__ == "__main__":
     import config
     from tqdm import tqdm
     from option import MyOptions as cfg
-    from dataset.Dataset import GrabNetDataset
+    from Codes.ConditionHOI.dataset.Dataset_old import GrabNetDataset
     import mano
 
     parser = argparse.ArgumentParser()

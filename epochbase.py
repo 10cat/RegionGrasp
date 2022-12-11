@@ -268,7 +268,7 @@ class Epoch(nn.Module):
             ObjMesh = self.dataset.object_meshes[obj_name]
             obj_mesh = trimesh.base.Trimesh(vertices=obj_vs[idx], faces=ObjMesh.faces)
 
-            region_faces_ids = self.dataset.region_face_ids[str(int(sample_idx))]
+            region_faces_ids = self.dataset.region_face_ids[int(sample_idx)]
             # #region_centers = region_centers.tolist()
 
             visual_obj(obj_mesh, region_faces_ids=region_faces_ids)

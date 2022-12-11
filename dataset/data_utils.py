@@ -94,40 +94,6 @@ def copy_folders_path(root, old_folder_name, new_folder_name):
     new_folder_path = os.path.join(root, new_folder_name)
     old_folder_path = os.path.join(root, old_folder_name)
 
-        
-
-def visual_mesh_region(mesh, fs, color):
-    mesh.visual.face_colors[fs] = colors_like(config.colors[color])
-
-def visual_mesh(mesh, bg_color='grey', mark_region=None, mark_color='yellow'):
-    mesh.visual.face_colors = colors_like(config.colors[bg_color])
-    if mark_region:
-        if isinstance(mark_region, list) and isinstance(mark_region[0], list):
-            assert isinstance(mark_color, list), "Parameter 'mark_color' must match the type of 'mark_region'!"
-            for idx, region in enumerate(mark_region):
-                visual_mesh_region(mesh, region, mark_color[idx])
-                # mesh.visual.face_colors[region] = colors_like(config.colors[mark_color[idx]])
-                
-        else:
-            assert isinstance(mark_color, str), "Parameter 'mark_color' must match the type of 'mark_region'!"
-            visual_mesh_region(mesh, mark_region, mark_color)
-            # mesh.visual.face_colors[mark_region] = colors_like(config.colors[mark_color])
-
-def visual_inter(hand_mesh, rh_fs, h_mark_color,
-                 obj_mesh, obj_fs, o_mark_color,
-                 output_folder, 
-                 frame_name):
-    # TODO: component related visualization
-    visual_mesh(hand_mesh, bg_color='skin', mark_region=rh_fs, mark_color=h_mark_color)
-    visual_mesh(obj_mesh, bg_color='grey', mark_region=obj_fs, mark_color=o_mark_color)
-    
-    output_path_hand = os.path.join(output_folder, frame_name+'_hand.ply')
-    output_path_obj = os.path.join(output_folder, frame_name+'_obj.ply')
-    
-    hand_mesh.export(output_path_hand)
-    obj_mesh.export(output_path_obj)
-    
-    return
 
 def visual_hist(array):
     plt.figure()
@@ -243,6 +209,7 @@ def find_surrounded_faces(vids, mesh):
 
 
 if __name__ == "__main__":
+    from utils.visualization import visual_mesh
     mano_path = config.mano_dir
     mano_model = load_mano_model(mano_path)
     

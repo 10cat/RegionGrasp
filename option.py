@@ -12,14 +12,18 @@ class MyOptions:
     """
     Base Configuration
     """
-    w_wandb: bool = False
-    machine: int = '97'
-    exp_name: str = 'eval_cgrasp_1_1_epoch40' # 1
+    w_wandb: bool = True
+    machine: int = '41'
+    exp_name: str = 'thumb_cond_train0' # 1
     note: str = 'debug -- penetration depth computation -- test for using o2h signed distance for computing penetration depth '
-    mode: str = 'eval'
+    mode: str = 'train'
     use_cuda: bool = True
     visible_device: str="0"
     cuda_id: int = 0
+    
+    frame_names: str = 'frame_names_thumb.npz'
+    obj_meshes: str = 'decimate_meshes'
+    train_select_ids: bool = True
     num_mask: int = 1
     num_rhand_verts: int = 778
     num_obj_verts: int = 3000

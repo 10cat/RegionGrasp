@@ -9,7 +9,8 @@ import trimesh
 import mano
 from mano.model import load
 from dataset.Dataset_origin import GrabNetDataset_orig
-from dataset.data_utils import visual_inter, visual_mesh, visual_mesh_region, faces2verts_no_rep, MeshTransform, MeshInitialize
+from dataset.data_utils import faces2verts_no_rep, MeshTransform, MeshInitialize
+from utils.visualization import visual_inter, visual_mesh, visual_mesh_region
 from utils.utils import func_timer, makepath
 import matplotlib.pyplot as plt
 from tqdm import tqdm
