@@ -10,7 +10,8 @@ import mano
 from mano.model import load
 
 from dataset.Dataset_origin import GrabNetDataset_orig
-from dataset.data_utils import MeshInitialize, MeshTransform, m2m_intersect, visual_inter, visual_mesh, visual_mesh_region
+from dataset.data_utils import MeshInitialize, MeshTransform, m2m_intersect 
+from utils.visualization import visual_inter, visual_mesh, visual_mesh_region
 from utils.utils import func_timer, makepath
 import matplotlib.pyplot as plt
 from tqdm import tqdm

@@ -9,6 +9,7 @@ import random
 import torch.nn.functional as F
 # import chamfer_distance as chd
 from chamfer_distance import ChamferDistance as ch_dist
+from pytorch3d.structures import Meshes
 import sys
 sys.path.append('.')
 sys.path.append('..')
@@ -75,6 +76,8 @@ def get_std(log_vars):
         p_std = torch.exp(cfg.std_exp_beta * log_vars)
 
     return p_std
+
+
 
 def euler(rots, order="xyz", units="deg"):
     '''
@@ -260,6 +263,7 @@ def rotation_matrix_to_quaternion(rotation_matrix, eps=1e-6):
 
 
 def quaternion_to_angle_axis(quaternion: torch.Tensor) -> torch.Tensor:
+    
     """Convert quaternion vector to angle axis of rotation.
     Adapted from ceres C++ library: ceres-solver/include/ceres/rotation.h
     Args:
@@ -271,8 +275,8 @@ def quaternion_to_angle_axis(quaternion: torch.Tensor) -> torch.Tensor:
         - Output: :math:`(*, 3)`
     Example:
         >>> quaternion = torch.rand(2, 4)  # Nx4
-        >>> angle_axis = quaternion_to_angle_axis(quaternion)  # Nx3
-    """
+        >>> angle_axis = quaternion_to_angle_axis(quaternion)  # Nx3"""
+   
     if not torch.is_tensor(quaternion):
         raise TypeError("Input type is not a torch.Tensor. Got {}".format(
             type(quaternion)))
@@ -313,9 +317,9 @@ def point2point_signed(x, y, x_normals=None, y_normals=None):
 
     # ch_dist = chd.ChamferDistance()
 
-    x_near, y_near, xid_near, yidx_near = ch_dist(x, y)
+    x_near, y_near, xidx_near, yidx_near = ch_dist(x, y)
 
-    xidx_near_expanded = xid_near.view(N, P1, 1).expand(N, P1, D).to(torch.long)
+    xidx_near_expanded = xidx_near.view(N, P1, 1).expand(N, P1, D).to(torch.long)
     x_near = y.gather(1, xidx_near_expanded)
 
     yidx_near_expanded = yidx_near.view(N, P2, 1).expand(N, P2, D).to(torch.long)
@@ -338,8 +342,26 @@ def point2point_signed(x, y, x_normals=None, y_normals=None):
     else:
         x2y_signed = x2y.norm(dim=2)
 
-    return y2x_signed, x2y_signed, yidx_near
+    return y2x_signed, x2y_signed, yidx_near, xidx_near
 
+def signed_distance_batch(device, rhand_vs, rh_f, obj_vs, object_faces=None):
+    rh_normals = Meshes(verts=rhand_vs, faces=rh_f).to(device).verts_normals_packed().view(-1, cfg.num_rhand_verts, 3)
+    if object_faces is not None:
+        # obj_mesh_faces = torch.Tensor(obj_mesh_faces)
+        # obj_vs = obj_vs.tolist()
+        obj_vs_list = [obj_vs[i] for i in range(obj_vs.shape[0])] # need to be consistent length list with obj_mesh_faces
+        obj_normals = Meshes(verts=obj_vs_list, faces=object_faces).to(device).verts_normals_packed().view(-1, cfg.num_obj_verts, 3)
+    else:
+        obj_normals = None
+    o2h_signed, h2o_signed, o_nearest_ids, h_nearest_ids = point2point_signed(rhand_vs, obj_vs, rh_normals, obj_normals)
+    
+    return o2h_signed, h2o_signed, o_nearest_ids, h_nearest_ids
+
+def dataset_object_faces_batch(sample_ids, dataset, device):
+    sample_ids = sample_ids.reshape(-1).tolist()
+    obj_names = dataset.frame_objs[sample_ids]
+    obj_mesh_faces = [torch.Tensor(dataset.object_meshes[name].faces).to(device) for name in obj_names]
+    return obj_mesh_faces
     
 contact_ids={'Body': 1,
              'L_Thigh': 2,

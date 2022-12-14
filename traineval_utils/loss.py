@@ -121,8 +121,8 @@ class cGraspvaeLoss(nn.Module):
         else:
             obj_normals = None
         # import pdb; pdb.set_trace()
-        o2h_signed, h2o_signed, o_nearest_ids = point2point_signed(rhand_vs, obj_vs, rh_normals_pred, obj_normals)
-        o2h_signed_pred, h2o_signed_pred, o_nearest_ids_pred = point2point_signed(rhand_vs_pred, obj_vs, rh_normals, obj_normals)
+        o2h_signed, h2o_signed, _, _ = point2point_signed(rhand_vs, obj_vs, rh_normals, obj_normals)
+        o2h_signed_pred, h2o_signed_pred, _, _ = point2point_signed(rhand_vs_pred, obj_vs, rh_normals_pred, obj_normals)
 
         #### dist Loss ####
         loss_dist_h, loss_dist_o = self.dist_loss(h2o_signed, h2o_signed_pred, o2h_signed, o2h_signed_pred, region)
@@ -132,6 +132,7 @@ class cGraspvaeLoss(nn.Module):
             p_mean, log_vars, Zin = sample_stats
             loss_kl = self.KLLoss(rhand_vs, p_mean, log_vars)
         else:
+            # validation / test中loss_kl = 0
             loss_kl = torch.tensor(0.0, dtype=float).to(self.device)
 
         #### verts Loss ####

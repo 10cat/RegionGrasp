@@ -36,12 +36,10 @@ hand_comp_colors=['green', 'blue', 'purple', 'yellow', 'orange', 'red'] # 'thumb
 
 thumb_center = [1295, 1296, 1297, 1298, 1299, 1300, 1301, 1302, 1303, 1304, 1305, 1306, 1307, 1308, 1311, 1312, 1313, 1314, 1315, 1316, 1317, 1318, 1319, 1320, 1321, 1322, 1323, 1324, 1325, 1326, 1329, 1330, 1333, 1334, 1335, 1336, 1337, 1338, 1339, 1340, 1341, 1342, 1344, 1345, 1346, 1347, 1348, 1349, 1350, 1351, 1352, 1353, 1354, 1355, 1356, 1357, 1358, 1359, 1360, 1361, 1362, 1363, 1364, 1365, 1366, 1367, 1368, 1369, 1370, 1371, 1372, 1373, 1374, 1375, 1376, 1377, 1378, 1379, 1380, 1381, 1382]
 
-   
-
 """
 Filepath settings
 """
-machine = '97'
+machine = '41'
 
 if machine == '97':
 
@@ -57,15 +55,15 @@ if machine == '97':
     OUTPUT_ROOT = "/home/datassd/yilin/Outputs/ConditionHOI"
 
 if machine == '41':
-    DATASET_ROOT = "/home/yilin/GrabNet"
+    DATASET_ROOT = "/ssd_data/yilin/GrabNet"
 
     mano_dir = "/home/yilin/smpl_models/mano/MANO_RIGHT.pkl" # MANO right hand model path
     
-    visual_root = "/ssd_data/Outputs"
+    visual_root = "/ssd_data/yilin/Outputs"
     
-    dataset_visual_dir = "/ssd_data/Outputs/GrabNet_visual"
+    dataset_visual_dir = "/ssd_data/yilin/Outputs/GrabNet_visual"
 
-    OUTPUT_ROOT = "/home/yilin/Outputs/ConditionHOI"
+    OUTPUT_ROOT = "/ssd_data/yilin/Outputs/ConditionHOI"
 
 
 
@@ -80,7 +78,7 @@ check = False
 
 hand_sdf_th_alpha = -0.5
 
-rtree_radius = 0.01
+rtree_radius = 0.005
 
 r_depth = None
 

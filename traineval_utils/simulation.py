@@ -12,8 +12,8 @@ import pybullet as p
 # import skvideo.io as skvio
 # from array2gif import write_gif
 import imageio as imgio
-
-from utils.utils import makepath
+from utils.utils import func_timer, makepath
+from option import MyOptions as cfg
 
 def take_picture(renderer, width=256, height=256, conn_id=None):
     view_matrix = p.computeViewMatrix([0, 0, -1], [0, 0, 0], [0, -1, 0],
@@ -32,7 +32,8 @@ def write_video(frames, path):
     # skvio.vwrite(path, np.array(frames).astype(np.uint8), backend='ffmpeg')
     imgio.mimwrite(path, ims=frames, duration=0.5)
 
-def process_sample(sample_idx, sample, save_gif_folder=None, save_obj_folder=None, vhacd_exe=None, use_gui=False, wait_time=0, sample_vis_freq=10, save_all_steps=False):
+@func_timer
+def main(sample_idx, sample, save_gif_folder=None, save_obj_folder=None, vhacd_exe=None, use_gui=False, wait_time=0, sample_vis_freq=10, save_all_steps=False):
     if use_gui:
         conn_id = p.connect(p.GUI)
     else:
@@ -65,7 +66,7 @@ def process_sample(sample_idx, sample, save_gif_folder=None, save_obj_folder=Non
                               object_mass=1, verbose=True, vhacd_resolution=1000, vhacd_exe=vhacd_exe,
                               wait_time=wait_time, save_video=save_video, save_obj_path=save_obj_path,
                               save_hand_path=save_hand_path, save_video_path=save_video_path, use_gui=use_gui)
-    print("Distance = ", distance)
+    # print("Distance = ", distance) 
     return distance
 
 def run_simulation(hand_verts, hand_faces, obj_verts, obj_faces,
@@ -123,7 +124,7 @@ def run_simulation(hand_verts, hand_faces, obj_verts, obj_faces,
         restitution=hand_restitution,
         physicsClientId=conn_id)
 
-    #TODO ---add obj----#
+    # ---add obj----#
     obj_tmp_fname = tempfile.mktemp(suffix='.obj', dir=base_tmp_dir)
     makepath(base_tmp_dir)
     # Save object .obj file
@@ -132,6 +133,7 @@ def run_simulation(hand_verts, hand_faces, obj_verts, obj_faces,
         save_obj(final_obj_tmp_fname, obj_verts, obj_faces)
         shutil.copy(final_obj_tmp_fname, save_obj_path)
     # Get obj center of mass
+    # import pdb; pdb.set_trace()
     obj_center_mass = np.mean(obj_verts, axis=0) #mean centroid
     obj_verts -= obj_center_mass # 平移 -> 转换至质心为原点的坐标系
     # add object
@@ -139,7 +141,7 @@ def run_simulation(hand_verts, hand_faces, obj_verts, obj_faces,
     if use_vhacd:
         # convex hull decomposition 
         if verbose:
-            print("Computing vhacd decomposition")
+            # print("Computing vhacd decomposition")
             time1 = time.time()
         save_obj(obj_tmp_fname, obj_verts, obj_faces)
         # (Original: apply vhacd with vhacd.exe running )
@@ -151,7 +153,7 @@ def run_simulation(hand_verts, hand_faces, obj_verts, obj_faces,
         # else:
         #     print(f"Succeeded vhacd decomp of {obj_tmp_fname}")
 
-        #TODO directly use the built-in vhacd method in pybullet
+        # directly use the built-in vhacd method in pybullet
         log_name = "p_vhacd.txt"
         p.vhacd(obj_tmp_fname, obj_tmp_fname, log_name)
 
@@ -168,11 +170,11 @@ def run_simulation(hand_verts, hand_faces, obj_verts, obj_faces,
         )
         if verbose:
             time2 = time.time()
-            print(
-                "Computed v-hacd decomposition at res {} {:.6f} s".format(
-                    vhacd_resolution, (time2 - time1)
-                )
-            )
+            # print(
+            #     "Computed v-hacd decomposition at res {} {:.6f} s".format(
+            #         vhacd_resolution, (time2 - time1)
+            #     )
+            # )
     else:
         obj_collision_id = p.createCollisionShape(
             p.GEOM_MESH, vertices=obj_verts, physicsClientId=conn_id
@@ -201,7 +203,7 @@ def run_simulation(hand_verts, hand_faces, obj_verts, obj_faces,
         physicsClientId=conn_id,
     )
 
-    # TODO --- simulate for several steps --- #
+    #--- simulate for several steps --- #
     if save_video:
         images = []
         if use_gui:
@@ -230,7 +232,7 @@ def run_simulation(hand_verts, hand_faces, obj_verts, obj_faces,
     
     if save_video:
         write_video(images, save_video_path)
-        print("Saved gif to {}".format(save_video_path))
+        # print("Saved gif to {}".format(save_video_path))
     pose_end = p.getBasePositionAndOrientation(obj_body_id, physicsClientId=conn_id)[0]
 
     if use_vhacd:
