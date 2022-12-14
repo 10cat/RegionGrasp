@@ -1,10 +1,11 @@
 from copy import deepcopy
 import os
-os.environ['CUDA_VISIBLE_DEVICES'] = "1"
-import config
 import sys
 sys.path.append('.')
 sys.path.append('..')
+from option import MyOptions as cfg
+os.environ['CUDA_VISIBLE_DEVICES'] = cfg.visible_device
+import config
 import numpy as np
 import torch
 from torch import Tensor, optim
@@ -20,10 +21,10 @@ from utils.logger import Monitor
 from models.ConditionNet import ConditionNet
 from models.cGrasp_vae import cGraspvae
 from traineval_utils.loss import ConditionNetLoss, cGraspvaeLoss
-from traineval_utils.metrics import ConditionNetMetrics, cGraspvaeMetrics
+from traineval_utils.metrics import ConditionNetMetrics, TestMetricsCPU, cGraspvaeMetrics
 from utils.utils import func_timer
 from utils.visualization import visual_hand, visual_obj
-from option import MyOptions as cfg
+# from option import MyOptions as cfg
 import wandb
 
 to_dev = lambda tensor, device: tensor.to(device)
@@ -58,6 +59,18 @@ class Epoch(nn.Module):
         # import pdb; pdb.set_trace()
         
         return [self.ConditionNet, self.cGraspVAE]
+    
+    def init_mano(self):
+        with torch.no_grad():
+            rh_model = mano.load(model_path=cfg.mano_rh_path,
+                                      model_type='mano',
+                                      num_pca_comps=45,
+                                      batch_size=cfg.batch_size,
+                                      flat_hand_mean=True)
+            self.rh_model_cpu = rh_model
+            self.rh_model = rh_model.to(self.device)
+            self.rh_f_single = torch.from_numpy(self.rh_model.faces.astype(np.int32)).view(1, 3, -1)
+            self.rh_f = self.rh_f_single.repeat(cfg.batch_size, 1, 1).to(self.device).to(torch.long)
 
     def init_optimizers(self):
         # self.optimizer_cond = config.optimizer_cond(self.opt)
@@ -69,22 +82,13 @@ class Epoch(nn.Module):
         self.cGraspVAELoss = cGraspvaeLoss(self.rh_f, self.rh_model, self.device).to(self.device)
         self.ConditionNetMetrics = ConditionNetMetrics() # metrics always on cpu
         self.cGraspvaeMetrics = cGraspvaeMetrics(self.rh_model, self.rh_f, self.device) # metrics always on cpu
-
-    def init_mano(self):
-        with torch.no_grad():
-            rh_model = mano.load(model_path=cfg.mano_rh_path,
-                                      model_type='mano',
-                                      num_pca_comps=45,
-                                      batch_size=cfg.batch_size,
-                                      flat_hand_mean=True)
-            self.rh_model = rh_model.to(self.device)
-            self.rh_f_single = torch.from_numpy(self.rh_model.faces.astype(np.int32)).view(1, 3, -1)
-            self.rh_f = self.rh_f_single.repeat(cfg.batch_size, 1, 1).to(self.device).to(torch.long)
+        self.testMetrics = TestMetricsCPU(self.rh_model_cpu, self.dataset)
+    
         
 
     def load_checkpoints(self, checkpoints=None):
         if checkpoints is not None:
-            if cfg.mode == 'train':
+            if self.mode != 'test':
                 self.ConditionNet.load_state_dict(checkpoints[0])
                 if len(checkpoints) > 1:
                     # import pdb; pdb.set_trace()
@@ -107,21 +111,30 @@ class Epoch(nn.Module):
 
 
     def read_data(self, sample):
-
-        region = self.to_device(sample['region_mask'].transpose(2,1)) # B,C,N
-        region_centers = self.to_device(sample['region_centers'])
-        obj_vs = self.to_device(sample['verts_obj'].transpose(2,1))
-        obj_sdfs = self.to_device(sample['obj_sdf'].transpose(2,1)) if cfg.use_gtsdm else None
-        rhand_vs = self.to_device(sample['verts_rhand'].transpose(2,1))
+        # DONE 这里的载入输入数据的方式不太好，如果需要改数据输入输出需要改多处流程 => 还是用字典记录输入
+        
+        data = {}
+        data['region_mask'] = self.to_device(sample['region_mask'].transpose(2,1)) # B,C,N
+        data['region_centers'] = self.to_device(sample['region_centers'])
+        data['verts_obj'] = self.to_device(sample['verts_obj'].transpose(2,1))
+        data['obj_sdf'] = self.to_device(sample['obj_sdf'].transpose(2,1)) if cfg.use_gtsdm else None
+        data['verts_rhand'] = self.to_device(sample['verts_rhand'].transpose(2,1))
+        data['sample_ids'] = sample['sample_idx']
 
         # import pdb; pdb.set_trace()
-        # region = sample['region_mask'].transpose(2,1).to('cuda')
-
-        return [region, region_centers, obj_vs, obj_sdfs, rhand_vs]
+        # #region = sample['region_mask'].transpose(2,1).to('cuda')
+        
+        return data
+    
+    def get_object_meshes_face(self):
+        return
 
     # @func_timer
     def model_forward(self, data):
-        region, region_centers, obj_vs, obj_sdfs, rhand_vs = data
+    
+        region = data['region_mask']
+        obj_vs = data['verts_obj']
+        rhand_vs = data['verts_rhand']
         # model forward: 
         # 1) get condtion vector, along with train assisting cSDF_maps
         # 2) forward the cGraspvae model to obtain hand parameters as the key prediction
@@ -142,7 +155,7 @@ class Epoch(nn.Module):
         # outputs as a dict
         outputs = {}
         # for i in [hand_params, sample_stats, condition_vec, SD_maps]:
-        #     outputs[retrieve_name(i)[0]] = i   # TODO not gonna work when more than one var_val=None      
+        #     outputs[retrieve_name(i)[0]] = i        
         outputs['condition_vec'] = condition_vec
         outputs['feats'] = feats
         outputs['SD_maps'] = SD_maps
@@ -152,8 +165,10 @@ class Epoch(nn.Module):
 
     # @func_timer
     def loss_compute(self, outputs, data, sample_ids=None):
-        
-        region, region_centers, obj_vs, obj_sdfs, rhand_vs = data
+        region = data['region_mask']
+        obj_vs = data['verts_obj']
+        obj_sdfs = data['obj_sdf']
+        rhand_vs = data['verts_rhand']
 
         dict_losses = {}
         dict_loss_cond = {}
@@ -194,8 +209,7 @@ class Epoch(nn.Module):
         return dict_losses, signed_dists
 
     def metrics_compute(self, outputs, data, signed_dists=None):
-        region, region_centers, obj_vs, obj_sdfs, rhand_vs = data
-
+        obj_sdfs = data['obj_sdf']
         dict_metrics = {}
         if cfg.forward_Condition:
             SDmap_om = outputs['SD_maps'][0]
@@ -217,7 +231,7 @@ class Epoch(nn.Module):
 
     # @func_timer
     def model_update(self, dict_losses):
-        ################ TODO This part should belongs to model files ##########################
+        ##########################################
         # if self.ConditionNet and self.opt.freeze_ConditionNet:
         #     self.model_freeze(self.ConditionNet)
         # elif self.cGraspVAE and self.opt.freeze_cGraspVAE:
@@ -235,21 +249,25 @@ class Epoch(nn.Module):
             
         return
 
-    def update_meters(self, dict_losses, dict_metrics):
-        for name in dict_losses.keys():
-            self.Losses.add_value(name, dict_losses[name])
-        for name in dict_metrics.keys():
-            self.Metrics.add_value(name, dict_metrics[name])
+    def update_meters(self, dict_losses=None, dict_metrics=None):
+        if dict_losses is not None:
+            for name in dict_losses.keys():
+                self.Losses.add_value(name, dict_losses[name])
+        if dict_metrics is not None:
+            for name in dict_metrics.keys():
+                self.Metrics.add_value(name, dict_metrics[name])
     
-    def visual(self, rhand_vs_pred, data, sample_ids, batch_id):
-        region, region_centers, obj_vs, obj_sdfs, rhand_vs = data
+    def visual(self, rhand_vs_pred, data, sample_ids, batch_id): 
+        obj_vs = data['verts_obj']
+        rhand_vs = data['verts_rhand']
 
         batch_size = obj_vs.size(0)
         # import pdb; pdb.set_trace()
 
-        output_mesh_root = os.path.join(self.output_dir, self.mode + '_meshes')
+        output_mesh_root = os.path.join(self.output_dir, self.dataset.ds_name + '_meshes')
         makepath(output_mesh_root)
-        output_mesh_folder = os.path.join(output_mesh_root, 'batch_'+str(batch_id), f'epoch_{self.epoch}')
+        # output_mesh_folder = os.path.join(output_mesh_root, 'batch_'+str(batch_id), f'epoch_{self.epoch}')
+        output_mesh_folder = os.path.join(output_mesh_root, f'epoch_{self.epoch}', 'batch_'+str(batch_id))
         makepath(output_mesh_folder)
 
         rhand_vs_pred = to_cpu(rhand_vs_pred) # pred is output from mano forward, no need to transpose
@@ -267,8 +285,8 @@ class Epoch(nn.Module):
             ObjMesh = self.dataset.object_meshes[obj_name]
             obj_mesh = trimesh.base.Trimesh(vertices=obj_vs[idx], faces=ObjMesh.faces)
 
-            region_faces_ids = self.dataset.region_face_ids[str(int(sample_idx))]
-            # region_centers = region_centers.tolist()
+            region_faces_ids = self.dataset.region_face_ids[int(sample_idx)]
+            # #region_centers = region_centers.tolist()
 
             visual_obj(obj_mesh, region_faces_ids=region_faces_ids)
             visual_hand(rhand_mesh)
@@ -302,28 +320,29 @@ class Epoch(nn.Module):
     # @func_timer
     def one_batch(self, sample, idx):
         # read data
-        data_elements = self.read_data(sample)
+        data = self.read_data(sample)
         # self.rh_f repeat according to the true batchsize, or may lead to bug on the last batch
-        B = data_elements[0].shape[0]
+        B = data['verts_rhand'].shape[0]
         # import pdb; pdb.set_trace()
 
         if B != cfg.batch_size:
             self.rh_f = self.rh_f_single.repeat(B, 1, 1).to(self.device).to(torch.long)
             self.init_losses() # losses initialization requires the repeated rhand faces
 
-        outputs = self.model_forward(data_elements)
-        dict_losses, signed_dists = self.loss_compute(outputs, data_elements, sample_ids=sample['sample_idx'])
+        outputs = self.model_forward(data)
+        dict_losses, signed_dists = self.loss_compute(outputs, data, sample_ids=sample['sample_idx'])
         if self.mode == 'train':
             self.model_update(dict_losses)
 
         rhand_vs_pred = self.decode_batch_hand_params(outputs, B)
-        dict_metrics = self.metrics_compute(outputs, data_elements, signed_dists)
+        dict_metrics = self.metrics_compute(outputs, data, signed_dists)
         self.update_meters(dict_losses, dict_metrics)
         if self.mode != 'train':
-            if idx % cfg.visual_interval_val == 0: self.visual(rhand_vs_pred, data_elements, sample_ids=sample['sample_idx'], batch_id=idx)
+            if idx % cfg.visual_interval_val == 0: self.visual(rhand_vs_pred, data, sample_ids=sample['sample_idx'], batch_id=idx)
         else:
-            if idx == 0: self.visual(rhand_vs_pred, data_elements, sample_ids=sample['sample_idx'], batch_id=idx)
-
+            if idx == 0: self.visual(rhand_vs_pred, data, sample_ids=sample['sample_idx'], batch_id=idx)
+            
+        torch.cuda.empty_cache()
         # self.handparam_post()
         # self.visual_post()
         # self.lognotes()
@@ -359,7 +378,7 @@ class Epoch(nn.Module):
         return best_val
 
     
-    def one_epoch(self, epoch, best_val=None, checkpoints=None):
+    def __call__(self, epoch, best_val=None, checkpoints=None):
         if checkpoints is not None:
             self.load_checkpoints(checkpoints)
         self.epoch = epoch
@@ -367,16 +386,9 @@ class Epoch(nn.Module):
         # import pdb; pdb.set_trace()
         self.Losses, self.Metrics = AverageMeters(), AverageMeters()
         for idx, sample in enumerate(tqdm(self.dataloader, desc=f'{self.mode} epoch:{epoch}')):
-            # if idx > 10:
-            #     break
-            # if idx < len(self.dataloader) - 1:
-            #     continue
-            if self.mode != 'train':
-                with torch.no_grad():
-                    self.one_batch(sample, idx)
-
-            else:  
-                self.one_batch(sample, idx)
+            self.one_batch(sample, idx)
+            if self.mode == 'train':
+                break
         
         best_val = self.save_checkpoints(epoch, best_val)
         self.metrics_log(epoch)
@@ -386,7 +398,6 @@ class Epoch(nn.Module):
         else:
             return [self.ConditionNet.state_dict()], best_val
         
-
 
 class TrainEpoch(Epoch):
     def __init__(self, dataloader, dataset, mode='train', use_cuda=True, cuda_id=0, save_visual=True):
@@ -402,38 +413,41 @@ class ValEpoch(Epoch):
         self.l1loss = self.cGraspVAELoss.LossL1
 
     def save_checkpoints(self, epoch, best_val):
-        if cfg.fit_cGrasp:
-            metric_val = self.Metrics.average_meters['max_depth_ratio'].avg # TODO use max_depth_ratio as the main metrics
-            if best_val is not None and metric_val > 1 and metric_val < best_val:
-                checkpoint_path = os.path.join(self.model_root, f'bestmodel.pth')
-                torch.save({'epoch':epoch,
-                        'best_val': best_val,
-                        'ConditonNet_state_dict': self.ConditionNet.state_dict(),
-                        'cGraspVAE_state_dict':self.cGraspVAE.state_dict()},
-                        checkpoint_path)
-                best_val = metric_val
-                print("Saved the latest best model!")
-            elif best_val is None:
-                best_val = metric_val
-
+        
+        # if cfg.fit_cGrasp:
+        #     # DONE use max_depth_ratio as the main metrics
+        #     metric_val = self.Metrics.average_meters['max_depth_ratio'].avg 
+        #     if best_val is not None and metric_val > 1 and metric_val < best_val:
+        #         checkpoint_path = os.path.join(self.model_root, f'bestmodel.pth')
+        #         torch.save({'epoch':epoch,
+        #                 'best_val': best_val,
+        #                 'ConditonNet_state_dict': self.ConditionNet.state_dict(),
+        #                 'cGraspVAE_state_dict':self.cGraspVAE.state_dict()},
+        #                 checkpoint_path)
+        #         best_val = metric_val
+        #         print("Saved the latest best model!")
+        #     elif best_val is None:
+        #         best_val = metric_val
+        best_val = 0
         return best_val
 
     def model_forward(self, data):
-        region, region_centers, obj_vs, obj_sdfs, rhand_vs = data
+        region = data['region_mask']
+        obj_vs = data['verts_obj']
         # model forward: 
         # 1) get condtion vector, along with train assisting cSDF_maps
         # 2) forward the cGraspvae model to obtain hand parameters as the key prediction
         condition_vec, SD_maps, hand_params, sample_stats, feats = None, None, None, None, None
         # if self.use_cuda: self.ConditionNet.to('cuda')
         if cfg.fit_cGrasp:
-            # TODO cGraspVAE inference
+            # DONE cGraspVAE inference
             # if self.use_cuda: self.cGraspVAE.to('cuda')
             hand_params = self.cGraspVAE.inference(obj_vs,region_mask=region)
         
         # outputs as a dict
         outputs = {}
         # for i in [hand_params, sample_stats, condition_vec, SD_maps]:
-        #     outputs[retrieve_name(i)[0]] = i   # TODO not gonna work when more than one var_val=None      
+        #     outputs[retrieve_name(i)[0]] = i      
         outputs['condition_vec'] = condition_vec
         outputs['feats'] = feats
         outputs['SD_maps'] = SD_maps
@@ -441,13 +455,16 @@ class ValEpoch(Epoch):
         outputs['sample_stats'] = sample_stats # sample_stats = [p_mean, p_std]
         return outputs
 
-
     def select_best_grasp(self, vs_pred_iters, vs_gt, outputs_iters_list):
-        import pdb; pdb.set_trace()
+        # import pdb; pdb.set_trace()
+        # CHECK: 
+        
+        # NOTE: 当前筛选10个iteration的参数指标 -- 顶点重建误差
         vs_rec_errs = torch.mean(torch.einsum('bijk,j->bijk', torch.abs((vs_gt - vs_pred_iters)), self.v_weights2), dim=[2,3]) # dim should be (num_iters, B)
         indices = torch.argmin(vs_rec_errs, dim=0) # dim (B,)
         B = indices.shape[0]
         indices = indices.tolist()
+        
         outputs = {}
         outputs_sample = outputs_iters_list[0]
         keys = list(outputs_sample.keys())
@@ -468,7 +485,6 @@ class ValEpoch(Epoch):
                 for batch_idx in range(B):
                     iter_idx = indices[batch_idx]
                     outputs[key][batch_idx] = outputs_iters_list[iter_idx][key][batch_idx]
-             
                     
         return outputs
 
@@ -476,9 +492,9 @@ class ValEpoch(Epoch):
     def one_batch(self, sample, idx, num_iters=10):
         
         # read data
-        data_elements = self.read_data(sample)
+        data = self.read_data(sample)
         # self.rh_f repeat according to the true batchsize, or may lead to bug on the last batch
-        B = data_elements[0].shape[0]
+        B = data['verts_rhand'].shape[0]
         # import pdb; pdb.set_trace()
         self.rh_f = self.rh_f_single.repeat(B, 1, 1).to(self.device).to(torch.long)
         self.init_losses() # losses initialization requires the repeated rhand faces
@@ -488,32 +504,49 @@ class ValEpoch(Epoch):
         outputs_iters_list = []
         # import pdb; pdb.set_trace()
         for i in range(num_iters):
-            with torch.no_grad(): outputs_iter = self.model_forward(data_elements)
+            with torch.no_grad(): outputs_iter = self.model_forward(data)
             rhand_vs_pred = self.decode_batch_hand_params(outputs_iter, B)
             # rhand_vs_pred = rhand_vs_pred.transpose(2,1)
             vs_pred_iters_list.append(rhand_vs_pred.unsqueeze(dim=0))
             outputs_iters_list.append(outputs_iter)
             torch.cuda.empty_cache() # 因为需要在一个batch里面iterate很多次，所以
 
-        vs_pred_iters = torch.cat(vs_pred_iters_list) # (num_iters, B, x, y, z)
-        vs_gt = data_elements[4] # gt verts, dim (B, x, y, z)
+        vs_pred_iters = torch.cat(vs_pred_iters_list) # pred_verts: dim (num_iters, B, x, y, z)
+        vs_gt = data['verts_rhand'] # gt verts: dim (B, x, y, z)
         vs_gt = vs_gt.transpose(2, 1)
 
         outputs = self.select_best_grasp(vs_pred_iters, vs_gt, outputs_iters_list)
 
-        dict_losses, signed_dists = self.loss_compute(outputs, data_elements, sample_ids=sample['sample_idx'])
-        if self.mode == 'train':
-            self.model_update(dict_losses)
+        #--- LOSS compute ----#
+        if self.mode != 'test': # validation阶段计算loss是有必要的 -> 监视过拟合情况；test阶段就没有必要 
+            dict_losses, signed_dists = self.loss_compute(outputs, data, sample_ids=sample['sample_idx'])
+        else:
+            dict_losses = None
 
-        hand_params = outputs['hand_params']
+        # hand_params = outputs['hand_params']
         rhand_vs_pred = self.decode_batch_hand_params(outputs, B)
         # rhand_vs_pred = rhand_pred.vertices
-        dict_metrics = self.metrics_compute(outputs, data_elements, signed_dists)
-        self.update_meters(dict_losses, dict_metrics)
-        if self.mode != 'train':
-            if idx % cfg.visual_interval_val == 0: self.visual(rhand_vs_pred, data_elements, sample_ids=sample['sample_idx'], batch_id=idx)
+
+        #--- Metrics compute ----#
+        # 目前可以进行batch计算的metrics: 
+        #  -- interpenetration depth => 几何结构合理性指标
+        #  -- interpenetration volume （？）=> 几何结构合理性指标
+        # 目前不可以进行batch计算的metrics：
+        #  -- simulation displacement => 物理合理性指标
+        # DONE: 通过cfg控制metrics compute方式, 当前不考虑在training中使用testmetrics
+        if self.mode =='test' and cfg.testmetrics:
+        # TODO: [->traineval_utils/metrics]实现TestMetrics类用于计算metrics
+            # TODO: -- 确认输入输出数据类型: [in] 
+            dict_metrics = self.testMetrics(rhand_vs_pred, data)
         else:
-            if idx == 0: self.visual(rhand_vs_pred, data_elements, sample_ids=sample['sample_idx'], batch_id=idx)
+            dict_metrics = self.metrics_compute(outputs, data, signed_dists)
+        self.update_meters(dict_losses=dict_losses, dict_metrics=dict_metrics)
+
+        # --- Visualization --- #
+        if self.mode != 'train':
+            if idx % cfg.visual_interval_val == 0: self.visual(rhand_vs_pred, data, sample_ids=sample['sample_idx'], batch_id=idx)
+        else:
+            if idx == 0: self.visual(rhand_vs_pred, data, sample_ids=sample['sample_idx'], batch_id=idx)
 
         # self.handparam_post()
         # self.visual_post()
