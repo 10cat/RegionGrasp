@@ -76,11 +76,11 @@ if __name__ == "__main__":
         # HandMeshQuery = trimesh.proximity.ProximityQuery(HandMesh)
         # _, _, closest_faces = HandMeshQuery.on_surface(points=query_points)
         
-        # TODO: ----- query points不应该是object的顶点，而应该是thumb顶点 ---- #
+        # DONE: ----- query points不应该是object的顶点，而应该是thumb顶点 ---- #
         # thumb_vertices = config.hand_comp['thumb'][1]
         thumb_vertices_ids = faces2verts_no_rep(HandMesh.faces[config.thumb_center]) # to ensure the selected region in very close to the thumb contact region
         # thumb_vertices = HandMesh.vertices[thumb_vertices_ids]
-        # TODO: ---- select the thumb_vertices using a set sdf threshold! ---- #
+        # DONE: ---- select the thumb_vertices using a set sdf threshold! ---- #
         # import pdb; pdb.set_trace()
         hand_sdfs = sdf_annot['hand_obj_sdf']
         contact_ids = np.where(hand_sdfs > sdf_th)[0].tolist()
@@ -128,10 +128,10 @@ if __name__ == "__main__":
         
     frame_names_thumb = np.asarray(thumb_contact_frame_names)
     output_path = os.path.join(dataset.ds_path, 'frame_names_thumb.npz') 
-    # TODO: save the frame_name array with thumb contact to ds_path
+    # DONE: save the frame_name array with thumb contact to ds_path
     np.savez(output_path, frame_names=frame_names_thumb)
     
-    # TODO: save the grabnet ds files
+    # DONE: save the grabnet ds files
     ds_thumb = {k: np.array(ds_thumb[k]) for k in list(ds_thumb.keys())}
     ds_thumb_path = os.path.join(dataset.ds_path, f'grabnet_{args.ds_name}_thumb.npz')
     np.savez(ds_thumb_path, 

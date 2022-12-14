@@ -94,27 +94,6 @@ def copy_folders_path(root, old_folder_name, new_folder_name):
     new_folder_path = os.path.join(root, new_folder_name)
     old_folder_path = os.path.join(root, old_folder_name)
 
-
-def visual_hist(array):
-    plt.figure()
-    plt.hist(array)
-    plt.axvline(x=np.median(array), color='b', label='median value')
-    plt.axvline(x=np.mean(array), color='r', label='mean value')
-    plt.show()
-    plt.close()
-    
-def visual_sort(array, plot):
-    # array_sort = np.sort(array)
-    array_uni = np.array(list(set(array)))
-    array_sort = np.sort(array_uni)
-    th = cluster_threshold(array_sort)
-    if plot:
-        plt.figure()
-        plt.plot(array_sort)
-        plt.axhline(y=th, color='r', label='threshold')
-        plt.show()
-        plt.close()
-
 def cluster_threshold(sorted_array):
     threshold = None
     diff_max = 0

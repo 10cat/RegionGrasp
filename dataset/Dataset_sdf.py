@@ -257,7 +257,7 @@ class GrabNetDataset(data.Dataset):
 
     def rtree_bounds(self, points, radius, r_depth=None):
         # axis aligned bounds
-        if r_depth is not None:
+        if r_depth is not None: # (z, x, y) coordinate
             distance_vector = [r_depth, radius, radius]
             bounds = np.column_stack((points - distance_vector, points + distance_vector))
         else:
@@ -297,7 +297,7 @@ class GrabNetDataset(data.Dataset):
             face_candidates.append(f_indices)
         return face_candidates
 
-    def object_contact_regions_adjaceny(self, obj_face_ids, radius=0.005):
+    def object_contact_regions_adjaceny(self, obj_face_ids, radius=config.rtree_radius):
         """
         Form the contact unit regions on object surface centered at given faces based on searching the neighors.
         """
@@ -327,17 +327,17 @@ class GrabNetDataset(data.Dataset):
         # Get signed distance map for object(obj_hand_sdf) and hand(hand_obj_sdf)
         obj_hand_sdf, hand_obj_sdf = self.get_prox_sdf()
 
-        #TODO: Obtain certain proportion of top closest points based on signed distance
+        #DONE: Obtain certain proportion of top closest points based on signed distance
         # threshold = self.get_hand_sdf_threshold(hand_obj_sdf)
         threshold, select_indices = self.hand_contact_region(hand_obj_sdf)
 
-        #TODO: Find correspoding closest faces on object mesh
+        #DONE: Find correspoding closest faces on object mesh
         hand_obj_dists, obj_face_ids = self.object_contact_centers(select_indices)
         # import pdb; pdb.set_trace()
         
-        #TODO: Find the corresponding closest faces as the contact unit region centers; Form the contact unit regions based on neighborhood searching 
-        # candidates = self.object_contact_regions(obj_face_ids) # TODO triangles-tree based search contact_regions
-        candidates = self.object_contact_regions_adjaceny(obj_face_ids) # TODO face_adjacency_tree based search contact_regions
+        #DONE: Find the corresponding closest faces as the contact unit region centers; Form the contact unit regions based on neighborhood searching 
+        # candidates = self.object_contact_regions(obj_face_ids) # triangles-tree based search contact_regions
+        candidates = self.object_contact_regions_adjaceny(obj_face_ids) # face_adjacency_tree based search contact_regions
 
         # hand visualization
         visual_sdf(self.HandMesh, hand_obj_sdf, vert_indices=select_indices)

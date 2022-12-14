@@ -1,5 +1,6 @@
 from asyncio import FastChildWatcher
 import os
+from re import T
 from cv2 import fastNlMeansDenoisingColored
 import torch 
 from torch import optim
@@ -12,13 +13,17 @@ class MyOptions:
     """
     Base Configuration
     """
-    w_wandb: bool = True
+    w_wandb: bool = False
     machine: int = '41'
-    exp_name: str = 'thumb_cond_train0' # 1
-    note: str = 'debug -- penetration depth computation -- test for using o2h signed distance for computing penetration depth '
-    mode: str = 'train'
+    exp_name: str = 'thumb_cond_train0_1' # 1
+    note: str = '解决thumb_cond_train0存在的bug: 计算signed_dist_loss时，rhand_vs_pred错与rhand_normals对应；rhand_vs错与rhand_normals_pred对应'
+    run_type: str = 'train'
+    batch_size: int = 32 # train: 32; test/val: 16
+    test_part: bool = True
+    select_k: float = 0.25 # 选取batch_size * select_k这么多
+    
     use_cuda: bool = True
-    visible_device: str="0"
+    visible_device: str="2"
     cuda_id: int = 0
     
     frame_names: str = 'frame_names_thumb.npz'
@@ -27,7 +32,6 @@ class MyOptions:
     num_mask: int = 1
     num_rhand_verts: int = 778
     num_obj_verts: int = 3000
-    batch_size: int = 32
     start_epoch: int = 1
     num_epoch: int = 40
     forward_Condition: bool = False
@@ -35,6 +39,16 @@ class MyOptions:
     fit_Condition: bool = False
     fit_cGrasp: bool = True
     use_gtsdm: bool = False
+    
+    testmetrics: bool = True
+    metrics_contact: bool = True
+    metrics_inter: bool = True
+    metrics_simul: bool = False
+    metrics_cond: bool = False
+    voxel_mode: str = 'voxels_hand'
+    voxel_pitch: float = 0.01
+    condition_dist: float = -0.005
+    coverage_th: float = 0.6
 
     learning_rate: float = 1e-4
     class optimizer_cond:
@@ -88,8 +102,6 @@ class MyOptions:
     use_h2osigned: bool = False
     penetrate_threshold: float = -0.005
 
-
-    
     """
     Root Path
     """
@@ -113,5 +125,3 @@ if __name__=="__main__":
     config = MyOptions()
     import pdb; pdb.set_trace()
     config
-
-
