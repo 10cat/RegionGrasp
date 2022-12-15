@@ -165,6 +165,10 @@ class TestMetricsCPU():
         if self.test_metrics[names['simulation']]: # -- 2
             sim_dist = self.simulation(sample_info)
             metrics.add_value('sim_dist', sim_dist)
+        
+        if self.test_metrics[names['CA']] and self.test_metrics[names['IV']]:
+            CA_IV_ratio = CA / IV
+            metrics.add_value('CA/IV', CA_IV_ratio)
             
         
         return metrics

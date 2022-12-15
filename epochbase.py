@@ -386,9 +386,13 @@ class Epoch(nn.Module):
         # import pdb; pdb.set_trace()
         self.Losses, self.Metrics = AverageMeters(), AverageMeters()
         for idx, sample in enumerate(tqdm(self.dataloader, desc=f'{self.mode} epoch:{epoch}')):
-            self.one_batch(sample, idx)
-            if self.mode == 'train':
-                break
+            if self.mode != 'train':
+                with torch.no_grad(): # NOTE: 由于validation阶段需要iter 10次, no_grad()一定要开一定要开一定要开！否则会
+                    self.one_batch(sample, idx)
+
+            else:  
+                self.one_batch(sample, idx)
+            torch.cuda.empty_cache()
         
         best_val = self.save_checkpoints(epoch, best_val)
         self.metrics_log(epoch)

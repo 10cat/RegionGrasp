@@ -13,12 +13,12 @@ class MyOptions:
     """
     Base Configuration
     """
-    w_wandb: bool = False
+    w_wandb: bool = True
     machine: int = '41'
-    exp_name: str = 'thumb_cond_train0_1' # 1
-    note: str = '解决thumb_cond_train0存在的bug: 计算signed_dist_loss时，rhand_vs_pred错与rhand_normals对应；rhand_vs错与rhand_normals_pred对应'
-    run_type: str = 'train'
-    batch_size: int = 32 # train: 32; test/val: 16
+    exp_name: str = 'thumb_cond_train0_val' # 1
+    note: str = '在gpu上进行批处理计算h2o_signed_distance'
+    run_type: str = 'eval_val'
+    batch_size: int = 16 # train: 32; test/val: 16
     test_part: bool = True
     select_k: float = 0.25 # 选取batch_size * select_k这么多
     
@@ -44,7 +44,7 @@ class MyOptions:
     metrics_contact: bool = True
     metrics_inter: bool = True
     metrics_simul: bool = False
-    metrics_cond: bool = False
+    metrics_cond: bool = True
     voxel_mode: str = 'voxels_hand'
     voxel_pitch: float = 0.01
     condition_dist: float = -0.005
