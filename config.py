@@ -56,12 +56,19 @@ if machine == '97':
 
 if machine == '41':
     DATASET_ROOT = "/ssd_data/yilin/GrabNet"
+    
+    OBMAN_ROOT = "/ssd_data/yilin/obman"
+    
+    SHAPENET_ROOT = "/ssd_data/yilin/ShapeNetCore.v2"
+    
+    mano_root = "/home/yilin/smpl_models/mano"
 
     mano_dir = "/home/yilin/smpl_models/mano/MANO_RIGHT.pkl" # MANO right hand model path
     
     visual_root = "/ssd_data/yilin/Outputs"
     
     dataset_visual_dir = "/ssd_data/yilin/Outputs/GrabNet_visual"
+    obman_visual_dir = "/ssd_data/yilin/Outputs/ObMan_visual"
 
     OUTPUT_ROOT = "/ssd_data/yilin/Outputs/ConditionHOI"
 

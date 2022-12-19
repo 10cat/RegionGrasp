@@ -13,17 +13,20 @@ class MyOptions:
     """
     Base Configuration
     """
-    w_wandb: bool = True
+    w_wandb: bool = False
     machine: int = '41'
-    exp_name: str = 'thumb_cond_train0_val' # 1
-    note: str = '在gpu上进行批处理计算h2o_signed_distance'
-    run_type: str = 'eval_val'
+    exp_name: str = 'thumb_cond_train0_1_test' # 1
+    note: str = '可视化thumb_cond_train0的测试集生成效果'
+    run_type: str = 'eval'
+    checkpoint_folder: str = "thumb_cond_train0" # None when training 
+    checkpoint_epoch: int = 20 # -1 when training
+    
     batch_size: int = 16 # train: 32; test/val: 16
-    test_part: bool = True
+    test_part: bool = False
     select_k: float = 0.25 # 选取batch_size * select_k这么多
     
     use_cuda: bool = True
-    visible_device: str="2"
+    visible_device: str="0"
     cuda_id: int = 0
     
     frame_names: str = 'frame_names_thumb.npz'
@@ -40,7 +43,7 @@ class MyOptions:
     fit_cGrasp: bool = True
     use_gtsdm: bool = False
     
-    testmetrics: bool = True
+    testmetrics: bool = False
     metrics_contact: bool = True
     metrics_inter: bool = True
     metrics_simul: bool = False
@@ -94,6 +97,14 @@ class MyOptions:
     lambda_edge: float = 30 * (1. - kl_coef)
     vpe_path = "./config/verts_per_edge.npy"
     c_weights_path = "./config/rhand_weight.npy"
+    
+    """
+    check / visual / eval_inference_iteration
+    """
+    num_eval_iter: int = 5
+    check_interval: int = 2
+    visual_interval_val: int = 100
+    visual_sample_interval: int = 4
 
 
     """
@@ -117,9 +128,7 @@ class MyOptions:
         mano_rh_path: str = f"/home/yilin/smpl_models/mano/MANO_RIGHT.pkl"
 
     model_root: str= os.path.join(output_dir, 'model')
-    check_interval: int = 2
-    visual_interval_val: int = 100
-    visual_sample_interval: int = 4
+    
 
 if __name__=="__main__":
     config = MyOptions()

@@ -257,7 +257,7 @@ class Epoch(nn.Module):
             for name in dict_metrics.keys():
                 self.Metrics.add_value(name, dict_metrics[name])
     
-    def visual(self, rhand_vs_pred, data, sample_ids, batch_id): 
+    def visual(self, rhand_vs_pred, data, sample_ids, batch_id, iter=None): 
         obj_vs = data['verts_obj']
         rhand_vs = data['verts_rhand']
 
@@ -292,7 +292,7 @@ class Epoch(nn.Module):
             visual_hand(rhand_mesh)
             visual_hand(rhand_mesh_pred)
 
-            output_name = f"{str(idx)}_{obj_name}_"
+            output_name = f"{str(idx)}_{obj_name}_" if iter is None else f"{str(idx)}_{obj_name}_{iter}_"
             rhand_mesh_pred.export(os.path.join(output_mesh_folder, output_name+'rh_pred.ply'))
             rhand_mesh.export(os.path.join(output_mesh_folder, output_name+'rh_gt.ply'))
             obj_mesh.export(os.path.join(output_mesh_folder, output_name+'obj.ply'))
@@ -364,6 +364,7 @@ class Epoch(nn.Module):
         if cfg.w_wandb: wandb.log(AllMeters_avg)
 
     def save_checkpoints(self, epoch, best_val):
+        import pdb; pdb.set_trace() # BUG: save model 不work
         if epoch > 1 and epoch % cfg.check_interval == 0:
             makepath(self.model_root)
             checkpoint_path = os.path.join(self.model_root, f'checkpoint_{epoch}.pth')
@@ -393,6 +394,7 @@ class Epoch(nn.Module):
             else:  
                 self.one_batch(sample, idx)
             torch.cuda.empty_cache()
+            break
         
         best_val = self.save_checkpoints(epoch, best_val)
         self.metrics_log(epoch)
@@ -461,7 +463,7 @@ class ValEpoch(Epoch):
 
     def select_best_grasp(self, vs_pred_iters, vs_gt, outputs_iters_list):
         # import pdb; pdb.set_trace()
-        # CHECK: 
+        # TODO: 指标选择的最佳无论如何有局限性，应该计算全局指标
         
         # NOTE: 当前筛选10个iteration的参数指标 -- 顶点重建误差
         vs_rec_errs = torch.mean(torch.einsum('bijk,j->bijk', torch.abs((vs_gt - vs_pred_iters)), self.v_weights2), dim=[2,3]) # dim should be (num_iters, B)
@@ -493,7 +495,7 @@ class ValEpoch(Epoch):
         return outputs
 
     # @func_timer
-    def one_batch(self, sample, idx, num_iters=10):
+    def one_batch(self, sample, idx, num_iters=cfg.num_eval_iter):
         
         # read data
         data = self.read_data(sample)
@@ -507,30 +509,29 @@ class ValEpoch(Epoch):
         vs_pred_iters_list = []
         outputs_iters_list = []
         # import pdb; pdb.set_trace()
-        for i in range(num_iters):
+        for iter in range(num_iters):
             with torch.no_grad(): outputs_iter = self.model_forward(data)
             rhand_vs_pred = self.decode_batch_hand_params(outputs_iter, B)
             # rhand_vs_pred = rhand_vs_pred.transpose(2,1)
             vs_pred_iters_list.append(rhand_vs_pred.unsqueeze(dim=0))
             outputs_iters_list.append(outputs_iter)
+            # --- Visualization --- #
+            # 需要把每个iter生成的sample都输出可视化
+            if idx % cfg.visual_interval_val == 0:
+                self.visual(rhand_vs_pred, data, sample_ids=sample['sample_idx'], batch_id=idx, iter=iter)
             torch.cuda.empty_cache() # 因为需要在一个batch里面iterate很多次，所以
 
         vs_pred_iters = torch.cat(vs_pred_iters_list) # pred_verts: dim (num_iters, B, x, y, z)
         vs_gt = data['verts_rhand'] # gt verts: dim (B, x, y, z)
         vs_gt = vs_gt.transpose(2, 1)
-
-        outputs = self.select_best_grasp(vs_pred_iters, vs_gt, outputs_iters_list)
-
+        
         #--- LOSS compute ----#
+        outputs = self.select_best_grasp(vs_pred_iters, vs_gt, outputs_iters_list)
         if self.mode != 'test': # validation阶段计算loss是有必要的 -> 监视过拟合情况；test阶段就没有必要 
             dict_losses, signed_dists = self.loss_compute(outputs, data, sample_ids=sample['sample_idx'])
         else:
             dict_losses = None
-
-        # hand_params = outputs['hand_params']
-        rhand_vs_pred = self.decode_batch_hand_params(outputs, B)
-        # rhand_vs_pred = rhand_pred.vertices
-
+        
         #--- Metrics compute ----#
         # 目前可以进行batch计算的metrics: 
         #  -- interpenetration depth => 几何结构合理性指标
@@ -541,16 +542,15 @@ class ValEpoch(Epoch):
         if self.mode =='test' and cfg.testmetrics:
         # TODO: [->traineval_utils/metrics]实现TestMetrics类用于计算metrics
             # TODO: -- 确认输入输出数据类型: [in] 
+            rhand_vs_pred = self.decode_batch_hand_params(outputs, B)
             dict_metrics = self.testMetrics(rhand_vs_pred, data)
-        else:
+        elif self.mode != 'test':
             dict_metrics = self.metrics_compute(outputs, data, signed_dists)
+        else:
+            dict_metrics = None
         self.update_meters(dict_losses=dict_losses, dict_metrics=dict_metrics)
 
-        # --- Visualization --- #
-        if self.mode != 'train':
-            if idx % cfg.visual_interval_val == 0: self.visual(rhand_vs_pred, data, sample_ids=sample['sample_idx'], batch_id=idx)
-        else:
-            if idx == 0: self.visual(rhand_vs_pred, data, sample_ids=sample['sample_idx'], batch_id=idx)
+        
 
         # self.handparam_post()
         # self.visual_post()

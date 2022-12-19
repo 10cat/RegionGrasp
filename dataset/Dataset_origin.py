@@ -2,6 +2,7 @@ import os
 import sys
 sys.path.append('.')
 sys.path.append('..')
+import pickle
 import numpy as np
 import torch
 import mano
@@ -10,10 +11,14 @@ from torch.utils.data._utils.collate import default_collate
 from mano.model import load
 import trimesh
 import config
+from tqdm import tqdm
 from copy import deepcopy
+from collections import Counter
 
 import random
+from tqdm import tqdm
 from utils.utils import func_timer, makepath
+from dataset.tools.obman_utils import fast_load_obj
         
         
 class GrabNetDataset_orig(data.Dataset):
@@ -135,14 +140,19 @@ class GrabNetDataset_orig(data.Dataset):
             
         return data_out
     
+    
+    
 
         
 if __name__ == "__main__":
-    dataset_root = config.DATASET_ROOT
-    output_root = config.dataset_visual_dir
+    dataset_root = config.OBMAN_ROOT
+    output_root = config.obman_visual_dir
+    output_folder = "Dataset_sample"
     
-    trainset = GrabNetDataset_orig(dataset_root, ds_name='train', output_root=output_root)
-    trainset.__getitem__(0)
+    # trainset = GrabNetDataset_orig(dataset_root, ds_name='train', output_root=output_root)
+    # trainset.__getitem__(0)
+    
+    
         
         
         

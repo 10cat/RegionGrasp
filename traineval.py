@@ -93,6 +93,7 @@ if __name__ == "__main__":
     from omegaconf import OmegaConf
 
     parser = argparse.ArgumentParser()
+    parser.add_argument('--wandb', action='store_true')
     parser.add_argument('--checkpoint', type=str, default=None)
     parser.add_argument('--model_exp_name', type=str, default=None)
     parser.add_argument('--start_epoch', type=int, default=None)
@@ -114,6 +115,8 @@ if __name__ == "__main__":
                 config=OmegaConf.to_container(conf, resolve=True),
                 dir=os.path.join(cfg.output_root, 'wandb')) # omegaconf: resolve=True即可填写自动变量
                 # dir: set the absolute path for storing the metadata of each runs
+                
+    print(f"================ {cfg.run_type} experiment running! ================") # NOTE: Checkpoint! 提醒一下当前实验的属性
     if cfg.run_type == 'train':
         train_val()
         
@@ -121,7 +124,12 @@ if __name__ == "__main__":
         assert args.model_exp_name is not None, "Requires trained models to evaluate validation set!"
         evaluation_val(args)
     else:
-        checkpoint = torch.load(args.checkpoint)
+        if cfg.checkpoint_folder is None:
+            assert args.checkpoint is not None, "No checkpoint pre-configed! Requires input checkpoint path"
+            chk_path = args.checkpoint
+        else:
+            chk_path = os.path.join(config.OUTPUT_ROOT, cfg.checkpoint_folder, 'model', f'checkpoint_{cfg.checkpoint_epoch}.pth')
+        checkpoint = torch.load(chk_path)
         # import pdb; pdb.set_trace()
         evaluation(checkpoint=checkpoint)
 
