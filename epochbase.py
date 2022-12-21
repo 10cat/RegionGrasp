@@ -264,7 +264,10 @@ class Epoch(nn.Module):
         batch_size = obj_vs.size(0)
         # import pdb; pdb.set_trace()
 
-        output_mesh_root = os.path.join(self.output_dir, self.dataset.ds_name + '_meshes')
+        output_mesh_root = os.path.join(self.output_dir, self.dataset.ds_name + cfg.run_type +'_meshes')
+        if cfg.checkpoint_epoch > -1:
+            # NOTE: 在eval状态下输出visual的文件夹要标出对应的checkpoint
+            output_mesh_root = os.path.join(self.output_dir, self.dataset.ds_name + f"_{cfg.run_type}" + f"_epoch{cfg.checkpoint_epoch}" + '_meshes')
         makepath(output_mesh_root)
         # output_mesh_folder = os.path.join(output_mesh_root, 'batch_'+str(batch_id), f'epoch_{self.epoch}')
         output_mesh_folder = os.path.join(output_mesh_root, f'epoch_{self.epoch}', 'batch_'+str(batch_id))
@@ -364,7 +367,6 @@ class Epoch(nn.Module):
         if cfg.w_wandb: wandb.log(AllMeters_avg)
 
     def save_checkpoints(self, epoch, best_val):
-        import pdb; pdb.set_trace() # BUG: save model 不work
         if epoch > 1 and epoch % cfg.check_interval == 0:
             makepath(self.model_root)
             checkpoint_path = os.path.join(self.model_root, f'checkpoint_{epoch}.pth')
@@ -394,7 +396,7 @@ class Epoch(nn.Module):
             else:  
                 self.one_batch(sample, idx)
             torch.cuda.empty_cache()
-            break
+            #break
         
         best_val = self.save_checkpoints(epoch, best_val)
         self.metrics_log(epoch)
@@ -527,10 +529,8 @@ class ValEpoch(Epoch):
         
         #--- LOSS compute ----#
         outputs = self.select_best_grasp(vs_pred_iters, vs_gt, outputs_iters_list)
-        if self.mode != 'test': # validation阶段计算loss是有必要的 -> 监视过拟合情况；test阶段就没有必要 
-            dict_losses, signed_dists = self.loss_compute(outputs, data, sample_ids=sample['sample_idx'])
-        else:
-            dict_losses = None
+        
+        dict_losses, signed_dists = self.loss_compute(outputs, data, sample_ids=sample['sample_idx'])
         
         #--- Metrics compute ----#
         # 目前可以进行batch计算的metrics: 
@@ -544,10 +544,8 @@ class ValEpoch(Epoch):
             # TODO: -- 确认输入输出数据类型: [in] 
             rhand_vs_pred = self.decode_batch_hand_params(outputs, B)
             dict_metrics = self.testMetrics(rhand_vs_pred, data)
-        elif self.mode != 'test':
-            dict_metrics = self.metrics_compute(outputs, data, signed_dists)
         else:
-            dict_metrics = None
+            dict_metrics = self.metrics_compute(outputs, data, signed_dists)
         self.update_meters(dict_losses=dict_losses, dict_metrics=dict_metrics)
 
         

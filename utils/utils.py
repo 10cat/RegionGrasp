@@ -137,7 +137,14 @@ def size_splits(tensor, split_sizes, dim=0):
                  for start, length in zip(splits, split_sizes))
 
 def region_masked_pointwise(obj_pc, mask):
-    obj_pc_masked = obj_pc * (mask)
+    # DONE: 不改变点乘，但是改成dense加权形式,即没有选中的点权重设小但不为0，选中为condition的点权重设大 (e.g. 0.1 / 3.0)
+    if cfg.mask_dense_weight:
+        weight = torch.ones_like(mask, dtype=torch.float32) * 0.1
+        cond = (mask > 0)
+        weight[cond] = cfg.mask_cond_weight
+    else:
+        weight = mask
+    obj_pc_masked = obj_pc * (weight)
     return obj_pc_masked
 
 def edges_for(x, vpe):

@@ -48,7 +48,7 @@ class cGraspvae(nn.Module):
     def forward(self, obj_pc, hand_xyz, region_mask=None, condition_vec=None):
         """
         :param obj_pc:[B, 3+n, N1]
-        :param hand_param: [B, 61]
+        :param hand_xyz: [B, 3, 778]
         :return: reconstructed hand vertex
         """
 

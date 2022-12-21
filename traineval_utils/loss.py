@@ -53,26 +53,40 @@ class cGraspvaeLoss(nn.Module):
         self.v_weights = torch.from_numpy(np.load(cfg.c_weights_path)).to(torch.float32).to(self.device) # 这个到底是啥呀？ 能不能用在其他数据集上？
         self.v_weights2 = torch.pow(self.v_weights, 1.0/2.5) # 这个到底是啥呀？ 能不能用在其他数据集上？
         self.vpe = torch.from_numpy(np.load(cfg.vpe_path)).to(self.device).to(torch.long) # 这个到底是啥呀？ 能不能用在其他数据集上？
-
-    def dist_loss(self, h2o, h2o_pred, o2h_signed, o2h_signed_pred, region):
-        ## adaptive weight for penetration and contact verts
         
-        self.w_dist = torch.ones([h2o.shape[0], cfg.num_obj_verts]).to(self.device)
+    def h2o_weight(self, dists):
+        # NOTE: h2o -- penetration weights (up); contact_weights (down)
+        w_dist_h = torch.ones([dists.shape[0], dists.shape[1]]).to(self.device)
         p_dist = cfg.th_penet
         c_dist = cfg.th_contact
-        w_dist = (o2h_signed < c_dist) * (o2h_signed > p_dist) # inside as negative; outside as positive
-        w_dist_neg = o2h_signed_pred < 0.
-        weight = self.w_dist.clone()
-        weight[~w_dist] = cfg.weight_contact # less weights for contact verts
-        weight[w_dist_neg] = cfg.weight_penet # more weights for penetration verts
-
-        # TODO conditioned region weights
+        w_dist_con = (dists < c_dist) * (dists > p_dist) # inside as negative; outside as positive
+        w_dist_pen = dists < p_dist
+        weight = w_dist_h.clone()
+        weight[w_dist_con] = cfg.weight_contact # less weights for contact verts
+        weight[w_dist_pen] = cfg.weight_penet # more weights for penetration verts
+        return weight
+    
+    def o2h_weight(self, dists, region):
+        # NOTE: o2h -- conditioned region weights
+        w_dist_o = torch.ones([dists.shape[0], dists.shape[1]]).to(self.device)
         w_region = region > 0.
         # import pdb; pdb.set_trace()
+        weight = w_dist_o.clone()
         weight[w_region.squeeze(1)] = cfg.weight_region
+        return weight
+        
 
-        loss_dist_h = cfg.lambda_dist_h * torch.mean(torch.einsum('ij,j->ij', torch.abs(h2o_pred.abs() - h2o.abs()), self.v_weights2))
-        loss_dist_o = cfg.lambda_dist_o * torch.mean(torch.einsum('ij,ij->ij', torch.abs(o2h_signed_pred - o2h_signed), weight))
+    def dist_loss(self, h2o_signed, h2o_signed_pred, o2h_signed, o2h_signed_pred, region):
+        ## adaptive weight for penetration and contact verts
+        
+        # weight_o2h = self.dist_loss_weight(o2h_signed)
+        weight_o2h = self.o2h_weight(o2h_signed, region)
+        weight_h2o = self.h2o_weight(h2o_signed)
+        # import pdb; pdb.set_trace()
+        
+
+        loss_dist_h = cfg.lambda_dist_h * torch.mean(torch.einsum('ij,ij->ij', torch.abs(h2o_signed_pred.abs() - h2o_signed.abs()), weight_h2o))
+        loss_dist_o = cfg.lambda_dist_o * torch.mean(torch.einsum('ij,ij->ij', torch.abs(o2h_signed_pred - o2h_signed), weight_o2h))
         return loss_dist_h, loss_dist_o
 
     def KLLoss(self, rhand_vs, p_mean, log_vars):

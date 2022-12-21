@@ -15,18 +15,17 @@ class MyOptions:
     """
     w_wandb: bool = False
     machine: int = '41'
-    exp_name: str = 'thumb_cond_train0_1_test' # 1
-    note: str = '可视化thumb_cond_train0的测试集生成效果'
-    run_type: str = 'eval'
-    checkpoint_folder: str = "thumb_cond_train0" # None when training 
-    checkpoint_epoch: int = 20 # -1 when training
+    exp_name: str = 'thumb_cond_train0_3' # 1
+    note: str = '让reigon_masked pointfeat不那么稀疏'
+    run_type: str = 'train'
+    checkpoint_epoch: int = -1 # -1 when training
     
-    batch_size: int = 16 # train: 32; test/val: 16
+    batch_size: int = 32 # train: 32; test/val: 16
     test_part: bool = False
     select_k: float = 0.25 # 选取batch_size * select_k这么多
     
     use_cuda: bool = True
-    visible_device: str="0"
+    visible_device: str="2"
     cuda_id: int = 0
     
     frame_names: str = 'frame_names_thumb.npz'
@@ -75,6 +74,8 @@ class MyOptions:
     VAE_condition_size: int = 1024 # fusion layers output dim = 1024
     std_type: str = 'exp'
     std_exp_beta: float = 0.5
+    mask_dense_weight: bool = True
+    mask_cond_weight: float = 3.0
 
     """
     Loss Configuration

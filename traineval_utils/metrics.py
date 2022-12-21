@@ -1,3 +1,4 @@
+from itertools import count
 import os
 import sys
 sys.path.append('.')
@@ -32,7 +33,7 @@ class cGraspvaeMetrics(nn.Module):
         self.rh_f = rh_f
         self.device = device
 
-    def penetration(self, signed_dists, penetrate_th=cfg.penetrate_threshold):
+    def penetration_max_depth(self, signed_dists, penetrate_th=cfg.th_penet):
         """
         Compute the max penetration depth between predicted hand mesh and object mesh / origin hand mesh and object mesh;
         
@@ -77,9 +78,15 @@ class cGraspvaeMetrics(nn.Module):
         max_depth_ratio = max_depth_pred / max_depth
 
         return max_depth_pred, max_depth, max_depth_ratio
-
-
-
+    
+    def approx_vol_batch(self, SDist, boolean_index):
+        w_SDist = torch.zeros_like(SDist) 
+        w_SDist[boolean_index] = 1.0 # boolean_index为True的为满足计算条件，weight置为1，其他为0， 由此还能够计算满足条件的个数
+        # counts = torch.sum(w_SDist, dim=1)
+        # import pdb; pdb.set_trace()
+        dists = torch.einsum('ij,ij->ij', SDist, w_SDist)
+        return torch.mean(torch.sum(dists.abs(), dim=1))
+            
     def forward(self, signed_dists):
 
         """
@@ -87,13 +94,18 @@ class cGraspvaeMetrics(nn.Module):
         :region_centers
         """
         dict_metrics = {}
-
+        _, _, _, h2o_signed_pred = signed_dists
         ##### penetration metrics #####
-        max_depth_pred, max_depth, max_depth_ratio = self.penetration(signed_dists)
-
-        ##### simulation metrics #####
-        dict_metrics = {'max_depth_ratio': max_depth_ratio, 
-                        'max_depth_pred': max_depth_pred}
+        # max_depth_pred, max_depth, max_depth_ratio = self.penetration(signed_dists)
+        SDists = h2o_signed_pred
+        w_pene = (SDists < cfg.th_penet)
+        w_contact = (SDists > cfg.th_penet) * (SDists < cfg.th_contact)
+        
+        approx_pene_vol = self.approx_vol_batch(SDists, w_pene)
+        approx_con_vol = self.approx_vol_batch(SDists, w_contact)
+        dict_metrics = {'approx_penetrate_vol': approx_pene_vol,
+                        'approx_contact_vol': approx_con_vol,
+                        'contact_pene_ratio': approx_con_vol / approx_pene_vol}
 
         return dict_metrics
     

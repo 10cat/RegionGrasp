@@ -17,24 +17,7 @@ import random
 from utils.utils import set_random_seed
 
 
-def train_val():
-    traindataset = GrabNetDataset(dataset_root=config.DATASET_ROOT, 
-                                  ds_name="train", 
-                                  frame_names_file=cfg.frame_names, 
-                                  grabnet_thumb=True, 
-                                  obj_meshes_folder=cfg.obj_meshes, 
-                                  select_ids=cfg.train_select_ids)
-    # traindataset = GrabNetDataset(config.dataset_dir, 'train', num_mask=cfg.num_mask)
-    trainloader = data.DataLoader(traindataset, batch_size=cfg.batch_size, shuffle=True)
-
-    valdataset = GrabNetDataset(dataset_root=config.DATASET_ROOT, 
-                                ds_name="val", 
-                                frame_names_file=cfg.frame_names, 
-                                grabnet_thumb=True, 
-                                obj_meshes_folder=cfg.obj_meshes, 
-                                select_ids=True)
-    valloader = data.DataLoader(valdataset, batch_size=cfg.batch_size, shuffle=False)
-
+def train_val(traindataset, trainloader, valdataset, valloader):
     trainer = TrainEpoch(trainloader, traindataset, use_cuda=cfg.use_cuda, cuda_id=cfg.cuda_id)
     # import pdb; pdb.set_trace()
     valer = ValEpoch(valloader, valdataset, mode='val', use_cuda=cfg.use_cuda, cuda_id=cfg.cuda_id)
@@ -49,15 +32,8 @@ def train_val():
     # tester.epoch(epoch, best_val=best_val)
     # print(f"Done with experiment: {cfg.exp_name}")
 
-def evaluation(checkpoint):
-    testdataset = GrabNetDataset(dataset_root=config.DATASET_ROOT, 
-                                 ds_name="test", 
-                                 frame_names_file=cfg.frame_names, 
-                                 grabnet_thumb=True, 
-                                 obj_meshes_folder=cfg.obj_meshes, 
-                                 select_ids=True)
-    testloader = data.DataLoader(testdataset, batch_size=cfg.batch_size, shuffle=False)
-    tester = ValEpoch(testloader, testdataset, mode='test', use_cuda=cfg.use_cuda, cuda_id=cfg.cuda_id)
+def evaluation(dataloader, dataset, checkpoint):
+    tester = ValEpoch(dataloader, dataset, mode='test', use_cuda=cfg.use_cuda, cuda_id=cfg.cuda_id)
     tester(1, checkpoints=checkpoint)
     
 def evaluation_val(args):
@@ -97,6 +73,7 @@ if __name__ == "__main__":
     parser.add_argument('--checkpoint', type=str, default=None)
     parser.add_argument('--model_exp_name', type=str, default=None)
     parser.add_argument('--start_epoch', type=int, default=None)
+    parser.add_argument('--eval_ds', type=str, default=None)
 
     args = parser.parse_args()
 
@@ -118,20 +95,44 @@ if __name__ == "__main__":
                 
     print(f"================ {cfg.run_type} experiment running! ================") # NOTE: Checkpoint! 提醒一下当前实验的属性
     if cfg.run_type == 'train':
-        train_val()
+        traindataset = GrabNetDataset(dataset_root=config.DATASET_ROOT, 
+                                  ds_name="train", 
+                                  frame_names_file=cfg.frame_names, 
+                                  grabnet_thumb=True, 
+                                  obj_meshes_folder=cfg.obj_meshes, 
+                                  select_ids=cfg.train_select_ids)
+        # traindataset = GrabNetDataset(config.dataset_dir, 'train', num_mask=cfg.num_mask)
+        trainloader = data.DataLoader(traindataset, batch_size=cfg.batch_size, shuffle=True)
+
+        valdataset = GrabNetDataset(dataset_root=config.DATASET_ROOT, 
+                                    ds_name="val", 
+                                    frame_names_file=cfg.frame_names, 
+                                    grabnet_thumb=True, 
+                                    obj_meshes_folder=cfg.obj_meshes, 
+                                    select_ids=True)
+        valloader = data.DataLoader(valdataset, batch_size=cfg.batch_size, shuffle=False)
+        train_val(traindataset, trainloader, valdataset, valloader)
         
     elif cfg.run_type == 'eval_val':
         assert args.model_exp_name is not None, "Requires trained models to evaluate validation set!"
         evaluation_val(args)
     else:
-        if cfg.checkpoint_folder is None:
+        assert args.eval_ds is not None, "eval mode requires input the dataset to evaluate!!"
+        dataset = GrabNetDataset(dataset_root=config.DATASET_ROOT, 
+                                  ds_name=args.eval_ds, 
+                                  frame_names_file=cfg.frame_names, 
+                                  grabnet_thumb=True, 
+                                  obj_meshes_folder=cfg.obj_meshes, 
+                                  select_ids=cfg.train_select_ids)
+        dataloader = data.DataLoader(dataset, batch_size=cfg.batch_size, shuffle=False)
+        if cfg.checkpoint_epoch < 0:
             assert args.checkpoint is not None, "No checkpoint pre-configed! Requires input checkpoint path"
             chk_path = args.checkpoint
         else:
-            chk_path = os.path.join(config.OUTPUT_ROOT, cfg.checkpoint_folder, 'model', f'checkpoint_{cfg.checkpoint_epoch}.pth')
+            chk_path = os.path.join(cfg.model_root, f'checkpoint_{cfg.checkpoint_epoch}.pth')
         checkpoint = torch.load(chk_path)
         # import pdb; pdb.set_trace()
-        evaluation(checkpoint=checkpoint)
+        evaluation(dataloader, dataset, checkpoint=checkpoint)
 
     
 
