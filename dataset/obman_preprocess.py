@@ -16,13 +16,14 @@ from copy import deepcopy
 from collections import Counter
 
 import random
+import pdb
 from tqdm import tqdm
 from utils.utils import func_timer, makepath
 from tools.obman_utils import fast_load_obj
 from tools.condition_utils import thumb_query_points
         
         
-class ObMan_preprocess(data.Dataset):
+class obman(data.Dataset):
     
     def __init__(self,
                  root,
@@ -61,7 +62,7 @@ class ObMan_preprocess(data.Dataset):
         # Cache information
         self.use_cache = use_cache
         self.name = 'obman'
-        self.cache_folder = os.path.join('data', 'cache',
+        self.cache_folder = os.path.join(self.root_all, 'cache',
                                          '{}'.format(self.name))
         makepath(self.cache_folder)
         self.mini_factor = mini_factor
@@ -118,11 +119,11 @@ class ObMan_preprocess(data.Dataset):
                 annotations = pickle.load(cache_f)
             print('Cached information for dataset {} loaded from {}'.format(
                 self.name, cache_path))
-            with open(cache_path_3d, 'rb') as cache_f:
-                annotations_3D = pickle.load(cache_f)
-            print('Cached 3D annotation information for dataset {} loaded from {}'.format(
-                self.name, cache_path_3d))
-            self.annotations = annotations
+            # with open(cache_path_3d, 'rb') as cache_f:
+            #     annotations_3D = pickle.load(cache_f)
+            # print('Cached 3D annotation information for dataset {} loaded from {}'.format(
+            #     self.name, cache_path_3d))
+            # self.annotations_3D = annotations_3D
             
         else:
             annotations_3D = None
@@ -257,15 +258,19 @@ class ObMan_preprocess(data.Dataset):
             ]
         else:
             has_depth_info = False
-        objects = [
-            obj.split('_')[0]
-            for obj in set([obj[:-7].split('/')[-1] for obj in obj_paths])
-        ]
-        unique_objects = set(objects)
-        print('Got {} out instances of {} unique objects {}'.format(
-            len(objects), len(unique_objects), unique_objects))
-        freqs = Counter(objects)
-        print(freqs)
+        # objects = [
+        #     obj.split('_')[0]
+        #     for obj in set([obj[:-7].split('/')[-1] for obj in obj_paths])
+        # ]
+        
+        # unique_objects = set(objects)
+        # import pdb; pdb.set_trace()
+        # print('Got {} out instances of {} unique objects {}'.format(
+        #     len(objects), len(unique_objects), unique_objects))
+        # freqs = Counter(objects)
+        # print(freqs)
+         
+        
         if has_depth_info:
             self.depth_infos = depth_infos
         self.image_names = image_names
@@ -278,7 +283,6 @@ class ObMan_preprocess(data.Dataset):
         self.obj_transforms = obj_transforms
         self.meta_infos = meta_infos
         self.obj_meshes = obj_meshes
-        self.annotations_3D = annotations_3D
         # Initialize cache for center and scale in case objects are used
         self.center_scale_cache = {}
         
@@ -329,10 +333,10 @@ class ObMan_preprocess(data.Dataset):
         return faces
     
     def get_sample_obj_info(self, idx):
-        model_path = self.obj_paths[idx]
-        model_path_split = model_path.split('/')
-        class_id = model_path_split[-4]
-        sample_id = model_path_split[-3]
+        meta_info = self.meta_infos[idx]
+        class_id = meta_info['class_id']
+        sample_id = meta_info['sample_id']
+        
         return class_id, sample_id
     
     def get_sample_obj_mesh(self, idx):
@@ -363,6 +367,7 @@ class ObMan_preprocess(data.Dataset):
         obj_transform = self.obj_transforms[idx]
         hom_verts = np.concatenate([verts, np.ones([verts.shape[0], 1])],
                                    axis=1)
+        import pdb; pdb.set_trace()
         trans_verts = obj_transform.dot(hom_verts.T).T[:, :3]
         trans_verts = self.cam_extr[:3, :3].dot(
             trans_verts.transpose()).transpose()
@@ -376,22 +381,26 @@ class ObMan_preprocess(data.Dataset):
     def __getitem__(self, idx):
         # TODO: code the __getitem__() to encode the hand_verts and object meshes
         sample = {}
-        if self.use_cache:
-            hand_verts3d = self.annotations_3D['hand_verts']
-        else:
-            hand_verts3d = self.get_verts3d(idx)
-            hand_faces = self.get_faces3d(idx)
-            obj_verts, obj_faces = self.get_obj_verts_faces(idx)
-            sample_id = idx
+        # if self.use_cache:
+        #     hand_verts3d = self.annotations_3D['hand_verts']
+        # else:
+        hand_verts3d = self.get_verts3d(idx)
+        hand_faces = self.get_faces3d(idx)
+        obj_verts, obj_faces = self.get_obj_verts_faces(idx)
+        sample_id = idx
+            
+        sample['hand_verts'] = hand_verts3d
+        sample['obj_verts'] = obj_verts
+        sample['id'] = sample_id
         return sample
     
 
 def preprocess(dataset_root, split='train'):
     
     
-    trainset = ObMan_preprocess(root = dataset_root, 
-                                shapenet_root = config.SHAPENET_ROOT, 
-                                split=split)
+    trainset = obman(root = dataset_root, 
+                     shapenet_root = config.SHAPENET_ROOT, 
+                     split=split)
     count_2048 = 0
     count_3000 = 0
     right_hand = 0
@@ -430,13 +439,19 @@ def preprocess(dataset_root, split='train'):
     
     
 def thumb_condition(dataset_root, output_path, split='train'):
-    dataset = ObMan_preprocess(root=dataset_root, 
-                               shapenet_root=config.SHAPENET_ROOT,
-                               split=split,
-                               use_cache=True)
+    dataset = obman(root=dataset_root, 
+                    shapenet_root=config.SHAPENET_ROOT,
+                    split=split,
+                    use_cache=True)
     
+    
+    pdb.set_trace()
     pbar = tqdm(range(dataset.__len__()))
     
+    min_verts = None
+    max_verts = None
+    count_1024 = 0
+    list_1024 = []
     for idx in pbar:
         hand_verts = dataset.annotations_3D['hand_verts'][idx]
         hand_faces = dataset.faces['right']
@@ -444,15 +459,33 @@ def thumb_condition(dataset_root, output_path, split='train'):
         obj_mesh = dataset.get_sample_obj_mesh(idx)
         obj_verts = dataset.annotations_3D['obj_verts'][idx]
         obj_faces = np.array(obj_mesh['faces']).astype(np.int16)
-        import pdb; pdb.set_trace()
+        # import pdb; pdb.set_trace()
         
         HandMesh = trimesh.Trimesh(vertices=hand_verts, faces=hand_faces)
         ObjMesh = trimesh.Trimesh(vertices=obj_verts, faces=obj_faces)
+        obj_verts_num = obj_verts.shape[0]
+        if min_verts is None:
+            min_verts = obj_verts_num
+            max_verts = obj_verts_num
+        else:
+            if obj_verts_num > max_verts: max_verts = obj_verts_num
+            if obj_verts_num < min_verts: min_verts = obj_verts_num
+            
+        if obj_verts_num < 1024:
+            count_1024 += 1
+            list_1024.append(idx)
         thumb_query_points(HandMesh, ObjMesh)
-    
-    
+        pbar.set_postfix_str(f"max_verts_num = {max_verts}; min_verts_num = {min_verts}; verts < 1024: {count_1024}")
+    list_1024_path = os.path.join(dataset_root, split, '')
     
     return
+
+def obj_pretrain_dataset(dataset_root, output_path, split='train'):
+    dataset = obman(root=dataset_root, 
+                               shapenet_root=config.SHAPENET_ROOT,
+                               split=split,
+                               use_cache=True)
+    
 
         
 if __name__ == "__main__":

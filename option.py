@@ -17,15 +17,15 @@ class MyOptions:
     machine: int = '41'
     exp_name: str = 'thumb_cond_train0_3' # 1
     note: str = '让reigon_masked pointfeat不那么稀疏'
-    run_type: str = 'train'
-    checkpoint_epoch: int = -1 # -1 when training
+    run_type: str = 'eval'
+    checkpoint_epoch: int = 14 # -1 when training
     
     batch_size: int = 32 # train: 32; test/val: 16
     test_part: bool = False
     select_k: float = 0.25 # 选取batch_size * select_k这么多
     
     use_cuda: bool = True
-    visible_device: str="2"
+    visible_device: str="3"
     cuda_id: int = 0
     
     frame_names: str = 'frame_names_thumb.npz'
@@ -67,6 +67,9 @@ class MyOptions:
     SDmap_output_dim: int = 1
     SDmap_layer_dims = [512, 256, 128]
     SDmap_leaky_slope: float = 1
+    
+    # Obj Condition
+    knn_k = 8
 
     #VAE
     VAE_encoder_sizes = [1024, 512, 256]
