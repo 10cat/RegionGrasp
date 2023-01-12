@@ -19,8 +19,8 @@ import random
 import pdb
 from tqdm import tqdm
 from utils.utils import func_timer, makepath
-from tools.obman_utils import fast_load_obj
-from tools.condition_utils import thumb_query_points
+from dataset.tools.obman_utils import fast_load_obj
+from dataset.tools.condition_utils import thumb_query_points
         
         
 class obman(data.Dataset):

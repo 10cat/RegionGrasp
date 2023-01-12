@@ -13,11 +13,11 @@ class MyOptions:
     """
     Base Configuration
     """
-    w_wandb: bool = False
+    w_wandb: bool = True
     machine: int = '41'
-    exp_name: str = 'thumb_cond_train0_3' # 1
+    exp_name: str = 'obj_pretrain_bert' # 1
     note: str = '让reigon_masked pointfeat不那么稀疏'
-    run_type: str = 'eval'
+    run_type: str = 'pretrain'
     checkpoint_epoch: int = 14 # -1 when training
     
     batch_size: int = 32 # train: 32; test/val: 16
@@ -57,7 +57,31 @@ class MyOptions:
         type: str = 'adam'
     class optimizer_cgrasp:
         type: str = 'adam'
-
+        
+    
+    """
+    Obj Condition Pretrain
+    """
+    embed_dim: int = 132
+    num_heads: int = 4
+    mlp_ratio: float = 2.
+    glob_feat_dim: int = 1024
+    depth: int = 3
+    knn_k = 8
+    
+    pretrain_batch_size: int = 8
+    lr_pt: float = 0.0005
+    weight_decay_pt: float = 0.0005
+    decay_step: int = 21
+    lr_decay: float = 0.76
+    lowest_decay: float = 0.02
+    bnm_decay_step: int = 21
+    bnm_lr_decay: float = 0.5
+    bnm_momentum: float = 0.9
+    bnm_lowest_decay: float = 0.01
+    pretrain_epochs: int = 20
+    
+    
 
     """
     Model Hyperparams
@@ -67,9 +91,6 @@ class MyOptions:
     SDmap_output_dim: int = 1
     SDmap_layer_dims = [512, 256, 128]
     SDmap_leaky_slope: float = 1
-    
-    # Obj Condition
-    knn_k = 8
 
     #VAE
     VAE_encoder_sizes = [1024, 512, 256]
@@ -107,7 +128,7 @@ class MyOptions:
     """
     num_eval_iter: int = 5
     check_interval: int = 2
-    visual_interval_val: int = 100
+    visual_interval_val: int = 10
     visual_sample_interval: int = 4
 
 

@@ -8,13 +8,22 @@ sys.path.append('..')
 import numpy as np
 import torch
 from torch.utils import data
+import torch.optim as optim
+
 import argparse
 import config
 from option import MyOptions
 from dataset.Dataset import GrabNetDataset
+
 from epochbase import TrainEpoch, ValEpoch
 import random
 from utils.utils import set_random_seed
+
+from dataset.obj_pretrain_preprocess import ObManObj
+from models.ConditionNet import ConditionTrans, ConditionBERT
+from traineval_utils.loss import ChamferDistanceL1Loss
+from utils.optim import *
+from utils.epoch_utils import MetersMonitor, model_update, PretrainEpoch
 
 
 def train_val(traindataset, trainloader, valdataset, valloader):
@@ -31,6 +40,41 @@ def train_val(traindataset, trainloader, valdataset, valloader):
         
     # tester.epoch(epoch, best_val=best_val)
     # print(f"Done with experiment: {cfg.exp_name}")
+
+    
+def pretrain(mode='train', model='trans', bs=8):
+    
+    model = ConditionBERT if model == 'bert' else ConditionTrans
+    net = model(embed_dim=cfg.embed_dim, num_heads=cfg.num_heads, mlp_ratio=cfg.mlp_ratio, glob_feat_dim=cfg.glob_feat_dim, depth={'encoder':cfg.depth, 'decoder':cfg.depth})
+    
+    if mode == 'train':
+        trainset = ObManObj(root=config.OBMAN_ROOT, 
+                           shapenet_root=config.SHAPENET_ROOT,
+                           split='train',
+                           use_cache=True)
+        
+        valset = ObManObj(root=config.OBMAN_ROOT, 
+                           shapenet_root=config.SHAPENET_ROOT,
+                           split='val',
+                           use_cache=True)
+        
+        trainloader = data.DataLoader(trainset, batch_size=bs, shuffle=True)
+        valloader = data.DataLoader(valset, batch_size=bs, shuffle=False)
+        
+        optimizer, scheduler = build_optim_sche(net)
+        chloss = ChamferDistanceL1Loss()
+        
+        net = net.to('cuda')
+        chloss = chloss.to('cuda')
+        
+        trainepoch = PretrainEpoch(chloss, optimizer, scheduler, output_dir=cfg.output_dir)
+        valepoch = PretrainEpoch(chloss, optimizer, scheduler, output_dir=cfg.output_dir, mode='val', visual_interval=cfg.visual_interval_val)
+        
+        for epoch in range(cfg.pretrain_epochs):
+            net = trainepoch(trainloader, epoch, net)
+            _ = valepoch(valloader, epoch, net)
+        
+    
 
 def evaluation(dataloader, dataset, checkpoint):
     tester = ValEpoch(dataloader, dataset, mode='test', use_cuda=cfg.use_cuda, cuda_id=cfg.cuda_id)
@@ -74,6 +118,9 @@ if __name__ == "__main__":
     parser.add_argument('--model_exp_name', type=str, default=None)
     parser.add_argument('--start_epoch', type=int, default=None)
     parser.add_argument('--eval_ds', type=str, default=None)
+    parser.add_argument('--pretrain', action='store_true')
+    parser.add_argument('--pt_mode', type=str, default='train')
+    parser.add_argument('--pt_model', type=str, default='trans')
 
     args = parser.parse_args()
 
@@ -116,6 +163,9 @@ if __name__ == "__main__":
     elif cfg.run_type == 'eval_val':
         assert args.model_exp_name is not None, "Requires trained models to evaluate validation set!"
         evaluation_val(args)
+        
+    elif args.pretrain:
+        pretrain(mode=args.pt_mode, model=args.pt_model)
     else:
         assert args.eval_ds is not None, "eval mode requires input the dataset to evaluate!!"
         dataset = GrabNetDataset(dataset_root=config.DATASET_ROOT, 

@@ -8,8 +8,10 @@ import torch.nn.functional as F
 from option import MyOptions as cfg
 from utils.utils import get_std, point2point_signed
 from pytorch3d.structures import Meshes
-import chamfer_distance as chd
+from chamfer_distance import ChamferDistance as ch_dist
 from utils.utils import edges_for
+
+
 
 class ConditionNetLoss(nn.Module):
     def __init__(self):
@@ -169,12 +171,34 @@ class cGraspvaeLoss(nn.Module):
         return loss_total, dict_loss, signed_dists
 
 
+class ChamferDistanceL1Loss(nn.Module):
+    def __init__(self):
+        super().__init__()
+    def forward(self, pc_in, pc_gt, dict_loss):
+        """_summary_
+
+        Args:
+            pc_in (): input point cloud
+            pc_gt (): target ground truth point cloud
+        """
+        B, N1, _ = pc_in.size()
+        _, N2, _ = pc_gt.size()
+        cham_x, cham_y, _, _ = ch_dist(pc_in, pc_gt)
+        # import pdb; pdb.set_trace()
+        loss = torch.mean(cham_x) + torch.mean(cham_y)
         
+        dict_loss['chamfer_loss'] = loss
+        
+        return dict_loss
 
 
 
 
 if __name__ == "__main__":
-    loss = ConditionNetLoss()
+    loss = ChamferDistanceL1Loss()
+    x = torch.randn(8, 32, 3)
+    y = torch.randn(8, 32, 3)
     
+    # import pdb; pdb.set_trace()
+    out = loss.forward(x, y)
 

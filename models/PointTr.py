@@ -20,7 +20,7 @@ def square_distance(src, dst):
     B, N, _ = src.shape
     _, M, _ = dst.shape
     
-    cor = -2 * torch.einsum('bij,bji->bii', src, dst.transpose(2,1))
+    cor = -2 * torch.einsum('bij,bjk->bik', src, dst.transpose(2,1))
     src_sq = torch.sum(src**2, dim=-1).view(B, N, 1)
     dst_sq = torch.sum(dst**2, dim=-1).view(B, 1, M)
     dist = src_sq + cor + dst_sq # [B, N, M]
@@ -31,10 +31,10 @@ def square_distance(src, dst):
 def get_knn_index(coor_q, coor_k=None, k=cfg.knn_k):
     coor_k = coor_k if coor_k is not None else coor_q
     
-    bs, _, np_q = coor_q.size()
-    _, _, np_k = coor_k.size()
+    bs, np_q, _ = coor_q.size()
+    _, np_k, _ = coor_k.size()
     
-    with torch.no_grad:
+    with torch.no_grad():
         idx = knn_point(k, coor_k, coor_q) # [B, np_q, k]
         idx = idx.transpose(-1, -2).contiguous() # [B, k, np_q]
         #NOTE 将idx对应成一个batch中的索引编号
@@ -72,11 +72,11 @@ class PoseEmbedding(nn.Module):
         return self.net(x)
     
 class Attention(nn.Module):
-    def __init__(self, dim_in, num_heads=8, qkv_bias=False, qkv_scale=None, attn_drop=0., proj_drop=0.):
+    def __init__(self, dim_in, num_heads=8, qkv_bias=False, qk_scale=None, attn_drop=0., proj_drop=0.):
         super().__init__()
         self.num_heads = num_heads
         head_dim = dim_in // num_heads
-        self.scale = head_dim ** -0.5
+        self.scale = qk_scale or head_dim ** -0.5
         
         self.qkv = nn.Linear(dim_in, dim_in*3, bias=qkv_bias)
         self.attn_drop = nn.Dropout(attn_drop)
@@ -103,7 +103,7 @@ class CrossAttention(nn.Module):
         self.dim_out = dim_out
         self.num_heads = num_heads
         head_dims = dim_out // num_heads
-        self.qk_scale = head_dims ** -0.5
+        self.qk_scale = qk_scale or head_dims ** -0.5
         
         self.q_map = nn.Linear(dim_in, dim_out, bias=qkv_bias)
         self.k_map = nn.Linear(dim_in, dim_out, bias=qkv_bias)
@@ -112,9 +112,11 @@ class CrossAttention(nn.Module):
         self.proj = nn.Linear(dim_out, dim_out)
         self.proj_drop = nn.Dropout(proj_drop)
         
-    def forward(self, q, k):
-        B, N, _ = q
+    def forward(self, q, v):
+        # import pdb; pdb.set_trace()
+        B, N, _ = q.size()
         C = self.dim_out
+        k = v
         NK = k.size(1)
         
         q = self.q_map(q).reshape(B, N, self.num_heads, C // self.num_heads).permute(0, 2, 1, 3) 
@@ -148,13 +150,13 @@ class Mlp(nn.Module):
         return x
 
 class EncoderBlock(nn.Module):
-    def __init__(self, dim, num_heads, mlp_ratio=4., qkv_bias=False, qkv_scale=None, drop=0., attn_drop=0., drop_path=0., act_layer=nn.GELU, norm_layer=nn.LayerNorm):
+    def __init__(self, dim, num_heads, mlp_ratio=4., qkv_bias=False, qk_scale=None, drop=0., attn_drop=0., drop_path=0., act_layer=nn.GELU, norm_layer=nn.LayerNorm):
         super().__init__()
         
         
         self.norm1 = norm_layer(dim)
         self.attn = Attention(
-            dim, num_heads, qkv_bias=qkv_bias, qkv_scale=qkv_scale, drop=drop, attn_drop=attn_drop, attn_drop=attn_drop, proj_proj=drop
+            dim, num_heads, qkv_bias=qkv_bias, qk_scale=qk_scale,attn_drop=attn_drop, proj_drop=drop
         )
         self.drop_path = DropPath(drop_path) if drop_path > 0. else nn.Identity()
         self.norm2 = norm_layer(dim)
@@ -194,13 +196,13 @@ class DecoderBlock(nn.Module):
         super().__init__()
         self.norm1 = norm_layer(dim)
         self.self_attn = Attention(
-            dim, num_heads=num_heads, qkv_scale=qk_scale, drop=drop, attn_drop=attn_drop, attn_drop=attn_drop, proj_proj=drop
+            dim, num_heads=num_heads, qkv_bias=qkv_bias, qk_scale=qk_scale, attn_drop=attn_drop, proj_drop=drop
         )
         dim_q = dim_q or dim
         self.norm_q = norm_layer(dim_q)
         self.norm_v = norm_layer(dim)
         self.attn = CrossAttention(
-            dim, dim, num_heads-num_heads, qkv_scale=qk_scale, drop=drop, attn_drop=attn_drop, attn_drop=attn_drop, proj_proj=drop)
+            dim, dim, num_heads=num_heads, qkv_bias=qkv_bias, qk_scale=qk_scale, attn_drop=attn_drop, proj_drop=drop)
         
         self.drop_path = DropPath(drop_path) if drop_path > 0. else nn.Identity()
         
@@ -218,7 +220,7 @@ class DecoderBlock(nn.Module):
         
         self.norm2 = norm_layer(dim)
         middle_hidden_features = int(dim * mlp_ratio)
-        self.mlp = Mlp(dim, hidden_features=middle_hidden_features, act_layer=act_layer, norm_laye=norm_layer)
+        self.mlp = Mlp(dim, hidden_features=middle_hidden_features, act_layer=act_layer, drop=drop)
         
     def forward(self, q, v, knn_index=None, cross_knn_index=None):
         
@@ -228,7 +230,7 @@ class DecoderBlock(nn.Module):
         if knn_index is not None:
             knn_f = get_knn_feature(norm_q, knn_index)
             knn_f = self.knn_map(knn_f) # [B, k, np, dim]
-            knn_f = knn_f.max(dim=1, keep_dim=False)[0] #[B, np, dim]
+            knn_f = knn_f.max(dim=1, keepdim=False)[0] #[B, np, dim]
             q_1 = torch.cat((q_1, knn_f), dim=-1)
             q_1 = self.merge_map(q_1)
         
@@ -236,19 +238,20 @@ class DecoderBlock(nn.Module):
         
         norm_q = self.norm_q(q)
         norm_v = self.norm_v(v)
+        # import pdb; pdb.set_trace()
         q_2 = self.attn(norm_q, norm_v)
         
         if cross_knn_index is not None:
             knn_f = get_knn_feature(norm_v, cross_knn_index, x_q=norm_q)
             knn_f = self.cross_knn_map(knn_f)
-            knn_f = knn_f.max(dim=1, keep_dim=False)[0]
+            knn_f = knn_f.max(dim=1, keepdim=False)[0]
             q_2 = torch.cat((q_2, knn_f), dim=-1)
             q_2 = self.cross_merge_map(q_2)
             
-        x = x + self.drop_path(q_2)
-        x = x + self.drop_path(self.mlp(self.norm2(x)))
+        q = q + self.drop_path(q_2)
+        q = q + self.drop_path(self.mlp(self.norm2(q)))
         
-        return x
+        return q
     
 class QueryGenerator(nn.Module):
     def __init__(self, embed_dim, feat_dim, num_query):
@@ -279,9 +282,13 @@ class QueryGenerator(nn.Module):
         glob_feat = torch.max(glob_feat, dim=-1)[0] # [B, 1024]
         if coarse_points is None:
             coarse_points = self.coarse_pred(glob_feat).reshape(bs, -1, 3)
-        
-        x = torch.cat([
+        else:
+            #NOTE: iterative update每次的预测试相对上一次的偏移量 
+            coarse_points = coarse_points + self.coarse_pred(glob_feat).reshape(bs, -1, 3)
+        # import pdb; pdb.set_trace()
+        query_feat = torch.cat([
             torch.unsqueeze(glob_feat, dim=1).expand(-1, self.num_query, -1),
             coarse_points], dim=-1)
+        query_feat = self.mlp_query(query_feat.transpose(1, 2)).transpose(1, 2)
         
-        return x, coarse_points
+        return query_feat, coarse_points

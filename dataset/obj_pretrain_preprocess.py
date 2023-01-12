@@ -14,7 +14,7 @@ from sklearn.neighbors import KDTree
 
 from utils.utils import func_timer
 from dataset.data_utils import contact_to_dict
-from obman_preprocess import obman
+from dataset.obman_preprocess import obman
 
 class ObManObj(obman):
     def __init__(self, root, shapenet_root, split='train', joint_nb=21, mini_factor=None, use_cache=False, root_palm=False, mode='all', segment=False, use_external_points=True, apply_obj_transform=True):
@@ -24,7 +24,7 @@ class ObManObj(obman):
                      for meta_info in self.meta_infos],
                     axis=0)
         self.obj_resampled = self.resample_obj_mesh()
-        self.meta_infos_expand = self.expand_set()
+        self.meta_infos_expand, self.obj_transforms_expand = self.expand_set()
         self.mask_centers, self.mask_Ks = self.get_mask_ratio()
         
     def resampling_surface(self, class_id, sample_id, N):
@@ -56,17 +56,21 @@ class ObManObj(obman):
     
     def expand_set(self, times=config.expand_times):
         meta_infos_new = []
+        obj_transforms_new = []
         for idx, meta_info in enumerate(self.meta_infos):
             for _ in range(times):
                 meta_infos_new.append(meta_info)
+                obj_transforms_new.append(self.obj_transforms[idx])
                 
-        return meta_infos_new
+        return meta_infos_new, obj_transforms_new
     
-    def get_mask_ratio(self, ratio_lb=config.ratio_lower, ratio_ub=config.ratio_upper, N = config.num_resample_points, seed1=0, seed2=1024):
+    def get_mask_ratio(self, ratio_lb=config.ratio_lower, ratio_ub=config.ratio_upper, N = config.num_resample_points, Nm = config.num_mask_points, seed1=0, seed2=1024):
         np.random.seed(seed1)
-        mask_centers = np.round(np.random.random(self.__len__()) * N).astype(np.int32)
-        np.random.seed(seed2)
-        mask_Ks = np.round((ratio_lb + (ratio_ub - ratio_lb) * np.random.random(self.__len__())) * N).astype(np.int32)
+        mask_centers = np.floor(np.random.random(self.__len__()) * N).astype(np.int32)
+        # np.random.seed(seed2)
+        # mask_Ks = np.round((ratio_lb + (ratio_ub - ratio_lb) * np.random.random(self.__len__())) * N).astype(np.int32)
+        # NOTE: obj condition network需要预测固定点数 -> mask固定点数
+        mask_Ks = (Nm *np.ones_like(mask_centers)).astype(np.int32)
         
         return mask_centers, mask_Ks
     
@@ -79,7 +83,7 @@ class ObManObj(obman):
         points = obj_re['points']
         face_ids = obj_re['faces']
         
-        obj_transform = self.obj_transforms[idx]
+        obj_transform = self.obj_transforms_expand[idx]
         hom_points = np.concatenate([points, np.ones([points.shape[0], 1])], axis=1)
         trans_points = obj_transform.dot(hom_points.T).T[:, :3]
         trans_points = self.cam_extr[:3, :3].dot(trans_points.transpose()).transpose()
@@ -102,27 +106,29 @@ class ObManObj(obman):
     def __len__(self):
         return len(self.meta_infos_expand)
     
-    @func_timer
+    # @func_timer
     def __getitem__(self, idx):
         sample = {}
         points = self.get_obj_resampled_trans(self.meta_infos_expand, idx)
         mask = self.KNNmask(points, idx)
-        sample['points'] = torch.from_numpy(points)
+        masked = mask < 1
+        remained_points = points[~masked].reshape(-1, 3)
+        mask_points = points[masked].reshape(-1, 3)
+        # pdb.set_trace()
+        sample['input_points'] = torch.from_numpy(remained_points)
+        sample['mask_points'] = torch.from_numpy(mask_points)
         sample['mask'] = torch.from_numpy(mask)
+        sample['sample_id'] = torch.Tensor([idx])
         return sample
     
     
-    
-    
-if __name__ == "__main__":
-    dataset_root = config.OBMAN_ROOT
-    
-    objdataset = ObManObj(root=dataset_root, 
-                           shapenet_root=config.SHAPENET_ROOT,
-                           split='train',
-                           use_cache=True)
-    
-    
+def sampling_check(objdataset):
+    """
+    研究采样方式和点数对于几何体所有面覆盖的情况
+
+    Args:
+        objdataset (dataset): obj dataset
+    """
     unique_objs = objdataset.unique_objs
     ratio_avg = 0
     for pair in unique_objs:
@@ -138,6 +144,22 @@ if __name__ == "__main__":
         
     ratio_avg = ratio_avg / unique_objs.shape[0]
     print(f"avg ratio: {ratio_avg}")
+    return
+    
+if __name__ == "__main__":
+    dataset_root = config.OBMAN_ROOT
+    
+    objdataset = ObManObj(root=dataset_root, 
+                           shapenet_root=config.SHAPENET_ROOT,
+                           split='test',
+                           use_cache=True)
+    
+    for idx in tqdm(range(objdataset.__len__())):
+        sample = objdataset.__getitem__(idx)
+        
+    
+    
+    
         
     
     
