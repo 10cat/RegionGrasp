@@ -15,9 +15,10 @@ class MyOptions:
     """
     w_wandb: bool = True
     machine: int = '41'
-    exp_name: str = 'obj_pretrain_bert' # 1
+    exp_name: str = 'obj_pretrain_comp_d3' # 1
     note: str = '让reigon_masked pointfeat不那么稀疏'
     run_type: str = 'pretrain'
+    obj_centric: bool = True
     checkpoint_epoch: int = 14 # -1 when training
     
     batch_size: int = 32 # train: 32; test/val: 16
@@ -25,7 +26,7 @@ class MyOptions:
     select_k: float = 0.25 # 选取batch_size * select_k这么多
     
     use_cuda: bool = True
-    visible_device: str="3"
+    visible_device: str="0"
     cuda_id: int = 0
     
     frame_names: str = 'frame_names_thumb.npz'
@@ -62,14 +63,15 @@ class MyOptions:
     """
     Obj Condition Pretrain
     """
-    embed_dim: int = 132
-    num_heads: int = 4
+    embed_dim: int = 768
+    num_heads: int = 6
     mlp_ratio: float = 2.
     glob_feat_dim: int = 1024
     depth: int = 3
-    knn_k = 8
+    knn_k: int = 8
+    knn_layer_num: int = 1
     
-    pretrain_batch_size: int = 8
+    pretrain_batch_size: int = 16
     lr_pt: float = 0.0005
     weight_decay_pt: float = 0.0005
     decay_step: int = 21
@@ -79,7 +81,7 @@ class MyOptions:
     bnm_lr_decay: float = 0.5
     bnm_momentum: float = 0.9
     bnm_lowest_decay: float = 0.01
-    pretrain_epochs: int = 20
+    pretrain_epochs: int = 40
     
     
 

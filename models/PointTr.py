@@ -6,8 +6,15 @@ import numpy as np
 import torch
 import torch.nn as nn
 from timm.models.layers import DropPath, trunc_normal_
-
+from models.FoldingNet import Fold
+from traineval_utils import pointnet_util
 from option import MyOptions as cfg
+
+def fps(pc, num):
+    fps_idx = pointnet_util.farthest_point_sample(pc, num) 
+    import pdb; pdb.set_trace()
+    sub_pc = torch.gather(pc.transpose(1, 2).contiguous(), dim=0, index=fps_idx.unsqueeze(1).repeat(1, 3, 1)).transpose(1,2).contiguous()
+    return sub_pc
 
 def knn_point(nsample, xyz, xyz_q):
     
@@ -292,3 +299,40 @@ class QueryGenerator(nn.Module):
         query_feat = self.mlp_query(query_feat.transpose(1, 2)).transpose(1, 2)
         
         return query_feat, coarse_points
+    
+    
+class FinePointGenerator(nn.Module):
+    def __init__(self, embed_dim, glob_feat_dim, num_query, num_pred):
+        super().__init__()
+        self.num_query = num_query
+        self.num_pred = num_pred
+        self.increase_dim = nn.Sequential(
+            nn.Conv1d(embed_dim, glob_feat_dim, 1),
+            nn.BatchNorm1d(glob_feat_dim),
+            nn.LeakyReLU(negative_slope=0.2),
+            nn.Conv1d(glob_feat_dim, glob_feat_dim, 1)
+        )
+        self.reduce_map = nn.Linear(embed_dim + 1027, embed_dim)
+        self.fold_step = int(pow(num_pred//num_query, 0.5) + 0.5)
+        self.foldingnet = Fold(embed_dim, step = self.fold_step, hidden_dim = 256)  # rebuild a cluster point
+        
+    def forward(self, q, coarse_pc, input):
+        B, M, C = q.shape
+        global_feature = self.increase_dim(q.transpose(1, 2)).transpose(1, 2)
+        global_feature = torch.max(global_feature, dim=1)[0]
+        
+        rebuild_feature = torch.cat([global_feature.unsqueeze(-2).expand(-1, M, -1), 
+                                     q,
+                                     coarse_pc], dim=-1)
+        rebuild_feature = self.reduce_map(rebuild_feature.reshape(B*M, -1))
+        
+        relative_xyz = self.foldingnet(rebuild_feature).reshape(B, M, 3, -1)
+        rebuild_points = (relative_xyz + coarse_pc.unsqueeze(-1)).transpose(2, 3).reshape(B, -1, 3)
+        
+        # inp_sparse = fps(input, self.num_query)
+        # coarse_pc = torch.cat([coarse_pc, inp_sparse], dim=1).contiguous()
+        rebuild_points = torch.cat([rebuild_points, input], dim=1).contiguous()
+        
+        ret = rebuild_points
+        return ret
+    

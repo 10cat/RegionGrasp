@@ -19,7 +19,7 @@ from epochbase import TrainEpoch, ValEpoch
 import random
 from utils.utils import set_random_seed
 
-from dataset.obj_pretrain_preprocess import ObManObj
+from dataset.obman_preprocess import ObManObj
 from models.ConditionNet import ConditionTrans, ConditionBERT
 from traineval_utils.loss import ChamferDistanceL1Loss
 from utils.optim import *
@@ -45,18 +45,22 @@ def train_val(traindataset, trainloader, valdataset, valloader):
 def pretrain(mode='train', model='trans', bs=8):
     
     model = ConditionBERT if model == 'bert' else ConditionTrans
-    net = model(embed_dim=cfg.embed_dim, num_heads=cfg.num_heads, mlp_ratio=cfg.mlp_ratio, glob_feat_dim=cfg.glob_feat_dim, depth={'encoder':cfg.depth, 'decoder':cfg.depth})
+    net = model(embed_dim=cfg.embed_dim, num_heads=cfg.num_heads, mlp_ratio=cfg.mlp_ratio, glob_feat_dim=cfg.glob_feat_dim, depth={'encoder':cfg.depth, 'decoder':cfg.depth}, knn_layer=cfg.knn_layer_num, fps=True)
     
     if mode == 'train':
-        trainset = ObManObj(root=config.OBMAN_ROOT, 
+        trainset = ObManObj(ds_root=config.OBMAN_ROOT, 
                            shapenet_root=config.SHAPENET_ROOT,
                            split='train',
-                           use_cache=True)
+                           use_cache=True,
+                           expand_times=2,
+                           object_centric=cfg.obj_centric)
         
-        valset = ObManObj(root=config.OBMAN_ROOT, 
-                           shapenet_root=config.SHAPENET_ROOT,
-                           split='val',
-                           use_cache=True)
+        valset = ObManObj(ds_root=config.OBMAN_ROOT, 
+                          shapenet_root=config.SHAPENET_ROOT,
+                          split='val',
+                          use_cache=True,
+                          expand_times=2,
+                          object_centric=cfg.obj_centric)
         
         trainloader = data.DataLoader(trainset, batch_size=bs, shuffle=True)
         valloader = data.DataLoader(valset, batch_size=bs, shuffle=False)
@@ -71,8 +75,12 @@ def pretrain(mode='train', model='trans', bs=8):
         valepoch = PretrainEpoch(chloss, optimizer, scheduler, output_dir=cfg.output_dir, mode='val', visual_interval=cfg.visual_interval_val)
         
         for epoch in range(cfg.pretrain_epochs):
-            net = trainepoch(trainloader, epoch, net)
-            _ = valepoch(valloader, epoch, net)
+            net, _ = trainepoch(trainloader, epoch, net)
+            _, stop_flag = valepoch(valloader, epoch, net)
+            if stop_flag:
+                print("Early stopping occur!")
+                break
+        
         
     
 
@@ -165,7 +173,7 @@ if __name__ == "__main__":
         evaluation_val(args)
         
     elif args.pretrain:
-        pretrain(mode=args.pt_mode, model=args.pt_model)
+        pretrain(mode=args.pt_mode, model=args.pt_model, bs=cfg.pretrain_batch_size)
     else:
         assert args.eval_ds is not None, "eval mode requires input the dataset to evaluate!!"
         dataset = GrabNetDataset(dataset_root=config.DATASET_ROOT, 

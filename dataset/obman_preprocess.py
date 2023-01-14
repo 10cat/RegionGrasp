@@ -2,508 +2,337 @@ import os
 import sys
 sys.path.append('.')
 sys.path.append('..')
+import pdb
 import pickle
+from tqdm import tqdm
+import config
+
 import numpy as np
 import torch
-import mano
-from torch.utils import data
-from torch.utils.data._utils.collate import default_collate
-from mano.model import load
 import trimesh
-import config
-from tqdm import tqdm
-from copy import deepcopy
-from collections import Counter
+from sklearn.neighbors import KDTree
 
-import random
-import pdb
-from tqdm import tqdm
 from utils.utils import func_timer, makepath
-from dataset.tools.obman_utils import fast_load_obj
-from dataset.tools.condition_utils import thumb_query_points
+from utils.visualization import colors_like
+from dataset.data_utils import faces2verts_no_rep, contact_to_dict
+from dataset.obman_orig import obman
+
+class ObManResample(obman):
+    def __init__(self, ds_root, shapenet_root, split='train', joint_nb=21, mini_factor=None, use_cache=False, root_palm=False, mode='all', segment=False, use_external_points=True, apply_obj_transform=True, expand_times=config.expand_times, resample_num = 8192):
+        super().__init__(ds_root, shapenet_root, split, joint_nb, mini_factor, use_cache, root_palm, mode, segment, use_external_points, apply_obj_transform)
+        self.unique_objs = np.unique(
+                    [(meta_info['obj_class_id'], meta_info['obj_sample_id'])
+                     for meta_info in self.meta_infos],
+                    axis=0)
+        
+        self.resample_num = resample_num
+        self.obj_resampled = self.resample_obj_mesh(N=resample_num)
         
         
-class obman(data.Dataset):
+        
+    def resampling_surface(self, class_id, sample_id, N):
+        obj = self.obj_meshes[class_id][sample_id]
+        obj_mesh = trimesh.Trimesh(vertices=obj['vertices'], faces=obj['faces'])
+        # areas = obj_mesh.area_faces
+        # weight = 1 + areas 
+        obj_xyz_resampled, face_id = trimesh.sample.sample_surface(obj_mesh, N)
+        return obj_xyz_resampled, face_id
     
-    def __init__(self,
-                 root,
-                 shapenet_root,
-                 split='train',
-                 joint_nb=21,
-                 mini_factor=None,
-                 use_cache=False,
-                 root_palm=False,
-                 mode='all',
-                 segment=False,
-                 use_external_points=True,
-                 apply_obj_transform=True):
-        self.split = split
-        self.mode = mode
-        self.root_all = root
-        self.root = os.path.join(root, split)
-        self.root_palm = root_palm
+    def resample_obj_mesh(self, N):
+        resampled = {}
+        resampled_paths = []
+        for pair in tqdm(self.unique_objs, desc=f"resampling objs to {N} points"):
+            class_id, sample_id = pair[0], pair[1]
+            resampled_points_path = os.path.join(self.shapenet_root, class_id, sample_id, 'models/resampled_'+str(N)+'.npy')
+            resampled_faces_path = os.path.join(self.shapenet_root, class_id, sample_id, 'models/resampled_'+str(N)+'_face_id.npy')
+            if os.path.exists(resampled_points_path) and not config.force_resample:
+                obj_xyz_resampled = np.load(resampled_points_path)
+                face_id = np.load(resampled_faces_path)
+            else:
+                obj_xyz_resampled, face_id = self.resampling_surface(class_id, sample_id, N)
+                np.save(resampled_points_path, obj_xyz_resampled)
+                np.save(resampled_faces_path, face_id)
+            
+            if class_id not in resampled:
+                resampled[class_id] = {}
+            resampled[class_id].update({sample_id: {'points':obj_xyz_resampled, 'faces':face_id}})
+            
+        return resampled
+    
+    
+    def get_obj_resampled_trans(self, meta_infos, obj_transforms, idx, obj_centric=False):
+        meta_info = meta_infos[idx]
+        class_id, sample_id = meta_info['obj_class_id'], meta_info['obj_sample_id']
+        # -- for resampled 
+        obj_re = self.obj_resampled[class_id][sample_id]
+        points = obj_re['points']
+        face_ids = obj_re['faces']
         
-        if not shapenet_root.endswith('/'):
-            # shapenet_root = shapenet_root[:-1]
-            shapenet_root = shapenet_root + '/'
-        self.shapenet_root = shapenet_root
+        obj_transform = obj_transforms[idx]
+        hom_points = np.concatenate([points, np.ones([points.shape[0], 1])], axis=1)
+        transform_mat = self.cam_extr.dot(obj_transform)
+        trans_points = transform_mat.dot(hom_points.T).T
         
-        self.use_external_points = use_external_points
-        if mode == 'all':
-            self.rgb_folder = os.path.join(self.root, "rgb")
-        elif mode == 'obj':
-            self.rgb_folder = os.path.join(self.root, "rgb_obj")
-        elif mode == 'hand':
-            self.rgb_folder = os.path.join(self.root, "rgb_hand")
-        else:
-            raise ValueError(
-                'Mode should be in [all|obj|hand], got {}'.format(mode))
-
-        # Cache information
-        self.use_cache = use_cache
-        self.name = 'obman'
-        self.cache_folder = os.path.join(self.root_all, 'cache',
-                                         '{}'.format(self.name))
-        makepath(self.cache_folder)
-        self.mini_factor = mini_factor
-        self.cam_intr = np.array([[480., 0., 128.], [0., 480., 128.],
-                                  [0., 0., 1.]]).astype(np.float32)
+        rotmat = transform_mat[:, :3]
+        trans = transform_mat[:, -1]
+        obj_trans = trans + points.mean(axis=0)
+        if obj_centric:
+            trans_points -= obj_trans
         
-        self.cam_extr = np.array([[1., 0., 0., 0.], [0., -1., 0., 0.],
-                                  [0., 0., -1., 0.]]).astype(np.float32)
-        self.joint_nb = joint_nb
-        self.segm_folder = os.path.join(self.root, 'segm')
+        return np.array(trans_points).astype(np.float32), trans
 
-        self.prefix_template = '{:08d}'
-        self.meta_folder = os.path.join(self.root, "meta")
-        self.coord2d_folder = os.path.join(self.root, "coords2d")
-
-        # Define links on skeleton
-        self.links = [(0, 1, 2, 3, 4), (0, 5, 6, 7, 8), (0, 9, 10, 11, 12),
-                      (0, 13, 14, 15, 16), (0, 17, 18, 19, 20)]
-
-        # Load mano faces
-        self.faces = {}
-        for side in ['left', 'right']:
-            with open(os.path.join(config.mano_root,'mano_faces_{}.pkl'.format(side)), 'rb') as p_f:
-                self.faces[side] = pickle.load(p_f)
-
-        # NOTE:shapenet model_normalized.pkl path
-        self.shapenet_template = self.shapenet_root + '{}/{}/models/model_normalized.pkl'
-        self.load_dataset()
-                
+class ObManObj(ObManResample):
+    def __init__(self, ds_root, shapenet_root, split='train', joint_nb=21, mini_factor=None, use_cache=False, root_palm=False, mode='all', segment=False, use_external_points=True, apply_obj_transform=True, expand_times=config.expand_times, resample_num=8192, object_centric=False):
+        super().__init__(ds_root, shapenet_root, split, joint_nb, mini_factor, use_cache, root_palm, mode, segment, use_external_points, apply_obj_transform, expand_times, resample_num)
+        self.meta_infos_exp, self.obj_transforms_exp = self.expand_set(expand_times)
+        self.mask_centers, self.mask_Ks = self.get_mask_ratio()
+        self.obj_centric = object_centric
+        
+    def transform_under_views(self):
         return
     
-    def _get_image_path(self, prefix):
-        image_path = os.path.join(self.rgb_folder, '{}.jpg'.format(prefix))
-
-        return image_path
+    def expand_set(self, times=config.expand_times):
+        meta_infos_new = []
+        obj_transforms_new = []
+        for idx, meta_info in enumerate(self.meta_infos):
+            for _ in range(times):
+                meta_infos_new.append(meta_info)
+                obj_transforms_new.append(self.obj_transforms[idx])
+                
+        return meta_infos_new, obj_transforms_new
+    
+    def get_mask_ratio(self, ratio_lb=config.ratio_lower, ratio_ub=config.ratio_upper, N = config.num_resample_points, Nm = config.num_mask_points, seed1=0, seed2=1024):
+        np.random.seed(seed1)
+        mask_centers = np.floor(np.random.random(self.__len__()) * N).astype(np.int32)
+        # np.random.seed(seed2)
+        # NOTE: 虽然训练阶段是需要固定点数的，但是pretrain阶段可以扩大mask掉的点数，可以一定程度上防止模型过拟合
+        mask_Ks = np.round((ratio_lb + (ratio_ub - ratio_lb) * np.random.random(self.__len__())) * N).astype(np.int32)
+        # mask_Ks = (Nm *np.ones_like(mask_centers)).astype(np.int32)
+        return mask_centers, mask_Ks
+    
+    def KNNmask(self, points, idx):
+        tree = KDTree(points)
+        center_id = int(self.mask_centers[idx])
+        K = self.mask_Ks[idx]
+        # pdb.set_trace()
+        distances, indices = tree.query(points[center_id].reshape(1, -1), K)
         
-    def _get_obj_path(self, class_id, sample_id):
-        shapenet_path = self.shapenet_template.format(class_id, sample_id)
-        return shapenet_path
+        mask = np.ones_like(points)
+        indices = indices.reshape(-1).tolist()
+        for index in indices:
+            mask[index] = 0.
+        return mask
     
-    def load_dataset(self):
-        # NOTE:MANO right hand model path -- use config
-        pkl_path = config.mano_dir 
-        if not os.path.exists(pkl_path):
-            pkl_path = '../' + pkl_path
-        cache_path = os.path.join(
-            self.cache_folder, '{}_{}_mode_{}.pkl'.format(
-                self.split, self.mini_factor, self.mode))
-        cache_path_3d = os.path.join(
-            self.cache_folder, '{}_3D_{}_mode_{}.pkl'.format(
-                self.split, self.mini_factor, self.mode))
-        if os.path.exists(cache_path) and self.use_cache:
-            with open(cache_path, 'rb') as cache_f:
-                annotations = pickle.load(cache_f)
-            print('Cached information for dataset {} loaded from {}'.format(
-                self.name, cache_path))
-            # with open(cache_path_3d, 'rb') as cache_f:
-            #     annotations_3D = pickle.load(cache_f)
-            # print('Cached 3D annotation information for dataset {} loaded from {}'.format(
-            #     self.name, cache_path_3d))
-            # self.annotations_3D = annotations_3D
-            
-        else:
-            annotations_3D = None
-            idxs = [
-                int(imgname.split('.')[0])
-                for imgname in sorted(os.listdir(self.meta_folder))
-            ]
-
-            if self.mini_factor:
-                mini_nb = int(len(idxs) * self.mini_factor)
-                idxs = idxs[:mini_nb]
-
-            prefixes = [self.prefix_template.format(idx) for idx in idxs]
-            print('Got {} samples for split {}'.format(len(idxs), self.split))
-
-            image_names = []
-            all_joints2d = []
-            all_joints3d = []
-            hand_sides = []
-            hand_poses = []
-            hand_pcas = []
-            hand_verts3d = []
-            obj_paths = []
-            obj_transforms = []
-            meta_infos = []
-            depth_infos = []
-            for idx, prefix in enumerate(tqdm(prefixes)):
-                meta_path = os.path.join(self.meta_folder,
-                                         '{}.pkl'.format(prefix))
-                with open(meta_path, 'rb') as meta_f:
-                    meta_info = pickle.load(meta_f)
-                    image_path = self._get_image_path(prefix)
-                    image_names.append(image_path)
-                    all_joints2d.append(meta_info['coords_2d'])
-                    all_joints3d.append(meta_info['coords_3d'])
-                    hand_verts3d.append(meta_info['verts_3d'])
-                    hand_sides.append(meta_info['side'])
-                    hand_poses.append(meta_info['hand_pose'])
-                    hand_pcas.append(meta_info['pca_pose'])
-                    depth_infos.append({
-                        'depth_min':
-                        meta_info['depth_min'],
-                        'depth_max':
-                        meta_info['depth_max'],
-                        'hand_depth_min':
-                        meta_info['hand_depth_min'],
-                        'hand_depth_max':
-                        meta_info['hand_depth_max'],
-                        'obj_depth_min':
-                        meta_info['obj_depth_min'],
-                        'obj_depth_max':
-                        meta_info['obj_depth_max']
-                    })
-                    obj_path = self._get_obj_path(meta_info['class_id'],
-                                                  meta_info['sample_id'])
-
-                    obj_paths.append(obj_path)
-                    obj_transforms.append(meta_info['affine_transform'])
-
-                    meta_info_full = {
-                        'obj_scale': meta_info['obj_scale'],
-                        'obj_class_id': meta_info['class_id'],
-                        'obj_sample_id': meta_info['sample_id']
-                    }
-                    if 'grasp_quality' in meta_info:
-                        meta_info_full['grasp_quality'] = meta_info[
-                            'grasp_quality']
-                        meta_info_full['grasp_epsilon'] = meta_info[
-                            'grasp_epsilon']
-                        meta_info_full['grasp_volume'] = meta_info[
-                            'grasp_volume']
-                    meta_infos.append(meta_info_full)
-
-            annotations = {
-                'depth_infos': depth_infos,
-                'image_names': image_names,
-                'joints2d': all_joints2d,
-                'joints3d': all_joints3d,
-                'hand_sides': hand_sides,
-                'hand_poses': hand_poses,
-                'hand_pcas': hand_pcas,
-                'hand_verts3d': hand_verts3d,
-                'obj_paths': obj_paths,
-                'obj_transforms': obj_transforms,
-                'meta_infos': meta_infos
-            }
-            print('class_nb: {}'.format(
-                np.unique(
-                    [(meta_info['obj_class_id']) for meta_info in meta_infos],
-                    axis=0).shape))
-            unique_obj = np.unique(
-                    [(meta_info['obj_class_id'], meta_info['obj_sample_id'])
-                     for meta_info in meta_infos],
-                    axis=0)
-            print('sample_nb : {}'.format(unique_obj.shape))
-            obj_meshes = self.load_obj_meshes(unique_obj)
-            # import pdb; pdb.set_trace()
-            annotations['obj_meshes'] = obj_meshes
-            
-            with open(cache_path, 'wb') as fid:
-                pickle.dump(annotations, fid)
-            print('Wrote cache for dataset {} to {}'.format(
-                self.name, cache_path))
-
-        # Set dataset attributes
-        #import pdb; pdb.set_trace() #(CHECK what is the loaded annotations
-        all_objects = [
-            obj[:-7].split('/')[-1].split('_')[0]
-            for obj in annotations['obj_paths']
-        ]
-        selected_idxs = list(range(len(all_objects)))
-        obj_paths = [annotations['obj_paths'][idx] for idx in selected_idxs]
-        image_names = [
-            annotations['image_names'][idx] for idx in selected_idxs
-        ]
-        joints3d = [annotations['joints3d'][idx] for idx in selected_idxs]
-        joints2d = [annotations['joints2d'][idx] for idx in selected_idxs]
-        hand_sides = [annotations['hand_sides'][idx] for idx in selected_idxs]
-        hand_pcas = [annotations['hand_pcas'][idx] for idx in selected_idxs]
-        hand_verts3d = [
-            annotations['hand_verts3d'][idx] for idx in selected_idxs
-        ]
-        obj_transforms = [
-            annotations['obj_transforms'][idx] for idx in selected_idxs
-        ]
-        meta_infos = [annotations['meta_infos'][idx] for idx in selected_idxs]
-        obj_meshes = annotations['obj_meshes']
-        if 'depth_infos' in annotations:
-            has_depth_info = True
-            depth_infos = [
-                annotations['depth_infos'][idx] for idx in selected_idxs
-            ]
-        else:
-            has_depth_info = False
-        # objects = [
-        #     obj.split('_')[0]
-        #     for obj in set([obj[:-7].split('/')[-1] for obj in obj_paths])
-        # ]
+    def input_pc_sample(self, idx, PC, M=2048):
+        N = PC.shape[0]
+        np.random.seed(idx+10)
+        indices = np.floor(np.random.random(M)*N).astype(np.int32)
+        sample_pc = [PC[int(index)] for index in indices]
+        sample_pc = np.array(sample_pc)
+        return sample_pc, indices
         
-        # unique_objects = set(objects)
-        # import pdb; pdb.set_trace()
-        # print('Got {} out instances of {} unique objects {}'.format(
-        #     len(objects), len(unique_objects), unique_objects))
-        # freqs = Counter(objects)
-        # print(freqs)
-         
-        
-        if has_depth_info:
-            self.depth_infos = depth_infos
-        self.image_names = image_names
-        self.joints2d = joints2d
-        self.joints3d = joints3d
-        self.hand_sides = hand_sides
-        self.hand_pcas = hand_pcas
-        self.hand_verts3d = hand_verts3d
-        self.obj_paths = obj_paths
-        self.obj_transforms = obj_transforms
-        self.meta_infos = meta_infos
-        self.obj_meshes = obj_meshes
-        # Initialize cache for center and scale in case objects are used
-        self.center_scale_cache = {}
-        
-    def load_obj_meshes(self, unique_obj):
-        obj_meshes = {}
-        for idx in tqdm(range(unique_obj.shape[0]), desc="Loading object meshes"):
-            class_id = unique_obj[idx][0]
-            sample_id = unique_obj[idx][1]
-            mesh = self.get_obj_mesh(class_id, sample_id)
-            if class_id not in obj_meshes:
-                obj_meshes[class_id] = {}
-            obj_meshes[class_id][sample_id] = mesh
-        return obj_meshes
-    
-    def get_obj_mesh(self, obj_class_id, obj_sample_id):
-        # model_path = self.obj_paths[idx]
-        # model_path = model_path.replace(
-        #     config.SHAPENET_ROOT, # NOTE:shapenet path
-        #     self.shapenet_root)
-        model_path = os.path.join(self.shapenet_root, obj_class_id, obj_sample_id, 'models/model_normalized.pkl')
-        model_path_obj = model_path.replace('.pkl', '.obj')
-        if os.path.exists(model_path):
-            with open(model_path, 'rb') as obj_f:
-                mesh = pickle.load(obj_f)
-        elif os.path.exists(model_path_obj):
-            with open(model_path_obj, 'r') as m_f:
-                mesh = fast_load_obj(m_f)[0]
-        else:
-            raise ValueError(
-                'Could not find model pkl or obj file at {}'.format(
-                    model_path.split('.')[-2]))
-        return mesh
-    
-    def get_verts3d(self, idx):
-        # NOTE: [hand verts3d]
-        # --self.hand_verts3d
-        # --self.cam_extr
-        verts3d = self.hand_verts3d[idx]
-        verts3d = self.cam_extr[:3, :3].dot(verts3d.transpose()).transpose()
-        return verts3d
-    
-    def get_sides(self, idx):
-        return self.hand_sides[idx]
-    
-    def get_faces3d(self, idx):
-        # NOTE: [hand faces]
-        faces = self.faces[self.get_sides(idx)]
-        return faces
-    
-    def get_sample_obj_info(self, idx):
-        meta_info = self.meta_infos[idx]
-        class_id = meta_info['class_id']
-        sample_id = meta_info['sample_id']
-        
-        return class_id, sample_id
-    
-    def get_sample_obj_mesh(self, idx):
-        class_id, sample_id = self.get_sample_obj_info(idx)
-        mesh = self.obj_meshes[class_id][sample_id]
-        return mesh
-    
-    def get_obj_verts_faces(self, idx):
-        # NOTE: [obj_verts, obj_faces] -> obj_meshes
-        # model_path = self.obj_paths[idx]
-        # model_path = model_path.replace(
-        #     config.SHAPENET_ROOT, # NOTE:shapenet path
-        #     self.shapenet_root)
-        # model_path_obj = model_path.replace('.pkl', '.obj')
-        # if os.path.exists(model_path):
-        #     with open(model_path, 'rb') as obj_f:
-        #         mesh = pickle.load(obj_f)
-        # elif os.path.exists(model_path_obj):
-        #     with open(model_path_obj, 'r') as m_f:
-        #         mesh = fast_load_obj(m_f)[0]
-        # else:
-        #     raise ValueError(
-        #         'Could not find model pkl or obj file at {}'.format(
-        #             model_path.split('.')[-2]))
-        mesh = self.get_sample_obj_mesh(idx)
-        verts = mesh['vertices']
-        # Apply transforms
-        obj_transform = self.obj_transforms[idx]
-        hom_verts = np.concatenate([verts, np.ones([verts.shape[0], 1])],
-                                   axis=1)
-        import pdb; pdb.set_trace()
-        trans_verts = obj_transform.dot(hom_verts.T).T[:, :3]
-        trans_verts = self.cam_extr[:3, :3].dot(
-            trans_verts.transpose()).transpose()
-        return np.array(trans_verts).astype(np.float32), np.array(
-            mesh['faces']).astype(np.int16)
-        
-    
     def __len__(self):
-        return len(self.hand_verts3d)
-        
+        return len(self.meta_infos_exp)
+    
+    # @func_timer
     def __getitem__(self, idx):
-        # TODO: code the __getitem__() to encode the hand_verts and object meshes
         sample = {}
-        # if self.use_cache:
-        #     hand_verts3d = self.annotations_3D['hand_verts']
-        # else:
-        hand_verts3d = self.get_verts3d(idx)
-        hand_faces = self.get_faces3d(idx)
-        obj_verts, obj_faces = self.get_obj_verts_faces(idx)
-        sample_id = idx
-            
-        sample['hand_verts'] = hand_verts3d
-        sample['obj_verts'] = obj_verts
-        sample['id'] = sample_id
+        obj_points, obj_trans = self.get_obj_resampled_trans(self.meta_infos_exp, self.obj_transforms_exp, idx, obj_centric=self.obj_centric)
+        mask = self.KNNmask(obj_points, idx)
+        masked = mask < 1
+        remained_points = obj_points[~masked].reshape(-1, 3)
+        mask_points = obj_points[masked].reshape(-1, 3)
+        # import pdb; pdb.set_trace()
+        remained_pc, sample_indices = self.input_pc_sample(idx, remained_points)
+        sample['input_points'] = torch.from_numpy(remained_pc)
+        sample['gt_points'] = torch.from_numpy(obj_points)
+        sample['mask'] = torch.from_numpy(mask)
+        sample['sample_id'] = torch.Tensor([idx])
+        sample['obj_trans'] = torch.Tensor(obj_trans)
+        
         return sample
     
-
-def preprocess(dataset_root, split='train'):
-    
-    
-    trainset = obman(root = dataset_root, 
-                     shapenet_root = config.SHAPENET_ROOT, 
-                     split=split)
-    count_2048 = 0
-    count_3000 = 0
-    right_hand = 0
-    
-    pbar = tqdm(range(trainset.__len__()))
-    annotations_3D = {'hand_verts':[],
-                      'obj_verts':[]}
-    
-    for idx in pbar:
-        obj_path = trainset.obj_paths[idx]
-        hand_verts3d = trainset.get_verts3d(idx)
-        hand_faces = trainset.get_faces3d(idx)
-        annotations_3D['hand_verts'].append(hand_verts3d)
-        # annotations_3D['hand_faces'].append(hand_faces) # NOTE:不需要专门解码'hand_faces'， 因为经统计，train - 全是right
-        obj_verts, obj_faces = trainset.get_obj_verts_faces(idx)
-        annotations_3D['obj_verts'].append(obj_verts)
-        # 不需要专门解码obj_faces, 因为只会在可视化的时候使用，而annotations中有存meshes，可以直接从meshes中找
-        if obj_verts.shape[0] < 3000:
-            count_3000 = count_3000 + 1
-        if obj_verts.shape[0] < 2048:
-            count_2048 = count_2048 + 1
-        if trainset.hand_sides[idx] == 'right':
-            right_hand = right_hand + 1
-        pbar.set_postfix_str(f"obj_verts<3000: num={count_3000};  obj_verts<2048: num={count_2048}; right_hand: num={right_hand}")
-        # HandMesh.export()
-    cache_path = os.path.join(
-            trainset.cache_folder, '{}_3D_{}_mode_{}.pkl'.format(
-                trainset.split, trainset.mini_factor, trainset.mode))
-    with open(cache_path, 'wb') as fid:
-        pickle.dump(annotations_3D, fid)
-    print('Wrote cache for dataset {} to {}'.format(
-        trainset.name, cache_path))
-    print(f"obj_verts < 3000: {count_3000}; obj_verts < 2048: {count_2048}; right_hand: {right_hand}")
-    return
-
-    
-    
-def thumb_condition(dataset_root, output_path, split='train'):
-    dataset = obman(root=dataset_root, 
-                    shapenet_root=config.SHAPENET_ROOT,
-                    split=split,
-                    use_cache=True)
-    
-    
-    pdb.set_trace()
-    pbar = tqdm(range(dataset.__len__()))
-    
-    min_verts = None
-    max_verts = None
-    count_1024 = 0
-    list_1024 = []
-    for idx in pbar:
-        hand_verts = dataset.annotations_3D['hand_verts'][idx]
-        hand_faces = dataset.faces['right']
+class ObManThumb(ObManResample):
+    def __init__(self, ds_root, shapenet_root, split='train', joint_nb=21, mini_factor=None, use_cache=False, root_palm=False, mode='all', segment=False, use_external_points=True, apply_obj_transform=True, expand_times=1, resample_num=8192, object_centric=False):
+        super().__init__(ds_root, shapenet_root, split, joint_nb, mini_factor, use_cache, root_palm, mode, segment, use_external_points, apply_obj_transform, expand_times, resample_num)
         
-        obj_mesh = dataset.get_sample_obj_mesh(idx)
-        obj_verts = dataset.annotations_3D['obj_verts'][idx]
-        obj_faces = np.array(obj_mesh['faces']).astype(np.int16)
+        self.obj_centric = object_centric
+        
+    def thumb_query_point(self, HandMesh, ObjMesh, pene_th=0.002, contact_th=-0.005):
+        thumb_vertices_ids = faces2verts_no_rep(HandMesh.faces[config.thumb_center])
+        thumb_vertices = HandMesh.vertices[thumb_vertices_ids]
+        ObjQuery = trimesh.proximity.ProximityQuery(ObjMesh)
+        #  -- 以thumb_vertices_ids为query计算signed distances并返回相对应的closest faces
+        # NOTE: the on_surface return is not signed_dists, 所以需要专门计算signed dists， 再用on_surface返回obj上最近的面
+        h2o_signed_dists = ObjQuery.signed_distance(thumb_vertices)
+        _, _, h2o_closest_fid = ObjQuery.on_surface(thumb_vertices)
+        
+        # -- 用sdf_th阈值进一步选取thumb上真正的contact部分
+        # NOTE: OUTSIDE mesh -> NEG； INSIDE the mesh -> POS
+        penet_flag = h2o_signed_dists < pene_th
+        contact_flag = h2o_signed_dists > contact_th
+        flag = penet_flag & contact_flag
+        obj_contact_fids = h2o_closest_fid[flag]
         # import pdb; pdb.set_trace()
+        if obj_contact_fids.shape[0] == 0:
+            return None
+        elif obj_contact_fids.shape[0] == 1:
+            point = ObjMesh.triangles_center[obj_contact_fids[0]]
+        else:
+            # import pdb; pdb.set_trace()
+            tri_centers = np.array([ObjMesh.triangles_center[fid] for fid in obj_contact_fids])
+            # TODO mean of the tri_centers
+            point =  np.mean(tri_centers, axis=0)
+            
+        return point
+    
+    
+    def get_KNN_in_pc(self, PC, point_q, K=410):
+        PC_tree = KDTree(PC)
+        distance, indices = PC_tree.query(point_q.reshape(1, -1), K)
+        distance = distance.reshape(-1)
+        indices = indices.reshape(-1)
+        return distance, indices
+    
+    def divide_pointcloud(self, PC, indices):
+        N = PC.shape[0]
+        indices_neg = list(set(range(N)) - set(indices))
+        pc = [PC[i] for i in indices]
+        rem_pc = [PC[i] for i in indices_neg]
+        
+        pc = np.array(pc)
+        rem_pc = np.array(rem_pc)
+        return pc, rem_pc
+    
+    def input_pc_sample(self, idx, PC, M=2048):
+        N = PC.shape[0]
+        np.random.seed(idx)
+        indices = np.floor(np.random.random(M)*N).astype(np.int32)
+        sample_pc = [PC[int(index)] for index in indices]
+        sample_pc = np.array(sample_pc)
+        return sample_pc, indices
+    
+    def __getitem__(self, idx):
+        annot = {}
+        ObjPoints, obj_trans = self.get_obj_resampled_trans(self.meta_infos, idx, obj_centric=self.obj_centric) # np(8192, 3)
+        N = ObjPoints.shape[0]
+        hand_verts = self.get_verts3d(idx)
+        hand_faces = self.get_faces3d(idx)
+        if self.obj_centric:
+            hand_verts -= obj_trans
+        obj_mesh = self.get_sample_obj_mesh(idx)
+        obj_verts, _ = self.get_obj_verts_faces(idx)
         
         HandMesh = trimesh.Trimesh(vertices=hand_verts, faces=hand_faces)
-        ObjMesh = trimesh.Trimesh(vertices=obj_verts, faces=obj_faces)
-        obj_verts_num = obj_verts.shape[0]
-        if min_verts is None:
-            min_verts = obj_verts_num
-            max_verts = obj_verts_num
-        else:
-            if obj_verts_num > max_verts: max_verts = obj_verts_num
-            if obj_verts_num < min_verts: min_verts = obj_verts_num
-            
-        if obj_verts_num < 1024:
-            count_1024 += 1
-            list_1024.append(idx)
-        thumb_query_points(HandMesh, ObjMesh)
-        pbar.set_postfix_str(f"max_verts_num = {max_verts}; min_verts_num = {min_verts}; verts < 1024: {count_1024}")
-    list_1024_path = os.path.join(dataset_root, split, '')
+        ObjMesh = trimesh.Trimesh(vertices=obj_verts, faces=obj_mesh['faces'])
+        
+        point_contact = self.thumb_query_point(HandMesh, ObjMesh)
+        if point_contact is None:
+            # TODO: 筛掉没有手接触的sample
+            return None
+        
+        dists, contact_indices = self.get_KNN_in_pc(ObjPoints, point_contact)
+        
+        # import pdb; pdb.set_trace()
+        
+        contact_pc, input_pc_hr = self.divide_pointcloud(ObjPoints, contact_indices)
+        
+        # CHECK:region_visual --> 820有点太大了，先取一半吧410
+        # PC_contact = trimesh.PointCloud(vertices=contact_ps, colors=colors_like(config.colors['yellow']))
+        # PC_rem = trimesh.PointCloud(vertices=rem_ps, colors=colors_like(config.colors['green']))
+        
+        # PC_contact.export('test_pc_contact.ply')
+        # PC_rem.export('test_pc_rem.ply')
+        # ObjMesh.export('test_mesh.ply')
+        # HandMesh.export('hand_mesh.ply')
+        
+        # import pdb; pdb.set_trace()
+        
+        # TODO: random sampling Np = 2048 from the rem_ps
+        np.random.seed(idx)
+        input_pc, sampled_indices = self.input_pc_sample(idx, ObjPoints)
+        
+        annot['contact_indices'] = contact_indices
+        annot['contact_pc'] = contact_pc
+        annot['input_pc_hr'] = input_pc_hr
+        annot['input_pc'] = input_pc
+        annot['sampled_indices'] = sampled_indices
+        
+        return annot
     
+
+  
+def sampling_check(objdataset):
+    """
+    研究采样方式和点数对于几何体所有面覆盖的情况
+
+    Args:
+        objdataset (dataset): obj dataset
+    """
+    unique_objs = objdataset.unique_objs
+    ratio_avg = 0
+    for pair in unique_objs:
+        class_id, sample_id = pair[0], pair[1]
+        obj = objdataset.obj_meshes[class_id][sample_id]
+        obj_faces = obj['faces']
+        obj_xyz_resampled, face_ids = objdataset.resampling_surface(class_id, sample_id, N=3000)
+        num_face_orig = obj_faces.shape[0]
+        num_face_sampled = len(set(face_ids))
+        face_sample_ratio = num_face_sampled / num_face_orig
+        ratio_avg += face_sample_ratio
+        print(f"[{class_id}, {sample_id}] original face_num:{num_face_orig}; sampled face_num: {num_face_sampled}; ratio: {face_sample_ratio}")
+        
+    ratio_avg = ratio_avg / unique_objs.shape[0]
+    print(f"avg ratio: {ratio_avg}")
     return
 
-def obj_pretrain_dataset(dataset_root, output_path, split='train'):
-    dataset = obman(root=dataset_root, 
-                               shapenet_root=config.SHAPENET_ROOT,
-                               split=split,
-                               use_cache=True)
+def get_thumb_condition(ds_root):
+    dataset = ObManThumb(ds_root=ds_root, 
+                           shapenet_root=config.SHAPENET_ROOT,
+                           split='train',
+                           use_cache=True)
+    output_root = os.path.join(dataset.root, 'thumbHOI')
+    makepath(output_root)
+    samples_list = []
+    for idx in tqdm(range(dataset.__len__())):
+        annot = dataset.__getitem__(idx)
+        if annot is None:
+            continue
+        output_path = os.path.join(output_root, f'{idx}.pkl')
+        with open(output_path, 'wb') as fid:
+            pickle.dump(annot, fid)
+        samples_list.append(idx)
     
+    list_path = os.path.join(output_root, 'samples_id.npy')
+    np.save(list_path, np.array(samples_list))
+    return
 
-        
+def get_new_objpretrain(ds_root):
+    objdataset = ObManObj(ds_root=ds_root,
+                          shapenet_root=config.SHAPENET_ROOT,
+                          split='train',
+                          use_cache=True,
+                          expand_times=5,
+                          object_centric=True)
+    for idx in tqdm(range(objdataset.__len__())):
+        sample = objdataset.__getitem__(idx)
+    
+    
 if __name__ == "__main__":
-    import argparse
-    parser = argparse.ArgumentParser()
-    parser.add_argument('--split', type=str, default='train')
-    parser.add_argument('--preprocess', action='store_true')
-    parser.add_argument('--condition', action='store_true')
-    args = parser.parse_args()
-    
     dataset_root = config.OBMAN_ROOT
-    output_root = config.obman_visual_dir
-    output_folder = "Dataset_sample"
-    output_path = os.path.join(output_root, output_folder)
-    makepath(output_path)
     
-    if args.preprocess:
-        preprocess(dataset_root, split=args.split)
-    if args.condition:
-        thumb_condition(dataset_root, output_path, split=args.split)
+    get_new_objpretrain(dataset_root)
+    
+    
+    
+    
+        
+        
+    
+    
+    
+        
+    
+    
+        
     

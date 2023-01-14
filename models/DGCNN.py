@@ -2,6 +2,8 @@ import torch
 import torch.nn as nn
 from models.PointTr import knn_point
 # from pointnet2_ops import pointnet2_utils
+from traineval_utils import pointnet_util
+from pytorch3d.ops import sample_farthest_points
 
 class DGCNN_grouper(nn.Module):
     def __init__(self):
@@ -31,29 +33,34 @@ class DGCNN_grouper(nn.Module):
                                    nn.LeakyReLU(negative_slope=0.2)
                                    )
         
-    @staticmethod
-    def fps_downsample(coor, x, num_group):
+    # @staticmethod
+    def fps_downsample(self, coor, x, num_group):
+        
         xyz = coor.transpose(1, 2).contiguous() # b, n, 3
         # fps_idx = pointnet2_utils.furthest_point_sample(xyz, num_group)
-        # fps_idx = 
-
         # combined_x = torch.cat([coor, x], dim=1)
-
         # new_combined_x = (
         #     pointnet2_utils.gather_operation(
         #         combined_x, fps_idx
         #     )
         # )
+        # fps_idx = pointnet_util.farthest_point_sample(xyz, num_group)
+        _, fps_idx = sample_farthest_points(xyz, K=num_group)
+        combined_x = torch.cat([coor, x], dim=1)
+        # import pdb; pdb.set_trace()
+        # SOLVED: 直接用torch.gather报错CUDA error: device-side assert triggered，而这个报错多是因为index out of bound
+        # NOTE: 出这个bug的原因是torch.gather选择的dim选错了哈哈哈哈 
+        new_combined_x = torch.gather(combined_x, dim=-1, index=fps_idx.unsqueeze(1).repeat(1, combined_x.shape[1], 1))
+        
+        new_coor = new_combined_x[:, :3]
+        new_x = new_combined_x[:, 3:]
+        # import pdb;pdb.set_trace()
 
-        # new_coor = new_combined_x[:, :3]
-        # new_x = new_combined_x[:, 3:]
-
-        # return new_coor, new_x
-        return 
+        return new_coor, new_x
     
     
-    @staticmethod
-    def get_graph_feature(coor_q, x_q, coor_k, x_k):
+    # @staticmethod
+    def get_graph_feature(self, coor_q, x_q, coor_k, x_k):
 
         # coor: bs, 3, np, x: bs, c, np
 
@@ -90,8 +97,12 @@ class DGCNN_grouper(nn.Module):
         f = self.get_graph_feature(coor, f, coor, f)
         f = self.layer1(f)
         f = f.max(dim=-1, keepdim=False)[0]
-
-        coor_q, f_q = self.fps_downsample(coor, f, 512) if fps else coor, f
+        
+        if not fps:
+            coor_q, f_q = coor, f
+        else:
+            # import pdb; pdb.set_trace()
+            coor_q, f_q = self.fps_downsample(coor, f, 512)
         f = self.get_graph_feature(coor_q, f_q, coor, f)
         f = self.layer2(f)
         f = f.max(dim=-1, keepdim=False)[0]
@@ -101,7 +112,11 @@ class DGCNN_grouper(nn.Module):
         f = self.layer3(f)
         f = f.max(dim=-1, keepdim=False)[0]
 
-        coor_q, f_q = self.fps_downsample(coor, f, 128) if fps else coor, f
+        if not fps:
+            coor_q, f_q = coor, f
+        else:
+            # import pdb; pdb.set_trace()
+            coor_q, f_q = self.fps_downsample(coor, f, 128)
         f = self.get_graph_feature(coor_q, f_q, coor, f)
         f = self.layer4(f)
         f = f.max(dim=-1, keepdim=False)[0]

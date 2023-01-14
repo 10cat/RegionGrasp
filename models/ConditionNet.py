@@ -8,18 +8,21 @@ from option import MyOptions as cfg
 from models.pointnet_encoder import PointNetEncoder
 from utils.utils import func_timer, region_masked_pointwise
 from timm.models.layers import trunc_normal_
-from models.PointTr import get_knn_index, PoseEmbedding, Attention, CrossAttention, EncoderBlock, DecoderBlock, QueryGenerator
+from models.PointTr import get_knn_index, PoseEmbedding, Attention, CrossAttention, EncoderBlock, DecoderBlock, QueryGenerator, FinePointGenerator
 from models.DGCNN import DGCNN_grouper
 
+
 class ConditionTrans(nn.Module):
-    def __init__(self, in_chans=3, embed_dim=132, num_heads=6, mlp_ratio=2., qkv_bias=False, qk_scale=None, drop_rate=0., attn_drop_rate=0., glob_feat_dim=1024, depth={'encoder':3, 'decoder':3}, num_query=32, knn_layer=-1):
+    def __init__(self, in_chans=3, embed_dim=768, num_heads=6, mlp_ratio=2., qkv_bias=False, qk_scale=None, drop_rate=0., attn_drop_rate=0., glob_feat_dim=1024, depth={'encoder':6, 'decoder':6}, num_query=224, knn_layer=-1, fps=False, num_pred=8192):
         
         #CHECK: 不打算和PointTr一样使用fps将2048个点降为128个点，而直接使用最初的2048个点(N=2048, C=32), 所以embed_dim可以相应的降低维度
         super().__init__()
         
-        self.num_features = self.embed_dim = embed_dim
+        self.embed_dim = embed_dim
         self.knn_layer = knn_layer
+        self.num_pred = num_pred
         self.num_query = num_query
+        self.fps = fps
         
         self.pc_embed = DGCNN_grouper()
         self.pos_embed = PoseEmbedding(in_chans=in_chans, embed_dim=embed_dim)
@@ -42,6 +45,9 @@ class ConditionTrans(nn.Module):
         
         self.query_generate = QueryGenerator(embed_dim=embed_dim, feat_dim=glob_feat_dim, num_query=num_query)
         
+        self.finepoint_generate = FinePointGenerator(embed_dim=embed_dim, glob_feat_dim=glob_feat_dim, num_query=num_query, num_pred=num_pred)
+        
+        
         
     def _init_weights(self, m):
         if isinstance(m, nn.Linear):
@@ -57,9 +63,9 @@ class ConditionTrans(nn.Module):
             nn.init.constant_(m.weight.data, 1)
             nn.init.constant_(m.bias.data, 0)
             
-    def get_input_embedding(self, input):
+    def get_input_embedding(self, input, fps=False):
         # coor, f = self.grouper(input.transpose(1, 2).contiguous())
-        coor, f = self.pc_embed(input.transpose(1, 2).contiguous(), fps=False)
+        coor, f = self.pc_embed(input.transpose(1, 2).contiguous(), fps=fps)
         # import pdb; pdb.set_trace()
         knn_index = get_knn_index(coor)
         # import pdb; pdb.set_trace()
@@ -76,7 +82,7 @@ class ConditionTrans(nn.Module):
     def forward(self, input):
         bs = input.size(0)
         
-        coor, x, pos, knn_index = self.get_input_embedding(input)
+        coor, x, pos, knn_index = self.get_input_embedding(input, fps=self.fps)
         
         for i, blk in enumerate(self.encoder):
             if i < self.knn_layer:
@@ -84,24 +90,27 @@ class ConditionTrans(nn.Module):
             else:
                 x = blk(x + pos)
         
-        q, pred_pc = self.query_generate(x)
-        new_knn_index, cross_knn_index = self.get_new_knn_index(pred_pc, coor_k=coor)
+        q, coarse_pc = self.query_generate(x)
+        new_knn_index, cross_knn_index = self.get_new_knn_index(coarse_pc, coor_k=coor)
         
         for i, blk in enumerate(self.decoder):
             if i < self.knn_layer:
                 q = blk(q, x, new_knn_index, cross_knn_index)
             else:
                 q = blk(q, x)
+                
+        pred_pc = self.finepoint_generate(q, coarse_pc, input)
+        
         return q, pred_pc
     
 class ConditionBERT(ConditionTrans):
-    def __init__(self, in_chans=3, embed_dim=132, num_heads=6, mlp_ratio=2, qkv_bias=False, qk_scale=None, drop_rate=0, attn_drop_rate=0, glob_feat_dim=1024, depth={ 'encoder': 3,'decoder': 3 }, num_query=32, knn_layer=-1):
-        super().__init__(in_chans, embed_dim, num_heads, mlp_ratio, qkv_bias, qk_scale, drop_rate, attn_drop_rate, glob_feat_dim, depth, num_query, knn_layer)
+    def __init__(self, in_chans=3, embed_dim=768, num_heads=6, mlp_ratio=2., qkv_bias=False, qk_scale=None, drop_rate=0., attn_drop_rate=0., glob_feat_dim=1024, depth={'encoder':6, 'decoder':6}, num_query=224, knn_layer=-1, fps=True, num_pred=8192):
+        super().__init__(in_chans, embed_dim, num_heads, mlp_ratio, qkv_bias, qk_scale, drop_rate, attn_drop_rate, glob_feat_dim, depth, num_query, knn_layer, fps, num_pred)
         
     def forward(self, input):
         bs = input.size(0)
          
-        coor, x, pos, knn_index = self.get_input_embedding(input)
+        coor, x, pos, knn_index = self.get_input_embedding(input, fps=self.fps)
         
         assert len(self.encoder) == len(self.decoder), "The encoder and decoder should have same depth in Iterative mode"
         

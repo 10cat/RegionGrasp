@@ -56,6 +56,7 @@ class CheckpointsManage(object):
     def __init__(self, root):
         self.root = root
         self.best_metrics = None
+        self.no_improve = 0
         return
     
     def save_checkpoints(self, epoch, model, metric_value):
@@ -68,7 +69,9 @@ class CheckpointsManage(object):
                         'state_dict':model.state_dict()},
                     checkpoint_path)
             self.best_metrics = metric_value
-        return
+        else:
+            self.no_improve += 1
+        return self.no_improve
     
     def load_checkpoints(self, model, chkpt_epoch, stdict):
         checkpoint_path = os.path.join(self.root, f'checkpoint_{chkpt_epoch}.pth')
@@ -151,10 +154,11 @@ class PretrainEpoch():
         if cfg.w_wandb: wandb.log(Allmeters)
         
     def __call__(self, dataloader, epoch, model):
+        stop_flag = False
         pbar = tqdm(dataloader, desc=f"{self.mode} epoch {epoch}:")
         for batch_idx, sample in enumerate(pbar):
             input = sample['input_points']
-            gt_points = sample['mask_points'] # gt for the masked points
+            gt_points = sample['gt_points'] # gt for the masked points
             sample_ids = sample['sample_id']
             
             if self.mode != 'train':
@@ -171,13 +175,17 @@ class PretrainEpoch():
             msg = msg_loss
             pbar.set_postfix_str(msg)
             # import pdb;pdb.set_trace()
-            
             if self.mode == 'val':
-                self.Checkpt.save_checkpoints(epoch, model, metric_value=losses[f'{self.mode}_total_loss'])
                 self.visual(batch_idx, pred_points, gt_points, sample_ids, epoch, visual_interval=self.visual_interval)
             
+        if self.mode == 'val':
+            no_improve_epochs = self.Checkpt.save_checkpoints(epoch, model, metric_value=losses[f'{self.mode}_total_loss'])
+            if no_improve_epochs > 5:
+                stop_flag = True
+            
+            
         self.log(self.Losses)
-        return model
+        return model, stop_flag
         
     
 if __name__ == "__main__":
