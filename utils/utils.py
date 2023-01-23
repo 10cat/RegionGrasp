@@ -269,8 +269,8 @@ def rotation_matrix_to_quaternion(rotation_matrix, eps=1e-6):
     return q
 
 
-def quaternion_to_angle_axis(quaternion: torch.Tensor) -> torch.Tensor:
-    
+def quaternion_to_angle_axis(quaternion: torch.Tensor) :
+   
     """Convert quaternion vector to angle axis of rotation.
     Adapted from ceres C++ library: ceres-solver/include/ceres/rotation.h
     Args:
@@ -282,7 +282,8 @@ def quaternion_to_angle_axis(quaternion: torch.Tensor) -> torch.Tensor:
         - Output: :math:`(*, 3)`
     Example:
         >>> quaternion = torch.rand(2, 4)  # Nx4
-        >>> angle_axis = quaternion_to_angle_axis(quaternion)  # Nx3"""
+        >>> angle_axis = quaternion_to_angle_axis(quaternion)
+    """
    
     if not torch.is_tensor(quaternion):
         raise TypeError("Input type is not a torch.Tensor. Got {}".format(
@@ -363,6 +364,27 @@ def signed_distance_batch(device, rhand_vs, rh_f, obj_vs, object_faces=None):
     o2h_signed, h2o_signed, o_nearest_ids, h_nearest_ids = point2point_signed(rhand_vs, obj_vs, rh_normals, obj_normals)
     
     return o2h_signed, h2o_signed, o_nearest_ids, h_nearest_ids
+
+def decode_hand_params_batch(hand_params, batch_size, device):
+    """decode the mano hand model(vertices, faces) from given mano hand parameters
+    Args:
+        hand_params (dict): mano parameters
+        batch_size (int): batch szie for initializing rh_model
+        device : the device where 'outputs' is on, cannot directly use hand_params.device because 'hand_params' is dict
+
+    Returns:
+        mano hand model (vertices[B, 3, 778], faces[B, 3, 1553])
+    """
+    B = batch_size
+    import mano
+    rh_model = mano.load(model_path=cfg.mano_rh_path,
+                            model_type='mano',
+                                num_pca_comps=45,
+                                batch_size=B,
+                                flat_hand_mean=True)
+    rh_model = rh_model.to(device)
+    rhand_pred = rh_model(**hand_params)
+    return rhand_pred, rh_model
 
 def dataset_object_faces_batch(sample_ids, dataset, device):
     sample_ids = sample_ids.reshape(-1).tolist()

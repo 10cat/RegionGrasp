@@ -8,12 +8,13 @@ import torch.nn as nn
 from timm.models.layers import DropPath, trunc_normal_
 from models.FoldingNet import Fold
 from traineval_utils import pointnet_util
-from option import MyOptions as cfg
+from pytorch3d.ops import sample_farthest_points
+# from option import MyOptions as cfg
 
 def fps(pc, num):
-    fps_idx = pointnet_util.farthest_point_sample(pc, num) 
-    import pdb; pdb.set_trace()
-    sub_pc = torch.gather(pc.transpose(1, 2).contiguous(), dim=0, index=fps_idx.unsqueeze(1).repeat(1, 3, 1)).transpose(1,2).contiguous()
+    _, fps_idx = sample_farthest_points(pc, K=num) 
+    # import pdb; pdb.set_trace()
+    sub_pc = torch.gather(pc.transpose(1, 2).contiguous(), dim=-1, index=fps_idx.unsqueeze(1).repeat(1, 3, 1)).transpose(1,2).contiguous()
     return sub_pc
 
 def knn_point(nsample, xyz, xyz_q):
@@ -35,7 +36,7 @@ def square_distance(src, dst):
     return dist
 
 
-def get_knn_index(coor_q, coor_k=None, k=cfg.knn_k):
+def get_knn_index(coor_q, coor_k=None, k=8):
     coor_k = coor_k if coor_k is not None else coor_q
     
     bs, np_q, _ = coor_q.size()
@@ -50,7 +51,7 @@ def get_knn_index(coor_q, coor_k=None, k=cfg.knn_k):
         idx = idx.view(-1)
     return idx
 
-def get_knn_feature(x, knn_index, x_q=None, k=cfg.knn_k):
+def get_knn_feature(x, knn_index, x_q=None, k=8):
     
     bs, num_points, dims = x.size()
     num_query = x_q.size(1) if x_q is not None else num_points
@@ -157,10 +158,10 @@ class Mlp(nn.Module):
         return x
 
 class EncoderBlock(nn.Module):
-    def __init__(self, dim, num_heads, mlp_ratio=4., qkv_bias=False, qk_scale=None, drop=0., attn_drop=0., drop_path=0., act_layer=nn.GELU, norm_layer=nn.LayerNorm):
+    def __init__(self, dim, num_heads, mlp_ratio=4., qkv_bias=False, qk_scale=None, drop=0., attn_drop=0., drop_path=0., act_layer=nn.GELU, norm_layer=nn.LayerNorm, knn_k=8):
         super().__init__()
         
-        
+        self.knn_k = knn_k
         self.norm1 = norm_layer(dim)
         self.attn = Attention(
             dim, num_heads, qkv_bias=qkv_bias, qk_scale=qk_scale,attn_drop=attn_drop, proj_drop=drop
@@ -182,7 +183,7 @@ class EncoderBlock(nn.Module):
         x_1 = self.attn(norm_x)
         
         if knn_index is not None:
-            knn_f = get_knn_feature(norm_x, knn_index=knn_index) # [B, k, np, 2*dim]
+            knn_f = get_knn_feature(norm_x, knn_index=knn_index, k=self.knn_k) # [B, k, np, 2*dim]
             knn_f = self.knn_map(knn_f) # [B, k, np, dim]
             #NOTE: max pooling the knn query feature
             knn_f = knn_f.max(dim=1, keepdim=False)[0] #[B, np, dim]
@@ -199,8 +200,9 @@ class EncoderBlock(nn.Module):
         
     
 class DecoderBlock(nn.Module):
-    def __init__(self, dim, num_heads, dim_q=None, mlp_ratio=4., qkv_bias=False, qk_scale=None, drop=0., attn_drop=0., drop_path=0., act_layer=nn.GELU, norm_layer=nn.LayerNorm):
+    def __init__(self, dim, num_heads, dim_q=None, mlp_ratio=4., qkv_bias=False, qk_scale=None, drop=0., attn_drop=0., drop_path=0., act_layer=nn.GELU, norm_layer=nn.LayerNorm, knn_k=8):
         super().__init__()
+        self.knn_k = knn_k
         self.norm1 = norm_layer(dim)
         self.self_attn = Attention(
             dim, num_heads=num_heads, qkv_bias=qkv_bias, qk_scale=qk_scale, attn_drop=attn_drop, proj_drop=drop
@@ -235,7 +237,7 @@ class DecoderBlock(nn.Module):
         q_1 = self.self_attn(norm_q)
         
         if knn_index is not None:
-            knn_f = get_knn_feature(norm_q, knn_index)
+            knn_f = get_knn_feature(norm_q, knn_index, k=self.knn_k)
             knn_f = self.knn_map(knn_f) # [B, k, np, dim]
             knn_f = knn_f.max(dim=1, keepdim=False)[0] #[B, np, dim]
             q_1 = torch.cat((q_1, knn_f), dim=-1)
@@ -249,7 +251,7 @@ class DecoderBlock(nn.Module):
         q_2 = self.attn(norm_q, norm_v)
         
         if cross_knn_index is not None:
-            knn_f = get_knn_feature(norm_v, cross_knn_index, x_q=norm_q)
+            knn_f = get_knn_feature(norm_v, cross_knn_index, x_q=norm_q, k=self.knn_k)
             knn_f = self.cross_knn_map(knn_f)
             knn_f = knn_f.max(dim=1, keepdim=False)[0]
             q_2 = torch.cat((q_2, knn_f), dim=-1)
@@ -285,8 +287,8 @@ class QueryGenerator(nn.Module):
         
     def forward(self, x, coarse_points=None):
         bs = x.shape[0]
-        glob_feat = self.increase_dim(x.transpose(1, 2))
-        glob_feat = torch.max(glob_feat, dim=-1)[0] # [B, 1024]
+        point_glob_feat = self.increase_dim(x.transpose(1, 2))
+        glob_feat = torch.max(point_glob_feat, dim=-1)[0] # [B, 1024]
         if coarse_points is None:
             coarse_points = self.coarse_pred(glob_feat).reshape(bs, -1, 3)
         else:
@@ -298,7 +300,7 @@ class QueryGenerator(nn.Module):
             coarse_points], dim=-1)
         query_feat = self.mlp_query(query_feat.transpose(1, 2)).transpose(1, 2)
         
-        return query_feat, coarse_points
+        return query_feat, coarse_points, point_glob_feat
     
     
 class FinePointGenerator(nn.Module):
@@ -316,23 +318,26 @@ class FinePointGenerator(nn.Module):
         self.fold_step = int(pow(num_pred//num_query, 0.5) + 0.5)
         self.foldingnet = Fold(embed_dim, step = self.fold_step, hidden_dim = 256)  # rebuild a cluster point
         
-    def forward(self, q, coarse_pc, input):
+    def forward(self, q, coarse_pc, input, feat_only):
         B, M, C = q.shape
-        global_feature = self.increase_dim(q.transpose(1, 2)).transpose(1, 2)
-        global_feature = torch.max(global_feature, dim=1)[0]
+        # import pdb; pdb.set_trace()
+        point_glob_feat = self.increase_dim(q.transpose(1, 2)).transpose(1, 2)
+        global_feature = torch.max(point_glob_feat, dim=1)[0]
+        if feat_only:
+            return point_glob_feat
         
         rebuild_feature = torch.cat([global_feature.unsqueeze(-2).expand(-1, M, -1), 
                                      q,
-                                     coarse_pc], dim=-1)
+                                     coarse_pc], dim=-1) # [B, M, 1027+C]
         rebuild_feature = self.reduce_map(rebuild_feature.reshape(B*M, -1))
         
         relative_xyz = self.foldingnet(rebuild_feature).reshape(B, M, 3, -1)
         rebuild_points = (relative_xyz + coarse_pc.unsqueeze(-1)).transpose(2, 3).reshape(B, -1, 3)
         
-        # inp_sparse = fps(input, self.num_query)
-        # coarse_pc = torch.cat([coarse_pc, inp_sparse], dim=1).contiguous()
-        rebuild_points = torch.cat([rebuild_points, input], dim=1).contiguous()
+        inp_sparse = fps(input, 128)
+        coarse_points = torch.cat([inp_sparse, coarse_pc], dim=1).contiguous()
+        rebuild_points = torch.cat([input, rebuild_points], dim=1).contiguous()
         
-        ret = rebuild_points
+        ret = (coarse_points, rebuild_points)
         return ret
     

@@ -45,6 +45,7 @@ class Fold(nn.Module):
 
     def forward(self, x):
         num_sample = self.step * self.step
+        # import pdb; pdb.set_trace()
         bs = x.size(0)
         features = x.view(bs, self.in_channel, 1).expand(bs, self.in_channel, num_sample)
         seed = self.folding_seed.view(1, 2, num_sample).expand(bs, 2, num_sample).to(x.device)

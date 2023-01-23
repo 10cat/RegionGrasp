@@ -25,15 +25,15 @@ class MyOptions:
     test_part: bool = False
     select_k: float = 0.25 # 选取batch_size * select_k这么多
     
-    use_cuda: bool = True
-    visible_device: str="0"
-    cuda_id: int = 0
+    use_cuda: bool = True #TODO: set as args
+    visible_device: str="0" #TODO: set as args
+    cuda_id: int = 0 #TODO: set as args
     
-    frame_names: str = 'frame_names_thumb.npz'
-    obj_meshes: str = 'decimate_meshes'
-    train_select_ids: bool = True
-    num_mask: int = 1
-    num_rhand_verts: int = 778
+    frame_names: str = 'frame_names_thumb.npz' #TODO: to config.py
+    obj_meshes: str = 'decimate_meshes' #TODO: to config.py
+    train_select_ids: bool = True #TODO: to config.py
+    num_mask: int = 1  #TODO: to config.py
+    num_rhand_verts: int = 778  
     num_obj_verts: int = 3000
     start_epoch: int = 1
     num_epoch: int = 40

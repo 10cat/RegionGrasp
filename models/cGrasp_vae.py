@@ -17,28 +17,29 @@ from models.pointnet_encoder import ObjRegionConditionEncoder, PointNetEncoder
 from models.CVAE import VAE
 from utils.utils import CRot2rotmat, region_masked_pointwise, rotmat2aa
 
-from option import MyOptions as cfg
+# from option import MyOptions as cfg
 
 
 class cGraspvae(nn.Module):
-    def __init__(self, in_channel_obj=3, in_channel_hand=3, encoder_sizes=cfg.VAE_encoder_sizes,
-                latent_size=64, decoder_sizes=[1024, 256, [16*6, 3]], condition_size=cfg.VAE_condition_size):
+    def __init__(self, ConditionNet, in_channel_obj=3, in_channel_hand=3, encoder_sizes=[1024, 512, 256],
+                latent_size=64, decoder_sizes=[1024, 256, [16*6, 3]], condition_size=1024):
         super(cGraspvae, self).__init__()
 
         self.in_channel_obj = in_channel_obj
         self.in_channel_hand = in_channel_hand
-        self.encoder_sizes = cfg.VAE_encoder_sizes
+        self.encoder_sizes = encoder_sizes
         self.latent_size = latent_size
         self.decoder_sizes = decoder_sizes
         self.condition_size = condition_size
 
         # self.obj_encoder = PointNetEncoder(global_feat=False, feature_transform=False, channel=self.in_channel_obj)
         self.hand_encoder = PointNetEncoder(global_feat=True, feature_transform=False, channel=self.in_channel_hand)
-        if cfg.fit_Condition is not True:
-            self.obj_rc_encoder = ObjRegionConditionEncoder()
-
+        # if cfg.fit_Condition is not True:
+        #     self.obj_rc_encoder = ObjRegionConditionEncoder()
+        self.cnet = ConditionNet
         
         # import pdb; pdb.set_trace()
+        self.condition_fit = nn.Sequential
 
         self.cvae = VAE(encoder_layer_sizes=self.encoder_sizes,
                         latent_size=self.latent_size,
@@ -56,10 +57,11 @@ class cGraspvae(nn.Module):
         # obj_pc_masked = region_masked_pointwise(obj_pc, region_mask)
         # obj_glb_feature, _, _ = self.obj_encoder(obj_pc) # [B, 1024]
         hand_glb_feature, _, _ = self.hand_encoder(hand_xyz) # [B, 1024]
-        if condition_vec is None:
-            assert region_mask is not None
-            obj_rc_glb_feature, _, _ = self.obj_rc_encoder(obj_pc, region_mask)
-            condition_vec = obj_rc_glb_feature
+        # if condition_vec is None:
+        #     assert region_mask is not None
+        #     obj_rc_glb_feature, _, _ = self.obj_rc_encoder(obj_pc, region_mask)
+        #     condition_vec = obj_rc_glb_feature
+        condition_vec = self.cnet(obj_pc, feat_only=True)
         recon, means, log_var, z = self.cvae(x=hand_glb_feature, c=condition_vec)
         # import pdb; pdb.set_trace()
         pose, trans = recon
@@ -70,10 +72,11 @@ class cGraspvae(nn.Module):
     def inference(self, obj_pc, region_mask=None, condition_vec=None):
         B = obj_pc.size(0)
         # obj_pc_masked = region_masked_pointwise(obj_pc, region_mask)
-        if condition_vec is None:
-            assert region_mask is not None
-            obj_rc_glb_feature, _, _ = self.obj_rc_encoder(obj_pc, region_mask)
-            condition_vec = obj_rc_glb_feature
+        # if condition_vec is None:
+        #     assert region_mask is not None
+        #     obj_rc_glb_feature, _, _ = self.obj_rc_encoder(obj_pc, region_mask)
+        #     condition_vec = obj_rc_glb_feature
+        condition_vec = self.cnet(obj_pc, feat_only=True)
         recon, z = self.cvae.inference(n=B, c=condition_vec)
         # recon = recon.contiguous().view(B, 61)
         pose, trans = recon
@@ -98,7 +101,7 @@ def hand_params_decode(pose, trans):
 
 
 if __name__ == "__main__":
-    B = cfg.batch_size
+    B = 32
     obj_verts = torch.randn(B, 3, 3000)
     region_mask = torch.randn(B, 1, 3000)
     hand_verts = torch.randn(B, 3, 778)

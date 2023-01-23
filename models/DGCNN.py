@@ -2,7 +2,7 @@ import torch
 import torch.nn as nn
 from models.PointTr import knn_point
 # from pointnet2_ops import pointnet2_utils
-from traineval_utils import pointnet_util
+# from traineval_utils import pointnet_util
 from pytorch3d.ops import sample_farthest_points
 
 class DGCNN_grouper(nn.Module):

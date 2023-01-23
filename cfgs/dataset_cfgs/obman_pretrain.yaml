@@ -1,0 +1,9 @@
+kwargs:  {
+  use_cache: True,
+  expand_times: 2,
+  object_centric: True,
+  resample_num: 8192,
+  ratio_lower: 0.05,
+  ratio_upper: 0.30,
+  num_mask_points: null
+}

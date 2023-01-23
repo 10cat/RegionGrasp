@@ -1,3 +1,4 @@
+from argparse import ArgumentParser
 import os
 import sys
 sys.path.append('.')
@@ -18,7 +19,7 @@ from dataset.data_utils import faces2verts_no_rep, contact_to_dict
 from dataset.obman_orig import obman
 
 class ObManResample(obman):
-    def __init__(self, ds_root, shapenet_root, split='train', joint_nb=21, mini_factor=None, use_cache=False, root_palm=False, mode='all', segment=False, use_external_points=True, apply_obj_transform=True, expand_times=config.expand_times, resample_num = 8192):
+    def __init__(self, ds_root, shapenet_root, split='train', joint_nb=21, mini_factor=None, use_cache=False, root_palm=False, mode='all', segment=False, use_external_points=True, apply_obj_transform=True, expand_times=1, resample_num = 8192):
         super().__init__(ds_root, shapenet_root, split, joint_nb, mini_factor, use_cache, root_palm, mode, segment, use_external_points, apply_obj_transform)
         self.unique_objs = np.unique(
                     [(meta_info['obj_class_id'], meta_info['obj_sample_id'])
@@ -67,6 +68,7 @@ class ObManResample(obman):
         obj_re = self.obj_resampled[class_id][sample_id]
         points = obj_re['points']
         face_ids = obj_re['faces']
+        # import pdb; pdb.set_trace()
         
         obj_transform = obj_transforms[idx]
         hom_points = np.concatenate([points, np.ones([points.shape[0], 1])], axis=1)
@@ -79,19 +81,24 @@ class ObManResample(obman):
         if obj_centric:
             trans_points -= obj_trans
         
-        return np.array(trans_points).astype(np.float32), trans
+        return np.array(trans_points).astype(np.float32), trans, np.array(face_ids)
 
 class ObManObj(ObManResample):
-    def __init__(self, ds_root, shapenet_root, split='train', joint_nb=21, mini_factor=None, use_cache=False, root_palm=False, mode='all', segment=False, use_external_points=True, apply_obj_transform=True, expand_times=config.expand_times, resample_num=8192, object_centric=False):
+    def __init__(self, ds_root, shapenet_root, split='train', joint_nb=21, mini_factor=None, use_cache=False, root_palm=False, mode='all', segment=False, use_external_points=True, apply_obj_transform=True, expand_times=1, resample_num=8192, object_centric=False, ratio_lower=None, ratio_upper=None, num_mask_points=None):
         super().__init__(ds_root, shapenet_root, split, joint_nb, mini_factor, use_cache, root_palm, mode, segment, use_external_points, apply_obj_transform, expand_times, resample_num)
+        
         self.meta_infos_exp, self.obj_transforms_exp = self.expand_set(expand_times)
-        self.mask_centers, self.mask_Ks = self.get_mask_ratio()
+        self.mask_centers, self.mask_Ks = self.get_mask_ratio(ratio_lb=ratio_lower, 
+                                                              ratio_ub=ratio_upper,
+                                                              Nm=num_mask_points)
         self.obj_centric = object_centric
+        self.expand_times = expand_times
+        
         
     def transform_under_views(self):
         return
     
-    def expand_set(self, times=config.expand_times):
+    def expand_set(self, times=None):
         meta_infos_new = []
         obj_transforms_new = []
         for idx, meta_info in enumerate(self.meta_infos):
@@ -101,13 +108,18 @@ class ObManObj(ObManResample):
                 
         return meta_infos_new, obj_transforms_new
     
-    def get_mask_ratio(self, ratio_lb=config.ratio_lower, ratio_ub=config.ratio_upper, N = config.num_resample_points, Nm = config.num_mask_points, seed1=0, seed2=1024):
+    def get_mask_ratio(self, ratio_lb=None, ratio_ub=None, Nm = None, seed1=0, seed2=1024):
         np.random.seed(seed1)
+        N = self.resample_num
         mask_centers = np.floor(np.random.random(self.__len__()) * N).astype(np.int32)
         # np.random.seed(seed2)
         # NOTE: 虽然训练阶段是需要固定点数的，但是pretrain阶段可以扩大mask掉的点数，可以一定程度上防止模型过拟合
-        mask_Ks = np.round((ratio_lb + (ratio_ub - ratio_lb) * np.random.random(self.__len__())) * N).astype(np.int32)
-        # mask_Ks = (Nm *np.ones_like(mask_centers)).astype(np.int32)
+        if ratio_lb is not None:
+            assert ratio_ub is not None
+            mask_Ks = np.round((ratio_lb + (ratio_ub - ratio_lb) * np.random.random(self.__len__())) * N).astype(np.int32)
+        else:
+            assert Nm is not None, "Fixed mask point number hasn't been configured"
+            mask_Ks = (Nm *np.ones_like(mask_centers)).astype(np.int32)
         return mask_centers, mask_Ks
     
     def KNNmask(self, points, idx):
@@ -137,7 +149,7 @@ class ObManObj(ObManResample):
     # @func_timer
     def __getitem__(self, idx):
         sample = {}
-        obj_points, obj_trans = self.get_obj_resampled_trans(self.meta_infos_exp, self.obj_transforms_exp, idx, obj_centric=self.obj_centric)
+        obj_points, obj_trans, _ = self.get_obj_resampled_trans(self.meta_infos_exp, self.obj_transforms_exp, idx, obj_centric=self.obj_centric)
         mask = self.KNNmask(obj_points, idx)
         masked = mask < 1
         remained_points = obj_points[~masked].reshape(-1, 3)
@@ -155,7 +167,6 @@ class ObManObj(ObManResample):
 class ObManThumb(ObManResample):
     def __init__(self, ds_root, shapenet_root, split='train', joint_nb=21, mini_factor=None, use_cache=False, root_palm=False, mode='all', segment=False, use_external_points=True, apply_obj_transform=True, expand_times=1, resample_num=8192, object_centric=False):
         super().__init__(ds_root, shapenet_root, split, joint_nb, mini_factor, use_cache, root_palm, mode, segment, use_external_points, apply_obj_transform, expand_times, resample_num)
-        
         self.obj_centric = object_centric
         
     def thumb_query_point(self, HandMesh, ObjMesh, pene_th=0.002, contact_th=-0.005):
@@ -214,7 +225,7 @@ class ObManThumb(ObManResample):
     
     def __getitem__(self, idx):
         annot = {}
-        ObjPoints, obj_trans = self.get_obj_resampled_trans(self.meta_infos, idx, obj_centric=self.obj_centric) # np(8192, 3)
+        ObjPoints, obj_trans, _ = self.get_obj_resampled_trans(self.meta_infos, self.obj_transforms, idx, obj_centric=self.obj_centric) # np(8192, 3)
         N = ObjPoints.shape[0]
         hand_verts = self.get_verts3d(idx)
         hand_faces = self.get_faces3d(idx)
@@ -228,7 +239,7 @@ class ObManThumb(ObManResample):
         
         point_contact = self.thumb_query_point(HandMesh, ObjMesh)
         if point_contact is None:
-            # TODO: 筛掉没有手接触的sample
+            # DONE: 筛掉没有手接触的sample
             return None
         
         dists, contact_indices = self.get_KNN_in_pc(ObjPoints, point_contact)
@@ -286,10 +297,10 @@ def sampling_check(objdataset):
     print(f"avg ratio: {ratio_avg}")
     return
 
-def get_thumb_condition(ds_root):
+def get_thumb_condition(ds_root, args):
     dataset = ObManThumb(ds_root=ds_root, 
                            shapenet_root=config.SHAPENET_ROOT,
-                           split='train',
+                           split=args.split,
                            use_cache=True)
     output_root = os.path.join(dataset.root, 'thumbHOI')
     makepath(output_root)
@@ -307,10 +318,10 @@ def get_thumb_condition(ds_root):
     np.save(list_path, np.array(samples_list))
     return
 
-def get_new_objpretrain(ds_root):
+def get_new_objpretrain(ds_root, args):
     objdataset = ObManObj(ds_root=ds_root,
                           shapenet_root=config.SHAPENET_ROOT,
-                          split='train',
+                          split=args.split,
                           use_cache=True,
                           expand_times=5,
                           object_centric=True)
@@ -319,9 +330,17 @@ def get_new_objpretrain(ds_root):
     
     
 if __name__ == "__main__":
+    import argparse
     dataset_root = config.OBMAN_ROOT
+    parser = ArgumentParser()
+    parser.add_argument('--run', type=str, default='obj_pretrain')
+    parser.add_argument('--split', type=str, default='train')
+    args = parser.parse_args()
     
-    get_new_objpretrain(dataset_root)
+    if args.run == 'obj_pretrain':
+        get_new_objpretrain(dataset_root, args)
+    elif args.run == 'thumb':
+        get_thumb_condition(dataset_root, args)
     
     
     

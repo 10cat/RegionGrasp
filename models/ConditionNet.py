@@ -4,7 +4,7 @@ sys.path.append('..')
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-from option import MyOptions as cfg
+# from option import MyOptions as cfg
 from models.pointnet_encoder import PointNetEncoder
 from utils.utils import func_timer, region_masked_pointwise
 from timm.models.layers import trunc_normal_
@@ -13,18 +13,21 @@ from models.DGCNN import DGCNN_grouper
 
 
 class ConditionTrans(nn.Module):
-    def __init__(self, in_chans=3, embed_dim=768, num_heads=6, mlp_ratio=2., qkv_bias=False, qk_scale=None, drop_rate=0., attn_drop_rate=0., glob_feat_dim=1024, depth={'encoder':6, 'decoder':6}, num_query=224, knn_layer=-1, fps=False, num_pred=8192):
+    def __init__(self, in_chans=3, embed_dim=768, num_heads=6, mlp_ratio=2., qkv_bias=False, qk_scale=None, drop_rate=0., attn_drop_rate=0., glob_feat_dim=1024, depth={'encoder':6, 'decoder':6}, num_query=224, knn_layer_num=-1, fps=False, num_pred=6144, knn_k=8):
         
         #CHECK: 不打算和PointTr一样使用fps将2048个点降为128个点，而直接使用最初的2048个点(N=2048, C=32), 所以embed_dim可以相应的降低维度
         super().__init__()
         
+        
         self.embed_dim = embed_dim
-        self.knn_layer = knn_layer
+        self.knn_layer = knn_layer_num
         self.num_pred = num_pred
         self.num_query = num_query
+        self.knn_k = knn_k
         self.fps = fps
         
         self.pc_embed = DGCNN_grouper()
+        
         self.pos_embed = PoseEmbedding(in_chans=in_chans, embed_dim=embed_dim)
         self.input_proj = nn.Sequential(
             nn.Conv1d(128, embed_dim, 1),
@@ -35,12 +38,13 @@ class ConditionTrans(nn.Module):
         
         self.encoder = nn.ModuleList([
             EncoderBlock(
-                dim=embed_dim, num_heads=num_heads, mlp_ratio=mlp_ratio, qkv_bias=qkv_bias, qk_scale=qk_scale, drop=drop_rate, attn_drop=attn_drop_rate)
+                dim=embed_dim, num_heads=num_heads, mlp_ratio=mlp_ratio, qkv_bias=qkv_bias, qk_scale=qk_scale, drop=drop_rate, attn_drop=attn_drop_rate, knn_k=knn_k)
             for i in range(depth['encoder'])])
+        
         
         self.decoder = nn.ModuleList([
             DecoderBlock(
-                dim=embed_dim, num_heads=num_heads, mlp_ratio=mlp_ratio, qkv_bias=qkv_bias, qk_scale=qk_scale, drop=drop_rate, attn_drop=attn_drop_rate)
+                dim=embed_dim, num_heads=num_heads, mlp_ratio=mlp_ratio, qkv_bias=qkv_bias, qk_scale=qk_scale, drop=drop_rate, attn_drop=attn_drop_rate, knn_k=knn_k)
             for i in range(depth['decoder'])])
         
         self.query_generate = QueryGenerator(embed_dim=embed_dim, feat_dim=glob_feat_dim, num_query=num_query)
@@ -79,10 +83,11 @@ class ConditionTrans(nn.Module):
         cross_knn_index = get_knn_index(pred_points, coor_k=coor_k)
         return new_knn_index, cross_knn_index
     
-    def forward(self, input):
+    def forward(self, input, feat_only=False):
         bs = input.size(0)
         
         coor, x, pos, knn_index = self.get_input_embedding(input, fps=self.fps)
+        # import pdb; pdb.set_trace()
         
         for i, blk in enumerate(self.encoder):
             if i < self.knn_layer:
@@ -90,7 +95,8 @@ class ConditionTrans(nn.Module):
             else:
                 x = blk(x + pos)
         
-        q, coarse_pc = self.query_generate(x)
+        q, coarse_pc, point_glob_feat_input = self.query_generate(x)
+        
         new_knn_index, cross_knn_index = self.get_new_knn_index(coarse_pc, coor_k=coor)
         
         for i, blk in enumerate(self.decoder):
@@ -99,9 +105,13 @@ class ConditionTrans(nn.Module):
             else:
                 q = blk(q, x)
                 
-        pred_pc = self.finepoint_generate(q, coarse_pc, input)
-        
-        return q, pred_pc
+        if feat_only:
+            point_glob_feat_rebuild = self.finepoint_generate(q, coarse_pc, input, feat_only=feat_only)
+            global_feature = torch.cat([point_glob_feat_input, point_glob_feat_rebuild], dim=-1) # B, 2048
+            return global_feature 
+        else:
+            coarse_pc, fine_pc = self.finepoint_generate(q, coarse_pc, input, feat_only=feat_only)
+            return q, coarse_pc, fine_pc
     
 class ConditionBERT(ConditionTrans):
     def __init__(self, in_chans=3, embed_dim=768, num_heads=6, mlp_ratio=2., qkv_bias=False, qk_scale=None, drop_rate=0., attn_drop_rate=0., glob_feat_dim=1024, depth={'encoder':6, 'decoder':6}, num_query=224, knn_layer=-1, fps=True, num_pred=8192):
@@ -250,7 +260,7 @@ class SDmapNet(nn.Module):
 if __name__ == "__main__":
     import os
     from tqdm import tqdm
-    os.environ['CUDA_VISIBLE_DEVICES'] = cfg.visible_device
+    os.environ['CUDA_VISIBLE_DEVICES'] = "1"
     B = 8
     Ndata = 180000
     

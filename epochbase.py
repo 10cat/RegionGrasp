@@ -20,7 +20,7 @@ from utils.meters import AverageMeter, AverageMeters
 from utils.logger import Monitor
 from models.ConditionNet import ConditionNet
 from models.cGrasp_vae import cGraspvae
-from traineval_utils.loss import ConditionNetLoss, cGraspvaeLoss
+from traineval_utils.loss import cGraspvaeLoss
 from traineval_utils.metrics import ConditionNetMetrics, TestMetricsCPU, cGraspvaeMetrics
 from utils.utils import func_timer
 from utils.visualization import visual_hand, visual_obj
@@ -154,13 +154,13 @@ class Epoch(nn.Module):
         
         # outputs as a dict
         outputs = {}
-        # for i in [hand_params, sample_stats, condition_vec, SD_maps]:
-        #     outputs[retrieve_name(i)[0]] = i        
+              
         outputs['condition_vec'] = condition_vec
         outputs['feats'] = feats
         outputs['SD_maps'] = SD_maps
         outputs['hand_params'] = hand_params
         outputs['sample_stats'] = sample_stats # sample_stats = [p_mean, p_std]
+        
         return outputs
 
     # @func_timer
@@ -305,17 +305,14 @@ class Epoch(nn.Module):
     def decode_batch_hand_params(self, outputs, batch_size):
         hand_params = outputs['hand_params']
         B = batch_size
-        if B == cfg.batch_size:
-            rhand_pred = self.rh_model(**hand_params)
-        else:
-            import mano
-            rh_model = mano.load(model_path=cfg.mano_rh_path,
-                                    model_type='mano',
-                                      num_pca_comps=45,
-                                      batch_size=B,
-                                      flat_hand_mean=True)
-            rh_model = rh_model.to(self.device)
-            rhand_pred = rh_model(**hand_params)
+        import mano
+        rh_model = mano.load(model_path=cfg.mano_rh_path,
+                                model_type='mano',
+                                    num_pca_comps=45,
+                                    batch_size=B,
+                                    flat_hand_mean=True)
+        rh_model = rh_model.to(self.device)
+        rhand_pred = rh_model(**hand_params)
         rhand_vs_pred = rhand_pred.vertices
         return rhand_vs_pred
 

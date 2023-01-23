@@ -367,7 +367,7 @@ class obman(data.Dataset):
         obj_transform = self.obj_transforms[idx]
         hom_verts = np.concatenate([verts, np.ones([verts.shape[0], 1])],
                                    axis=1)
-        import pdb; pdb.set_trace()
+        # import pdb; pdb.set_trace()
         trans_verts = obj_transform.dot(hom_verts.T).T[:, :3]
         trans_verts = self.cam_extr[:3, :3].dot(
             trans_verts.transpose()).transpose()
