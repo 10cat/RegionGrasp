@@ -144,6 +144,7 @@ class obman(data.Dataset):
             all_joints3d = []
             hand_sides = []
             hand_poses = []
+            hand_shapes = []
             hand_pcas = []
             hand_verts3d = []
             obj_paths = []
@@ -155,6 +156,7 @@ class obman(data.Dataset):
                                          '{}.pkl'.format(prefix))
                 with open(meta_path, 'rb') as meta_f:
                     meta_info = pickle.load(meta_f)
+                    # import pdb; pdb.set_trace()
                     image_path = self._get_image_path(prefix)
                     image_names.append(image_path)
                     all_joints2d.append(meta_info['coords_2d'])
@@ -162,6 +164,7 @@ class obman(data.Dataset):
                     hand_verts3d.append(meta_info['verts_3d'])
                     hand_sides.append(meta_info['side'])
                     hand_poses.append(meta_info['hand_pose'])
+                    hand_shapes.append(meta_info['shape'])
                     hand_pcas.append(meta_info['pca_pose'])
                     depth_infos.append({
                         'depth_min':
@@ -204,6 +207,7 @@ class obman(data.Dataset):
                 'joints3d': all_joints3d,
                 'hand_sides': hand_sides,
                 'hand_poses': hand_poses,
+                'hand_shapes': hand_shapes,
                 'hand_pcas': hand_pcas,
                 'hand_verts3d': hand_verts3d,
                 'obj_paths': obj_paths,
@@ -243,6 +247,8 @@ class obman(data.Dataset):
         joints2d = [annotations['joints2d'][idx] for idx in selected_idxs]
         hand_sides = [annotations['hand_sides'][idx] for idx in selected_idxs]
         hand_pcas = [annotations['hand_pcas'][idx] for idx in selected_idxs]
+        hand_poses = [annotations['hand_poses'][idx] for idx in selected_idxs]
+        hand_shapes = [annotations['hand_shapes'][idx] for idx in selected_idxs]
         hand_verts3d = [
             annotations['hand_verts3d'][idx] for idx in selected_idxs
         ]
@@ -278,6 +284,8 @@ class obman(data.Dataset):
         self.joints3d = joints3d
         self.hand_sides = hand_sides
         self.hand_pcas = hand_pcas
+        self.hand_poses = hand_poses
+        self.hand_shapes = hand_shapes
         self.hand_verts3d = hand_verts3d
         self.obj_paths = obj_paths
         self.obj_transforms = obj_transforms
@@ -398,7 +406,7 @@ class obman(data.Dataset):
 def preprocess(dataset_root, split='train'):
     
     
-    trainset = obman(root = dataset_root, 
+    trainset = obman(ds_root = dataset_root, 
                      shapenet_root = config.SHAPENET_ROOT, 
                      split=split)
     count_2048 = 0

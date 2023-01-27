@@ -54,7 +54,7 @@ class MetersMonitor(object):
         
     
 class CheckpointsManage(object):
-    def __init__(self, root, interval=1):
+    def __init__(self, root, interval=1, check_interval=None):
         self.root = root
         self.interval = interval
         self.best_metrics = None
@@ -64,16 +64,24 @@ class CheckpointsManage(object):
     def save_checkpoints(self, epoch, model, metric_value):
         if self.best_metrics is None:
             self.best_metrics = metric_value
+        
         elif metric_value < self.best_metrics:
-            checkpoint_path = os.path.join(self.root, f'checkpoint_{epoch}.pth')
+            best_model_path = os.path.join(self.root, f'best_model.pth')
             torch.save({'epoch':epoch,
                         'metrics':metric_value,
                         'state_dict':model.state_dict()},
-                    checkpoint_path)
+                    best_model_path)
             self.best_metrics = metric_value
             
         else:
             self.no_improve += 1
+        
+        checkpoint_path = os.path.join(self.root, f'checkpoint_{epoch}.pth')
+        torch.save({'epoch':epoch,
+                    'metrics':metric_value,
+                    'state_dict':model.state_dict()},
+                checkpoint_path)
+        
         return self.no_improve
     
     def load_checkpoints(self, model, chkpt_epoch, stdict):
@@ -171,7 +179,7 @@ class PretrainEpoch():
                 i = 0
                 pcs = [gt_points[i], fine_pc[i], coarse_pc[i]]
                 pcs = [pc.detach().to('cpu').numpy() for pc in pcs]
-                gt_colors = 'orange'
+                gt_colors = 'green'
                 pred_colors = ['green', 'yellow']
                 
                 self.Visual.visual(pcs=pcs[0], pc_colors=gt_colors, sample_id=int(sample_ids[i]), epoch=epoch, name='gt')
@@ -279,8 +287,9 @@ class EpochVAE():
                 obj_verts, _ = self.dataset.get_obj_verts_faces(sample_id)
                 obj_verts -= obj_trans[i]
                 self.VisualMesh.visual(vertices=obj_verts, faces=obj_mesh['faces'], mesh_color='grey', sample_id=sample_id, epoch=epoch, name='obj')
-                mask = region_mask > 0.
+                region_mask = region_mask[i]
                 obj_pc = obj_pc[i]
+                mask = region_mask > 0.
                 self.VisualPC.visual(pcs=[obj_pc[~mask], obj_pc[mask]], pc_colors=['green', 'yellow'], sample_id=sample_id, epoch=epoch, name='obj')
         return
         
@@ -337,7 +346,7 @@ class ValEpochVAE(EpochVAE):
                 # NOTE: validation generation in several iters
                 Loss_iters = AverageMeters() # loss/metrics计算方式：取5个iter的平均
                 for iter in range(self.cfg.eval_iter):
-                    hand_params = hand_params_list[0]
+                    hand_params = hand_params_list[iter] # 输出每个iter的生成效果
                     _, dict_loss, signed_dists, rhand_vs_pred, rhand_faces = self.loss(hand_params, None, obj_points, gt_rhand_vs, region_mask, obj_normals=obj_normals)
                     for key, val in dict_loss.items():
                         Loss_iters.add_value(key, val)

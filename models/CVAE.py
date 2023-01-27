@@ -1,12 +1,12 @@
 from copy import deepcopy
 import torch
 import torch.nn as nn
-from option import MyOptions as cfg
+# from option import MyOptions as cfg
 from utils.utils import get_std
 
 class VAE(nn.Module):
     def __init__(self, encoder_layer_sizes, latent_size, decoder_layer_sizes,
-                 conditional=True, condition_size=1024):
+                 conditional=True, condition_size=1024, cfg=None):
         super(VAE, self).__init__()
 
         if conditional:
@@ -26,13 +26,14 @@ class VAE(nn.Module):
         self.decoder = Decoder(
             decoder_layer_sizes, latent_size, conditional, condition_size)
         
-        # import pdb; pdb.set_trace()
+        # import pdb; pdb.set_trace()\
+        self.cfg = cfg
 
     
     def forward(self, x, c=None):
         batch_size = x.size(0)
         means, log_var = self.encoder(x, c)
-        std = get_std(log_var)
+        std = get_std(log_var, self.cfg)
         eps = torch.randn([batch_size, self.latent_size], device=means.device)
         z = eps * std + means
 

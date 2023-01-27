@@ -22,7 +22,7 @@ from utils.utils import CRot2rotmat, region_masked_pointwise, rotmat2aa
 
 class cGraspvae(nn.Module):
     def __init__(self, ConditionNet, in_channel_obj=3, in_channel_hand=3, encoder_sizes=[1024, 512, 256],
-                latent_size=64, decoder_sizes=[1024, 256, [16*6, 3]], condition_size=1024):
+                latent_size=64, decoder_sizes=[1024, 256, [16*6, 3]], condition_size=1024, cfg=None):
         super(cGraspvae, self).__init__()
 
         self.in_channel_obj = in_channel_obj
@@ -37,14 +37,13 @@ class cGraspvae(nn.Module):
         # if cfg.fit_Condition is not True:
         #     self.obj_rc_encoder = ObjRegionConditionEncoder()
         self.cnet = ConditionNet
-        
         # import pdb; pdb.set_trace()
-        self.condition_fit = nn.Sequential
 
         self.cvae = VAE(encoder_layer_sizes=self.encoder_sizes,
                         latent_size=self.latent_size,
                         decoder_layer_sizes=self.decoder_sizes,
-                        condition_size=self.condition_size)
+                        condition_size=self.condition_size, cfg=cfg)
+        self.cfg = cfg
 
     def forward(self, obj_pc, hand_xyz, region_mask=None, condition_vec=None):
         """

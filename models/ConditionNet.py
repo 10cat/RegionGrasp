@@ -107,7 +107,8 @@ class ConditionTrans(nn.Module):
                 
         if feat_only:
             point_glob_feat_rebuild = self.finepoint_generate(q, coarse_pc, input, feat_only=feat_only)
-            global_feature = torch.cat([point_glob_feat_input, point_glob_feat_rebuild], dim=-1) # B, 2048
+            global_feature = torch.cat([point_glob_feat_input, point_glob_feat_rebuild], dim=-1) # B, N+M, 1024
+            global_feature = torch.max(global_feature, dim=-1)[0]
             return global_feature 
         else:
             coarse_pc, fine_pc = self.finepoint_generate(q, coarse_pc, input, feat_only=feat_only)

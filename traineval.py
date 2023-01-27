@@ -57,7 +57,7 @@ def cgrasp(cfg=None):
         print('checkpoint for cnet loaded!')
         
     model = cGraspvae(cnet,
-                      **cfg.model.vae.kwargs)
+                      **cfg.model.vae.kwargs, cfg=cfg)
     
     # model.named_parameters()
     # import pdb; pdb.set_trace()
@@ -121,7 +121,8 @@ def pretrain(cfg=None):
         
         for epoch in range(cfg.num_epoch):
             net, _ = trainepoch(trainloader, epoch, net)
-            _, stop_flag = valepoch(valloader, epoch, net)
+            if epoch % cfg.check_interval:
+                _, stop_flag = valepoch(valloader, epoch, net)
             if stop_flag:
                 print("Early stopping occur!")
                 break
@@ -202,7 +203,7 @@ if __name__ == "__main__":
 
     if cfg.wandb:
         wandb.login()
-        wandb.init(project="ConditionHOI",
+        wandb.init(project=cfg.project_name,
                 name=cfg.exp_name,
                 config=conf,
                 dir=os.path.join(cfg.output_root, 'wandb')) # omegaconf: resolve=True即可填写自动变量

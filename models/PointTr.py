@@ -321,10 +321,13 @@ class FinePointGenerator(nn.Module):
     def forward(self, q, coarse_pc, input, feat_only):
         B, M, C = q.shape
         # import pdb; pdb.set_trace()
-        point_glob_feat = self.increase_dim(q.transpose(1, 2)).transpose(1, 2)
-        global_feature = torch.max(point_glob_feat, dim=1)[0]
+        point_glob_feat = self.increase_dim(q.transpose(1, 2))
         if feat_only:
             return point_glob_feat
+        
+        point_glob_feat = point_glob_feat.transpose(1, 2)
+        global_feature = torch.max(point_glob_feat, dim=1)[0]
+        
         
         rebuild_feature = torch.cat([global_feature.unsqueeze(-2).expand(-1, M, -1), 
                                      q,

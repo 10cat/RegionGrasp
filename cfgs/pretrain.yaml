@@ -1,3 +1,4 @@
+project_name: "ConditionHOI_pretrain"
 # dataset settings
 dataset: {
   name: obman,

@@ -54,6 +54,7 @@ class cGraspvaeLoss(nn.Module):
         self.v_weights = torch.from_numpy(np.load(cfg.c_weights_path)).to(torch.float32).to(self.device) # 这个到底是啥呀？ 能不能用在其他数据集上？
         self.v_weights2 = torch.pow(self.v_weights, 1.0/2.5) # 这个到底是啥呀？ 能不能用在其他数据集上？
         self.vpe = torch.from_numpy(np.load(cfg.vpe_path)).to(self.device).to(torch.long) # 这个到底是啥呀？ 能不能用在其他数据集上？
+        self.cfg = cfg
         self.latent_size = cfg.model.vae.kwargs.latent_size
         self.batch_size = cfg.batch_size
         self.mano_rh_path = cfg.mano_rh_path
@@ -70,7 +71,7 @@ class cGraspvaeLoss(nn.Module):
         # import pdb; pdb.set_trace()
         B = rhand_vs.size(0)
 
-        p_std = get_std(log_vars) 
+        p_std = get_std(log_vars, self.cfg) 
         q_z = torch.distributions.normal.Normal(p_mean, p_std)
         
         p_z = torch.distributions.normal.Normal(
@@ -85,7 +86,7 @@ class cGraspvaeLoss(nn.Module):
 
         B = rhand_vs.size(0)
         
-        rhand_pred, rh_model = decode_hand_params_batch(hand_params, B, self.device)
+        rhand_pred, rh_model = decode_hand_params_batch(hand_params, B, self.cfg, self.device)
         
         rhand_vs_pred = rhand_pred.vertices
         if rhand_vs.shape[-1] != 3:

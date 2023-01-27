@@ -13,7 +13,7 @@ from pytorch3d.structures import Meshes
 import sys
 sys.path.append('.')
 sys.path.append('..')
-from option import MyOptions as cfg
+# from option import MyOptions as cfg
 
 to_cpu = lambda tensor: tensor.detach().cpu().numpy() # 好！直接用lambda代入法一句话代替函数
 
@@ -68,7 +68,7 @@ def makepath(desired_path, isfile=False):
         if not os.path.exists(desired_path): os.makedirs(desired_path)
     return desired_path
 
-def get_std(log_vars):
+def get_std(log_vars, cfg):
     p_std = 0
     if cfg.std_type == 'softplus':
         p_std = F.softplus(log_vars)
@@ -136,7 +136,7 @@ def size_splits(tensor, split_sizes, dim=0):
     return tuple(tensor.narrow(int(dim), int(start), int(length)) 
                  for start, length in zip(splits, split_sizes))
 
-def region_masked_pointwise(obj_pc, mask):
+def region_masked_pointwise(obj_pc, mask, cfg):
     # DONE: 不改变点乘，但是改成dense加权形式,即没有选中的点权重设小但不为0，选中为condition的点权重设大 (e.g. 0.1 / 3.0)
     if cfg.mask_dense_weight:
         weight = torch.ones_like(mask, dtype=torch.float32) * 0.1
@@ -352,20 +352,20 @@ def point2point_signed(x, y, x_normals=None, y_normals=None):
 
     return y2x_signed, x2y_signed, yidx_near, xidx_near
 
-def signed_distance_batch(device, rhand_vs, rh_f, obj_vs, object_faces=None):
+def signed_distance_batch(device, rhand_vs, rh_f, obj_vs, cfg, object_faces=None):
     rh_normals = Meshes(verts=rhand_vs, faces=rh_f).to(device).verts_normals_packed().view(-1, cfg.num_rhand_verts, 3)
     if object_faces is not None:
         # obj_mesh_faces = torch.Tensor(obj_mesh_faces)
         # obj_vs = obj_vs.tolist()
         obj_vs_list = [obj_vs[i] for i in range(obj_vs.shape[0])] # need to be consistent length list with obj_mesh_faces
-        obj_normals = Meshes(verts=obj_vs_list, faces=object_faces).to(device).verts_normals_packed().view(-1, cfg.num_obj_verts, 3)
+        obj_normals = Meshes(verts=obj_vs_list, faces=object_faces).to(device).verts_normals_packed().view(-1, obj_vs.shape[1], 3)
     else:
         obj_normals = None
     o2h_signed, h2o_signed, o_nearest_ids, h_nearest_ids = point2point_signed(rhand_vs, obj_vs, rh_normals, obj_normals)
     
     return o2h_signed, h2o_signed, o_nearest_ids, h_nearest_ids
 
-def decode_hand_params_batch(hand_params, batch_size, device):
+def decode_hand_params_batch(hand_params, batch_size, cfg, device):
     """decode the mano hand model(vertices, faces) from given mano hand parameters
     Args:
         hand_params (dict): mano parameters

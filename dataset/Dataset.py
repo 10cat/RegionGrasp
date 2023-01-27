@@ -52,6 +52,7 @@ class ObManDataset(ObManThumb):
             annotations_thumb.append(annotation)
         self.samples_selected = sample_id
         self.annotations_thumb = annotations_thumb
+        # import pdb; pdb.set_trace()
         
     def __len__(self):
         return len(self.samples_selected)
@@ -74,7 +75,13 @@ class ObManDataset(ObManThumb):
             hand_verts -= obj_trans
         ObjMesh = trimesh.Trimesh(vertices=obj_verts, faces=obj_mesh['faces'])
         obj_point_normals = ObjMesh.face_normals[face_ids]
-        # import pdb; pdb.set_trace()
+        #import pdb; pdb.set_trace()
+        # DONE: gt_visualization
+        # HandMesh = trimesh.Trimesh(vertices=hand_verts, faces=hand_faces)
+        # root = '/home/yilin/Codes/test_visuals/train_trans'
+        # makepath(root)
+        # ObjMesh.export(os.path.join(root, f'{index}_obj.ply'))
+        # HandMesh.export(os.path.join(root, f'{index}_hand.ply'))
             
         # DONE: generate region_mask for o2h
         contact_indices = annot['contact_indices']
@@ -88,13 +95,13 @@ class ObManDataset(ObManThumb):
         
         # sample['contact_pc'] = torch.from_numpy(annot['contact_pc'])
         sample['region_mask'] = torch.from_numpy(region_mask)
-        # import pdb; pdb.set_trace()
+        
         sample['input_pc'] = torch.from_numpy(annot['input_pc'])
         sample['sample_id'] = torch.Tensor([index])
         
+        # import pdb; pdb.set_trace()
+        
         return sample
-    
-    
     
 
 class GrabNetDataset(GrabNetDataset_orig):
@@ -216,19 +223,31 @@ class GrabNetDataset(GrabNetDataset_orig):
         
         
 if __name__=="__main__":
-    dataset = GrabNetDataset(dataset_root=config.DATASET_ROOT, 
-                            ds_name="train", 
-                            frame_names_file='frame_names_thumb.npz', 
-                            grabnet_thumb=False, 
-                            obj_meshes_folder='decimate_meshes',
-                            select_ids=False, 
-                            output_root=None, 
-                            dtype=torch.float32, 
-                            only_params=False, 
-                            load_on_ram=False)
+    # dataset = GrabNetDataset(dataset_root=config.DATASET_ROOT, 
+    #                         ds_name="train", 
+    #                         frame_names_file='frame_names_thumb.npz', 
+    #                         grabnet_thumb=False, 
+    #                         obj_meshes_folder='decimate_meshes',
+    #                         select_ids=False, 
+    #                         output_root=None, 
+    #                         dtype=torch.float32, 
+    #                         only_params=False, 
+    #                         load_on_ram=False)
     
     
-    sample = dataset.__getitem__(200031)
+    # sample = dataset.__getitem__(200031)
+    
+    dataset = ObManDataset(ds_root=config.OBMAN_ROOT,
+                           shapenet_root=config.SHAPENET_ROOT,
+                           split='train',
+                           use_cache=True,
+                           object_centric=True)
+    
+    length = dataset.__len__()
+    
+    for idx in range(length):
+        sample = dataset.__getitem__(idx)
+        
 
     
     
