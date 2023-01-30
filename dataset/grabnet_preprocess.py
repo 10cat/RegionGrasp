@@ -103,7 +103,7 @@ class GrabNetThumb(GrabNetResample):
         obj_contact_fids = h2o_closest_fid[flag]
         # import pdb; pdb.set_trace()
         if obj_contact_fids.shape[0] == 0:
-            return None
+            return None, None
         elif obj_contact_fids.shape[0] == 1:
             point = ObjMesh.triangles_center[obj_contact_fids[0]]
         else:
@@ -197,7 +197,7 @@ def get_thumb_condition(ds_root, args):
     ds_thumb = {k:[] for k in list(ds_orig.keys())}
     ds_thumb['contact_mask'] = []
     sample_ids = []
-    for idx in tqdm(range(args.start, dataset.__len__()), desc='Annotating thumb contact in {dataset.ds_name} set'):
+    for idx in tqdm(range(args.start, dataset.__len__()), desc=f'Annotating thumb contact in {dataset.ds_name} set'):
         data_out, contact_mask = dataset.__getitem__(idx)
         if contact_mask is None:
             continue
