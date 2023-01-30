@@ -39,7 +39,7 @@ thumb_center = [1295, 1296, 1297, 1298, 1299, 1300, 1301, 1302, 1303, 1304, 1305
 """
 Filepath settings
 """
-machine = '41'
+machine = '97'
 
 if machine == '97':
 

@@ -82,7 +82,7 @@ class Epoch(nn.Module):
         self.cGraspVAELoss = cGraspvaeLoss(self.rh_f, self.rh_model, self.device).to(self.device)
         self.ConditionNetMetrics = ConditionNetMetrics() # metrics always on cpu
         self.cGraspvaeMetrics = cGraspvaeMetrics(self.rh_model, self.rh_f, self.device) # metrics always on cpu
-        self.testMetrics = TestMetricsCPU(self.rh_model_cpu, self.dataset)
+        if self.mode: self.testMetrics = TestMetricsCPU(self.rh_model_cpu, self.dataset)
     
         
 
@@ -386,9 +386,13 @@ class Epoch(nn.Module):
         # import pdb; pdb.set_trace()
         self.Losses, self.Metrics = AverageMeters(), AverageMeters()
         for idx, sample in enumerate(tqdm(self.dataloader, desc=f'{self.mode} epoch:{epoch}')):
-            self.one_batch(sample, idx)
-            if self.mode == 'train':
-                break
+            if self.mode != 'train':
+                with torch.no_grad(): # NOTE: 由于validation阶段需要iter 10次, no_grad()一定要开一定要开一定要开！否则会
+                    self.one_batch(sample, idx)
+
+            else:  
+                self.one_batch(sample, idx)
+            torch.cuda.empty_cache()
         
         best_val = self.save_checkpoints(epoch, best_val)
         self.metrics_log(epoch)
@@ -543,11 +547,9 @@ class ValEpoch(Epoch):
         self.update_meters(dict_losses=dict_losses, dict_metrics=dict_metrics)
 
         # --- Visualization --- #
-        if self.mode != 'train':
-            if idx % cfg.visual_interval_val == 0: self.visual(rhand_vs_pred, data, sample_ids=sample['sample_idx'], batch_id=idx)
-        else:
-            if idx == 0: self.visual(rhand_vs_pred, data, sample_ids=sample['sample_idx'], batch_id=idx)
-
+        if idx % cfg.visual_interval_val == 0: self.visual(rhand_vs_pred, data, sample_ids=sample['sample_idx'], batch_id=idx)
+        del data
+        del outputs
         # self.handparam_post()
         # self.visual_post()
         # self.lognotes()

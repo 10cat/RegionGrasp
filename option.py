@@ -13,8 +13,8 @@ class MyOptions:
     """
     Base Configuration
     """
-    w_wandb: bool = False
-    machine: int = '41'
+    w_wandb: bool = True
+    machine: int = '97'
     exp_name: str = 'thumb_cond_train0_1' # 1
     note: str = '解决thumb_cond_train0存在的bug: 计算signed_dist_loss时，rhand_vs_pred错与rhand_normals对应；rhand_vs错与rhand_normals_pred对应'
     run_type: str = 'train'
@@ -23,7 +23,7 @@ class MyOptions:
     select_k: float = 0.25 # 选取batch_size * select_k这么多
     
     use_cuda: bool = True
-    visible_device: str="2"
+    visible_device: str="0"
     cuda_id: int = 0
     
     frame_names: str = 'frame_names_thumb.npz'
