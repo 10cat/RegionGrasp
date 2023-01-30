@@ -134,6 +134,8 @@ class PointNetEncoder(nn.Module):
             x = x.transpose(2, 1)
         else:
             trans_feat = None
+            
+        # NOTE: local feature (B, 64, N), 64-dim for every point
 
         return x, trans, trans_feat, N
 
@@ -186,9 +188,12 @@ class ObjRegionConditionEncoder(PointNetEncoder):
         B = obj_pc.shape[0]
         x, trans, trans_feat, N = self.pre_pointfeat_forward(obj_pc)
 
-        pointfeat = x # local feature for every given points -- (B, 64, N)
+        #  NOTE: obj pointfeat -> local feature: (B, 64, N)
+        pointfeat = x
         # import pdb; pdb.set_trace()
-        pointfeat_masked = region_masked_pointwise(pointfeat, region_mask)
+        # NOTE: obj masked pointfeat -> mask方式是region_mask(B, 1, N)直接与obj pointfeat点乘(B, 64, N)
+        # FIXME: 由于选取出来的点一般相对于N来说较少，二值化的region_mask(B, 1, N)直接与obj pointfeat点乘(B, 64, N)的特征向量(B, 64, N)会特别稀疏
+        pointfeat_masked = region_masked_pointwise(pointfeat, region_mask) 
         
         x1 = self.pointfeat_forward(pointfeat)
         x2 = self.pointfeat_masked_forward(pointfeat_masked)

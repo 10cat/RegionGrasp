@@ -37,3 +37,5 @@ class AverageMeters:
 
     def avg(self, mode):
         return {(mode+'_' +name): avg_meter.avg for name, avg_meter  in self.average_meters.items()}
+    
+    

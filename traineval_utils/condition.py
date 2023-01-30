@@ -56,7 +56,7 @@ def main(sample_info, signed_dists=None, h_nearest_faces=None):
     
     
     if thumb_contact_verts is None:
-        return
+        return 0, 0.0
     
     # import pdb; pdb.set_trace()
     center = int(sample_info['cond_center']) #需要从tensor转换回int

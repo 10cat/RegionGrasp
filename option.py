@@ -14,23 +14,39 @@ class MyOptions:
     Base Configuration
     """
     w_wandb: bool = True
+<<<<<<< HEAD
     machine: int = '97'
     exp_name: str = 'thumb_cond_train0_1' # 1
     note: str = '解决thumb_cond_train0存在的bug: 计算signed_dist_loss时，rhand_vs_pred错与rhand_normals对应；rhand_vs错与rhand_normals_pred对应'
     run_type: str = 'train'
+=======
+    machine: int = '41'
+    exp_name: str = 'obj_pretrain_comp_d3' # 1
+    note: str = '让reigon_masked pointfeat不那么稀疏'
+    run_type: str = 'pretrain'
+    obj_centric: bool = True
+    checkpoint_epoch: int = 14 # -1 when training
+    
+>>>>>>> 5ef87f3edb85a5087625307c37e89234e6fa46b7
     batch_size: int = 32 # train: 32; test/val: 16
-    test_part: bool = True
+    test_part: bool = False
     select_k: float = 0.25 # 选取batch_size * select_k这么多
     
+<<<<<<< HEAD
     use_cuda: bool = True
     visible_device: str="0"
     cuda_id: int = 0
+=======
+    use_cuda: bool = True #TODO: set as args
+    visible_device: str="0" #TODO: set as args
+    cuda_id: int = 0 #TODO: set as args
+>>>>>>> 5ef87f3edb85a5087625307c37e89234e6fa46b7
     
-    frame_names: str = 'frame_names_thumb.npz'
-    obj_meshes: str = 'decimate_meshes'
-    train_select_ids: bool = True
-    num_mask: int = 1
-    num_rhand_verts: int = 778
+    frame_names: str = 'frame_names_thumb.npz' #TODO: to config.py
+    obj_meshes: str = 'decimate_meshes' #TODO: to config.py
+    train_select_ids: bool = True #TODO: to config.py
+    num_mask: int = 1  #TODO: to config.py
+    num_rhand_verts: int = 778  
     num_obj_verts: int = 3000
     start_epoch: int = 1
     num_epoch: int = 40
@@ -40,11 +56,11 @@ class MyOptions:
     fit_cGrasp: bool = True
     use_gtsdm: bool = False
     
-    testmetrics: bool = True
+    testmetrics: bool = False
     metrics_contact: bool = True
     metrics_inter: bool = True
     metrics_simul: bool = False
-    metrics_cond: bool = False
+    metrics_cond: bool = True
     voxel_mode: str = 'voxels_hand'
     voxel_pitch: float = 0.01
     condition_dist: float = -0.005
@@ -55,7 +71,32 @@ class MyOptions:
         type: str = 'adam'
     class optimizer_cgrasp:
         type: str = 'adam'
-
+        
+    
+    """
+    Obj Condition Pretrain
+    """
+    embed_dim: int = 768
+    num_heads: int = 6
+    mlp_ratio: float = 2.
+    glob_feat_dim: int = 1024
+    depth: int = 3
+    knn_k: int = 8
+    knn_layer_num: int = 1
+    
+    pretrain_batch_size: int = 16
+    lr_pt: float = 0.0005
+    weight_decay_pt: float = 0.0005
+    decay_step: int = 21
+    lr_decay: float = 0.76
+    lowest_decay: float = 0.02
+    bnm_decay_step: int = 21
+    bnm_lr_decay: float = 0.5
+    bnm_momentum: float = 0.9
+    bnm_lowest_decay: float = 0.01
+    pretrain_epochs: int = 40
+    
+    
 
     """
     Model Hyperparams
@@ -72,6 +113,8 @@ class MyOptions:
     VAE_condition_size: int = 1024 # fusion layers output dim = 1024
     std_type: str = 'exp'
     std_exp_beta: float = 0.5
+    mask_dense_weight: bool = True
+    mask_cond_weight: float = 3.0
 
     """
     Loss Configuration
@@ -94,6 +137,14 @@ class MyOptions:
     lambda_edge: float = 30 * (1. - kl_coef)
     vpe_path = "./config/verts_per_edge.npy"
     c_weights_path = "./config/rhand_weight.npy"
+    
+    """
+    check / visual / eval_inference_iteration
+    """
+    num_eval_iter: int = 5
+    check_interval: int = 2
+    visual_interval_val: int = 10
+    visual_sample_interval: int = 4
 
 
     """
@@ -117,9 +168,7 @@ class MyOptions:
         mano_rh_path: str = f"/home/yilin/smpl_models/mano/MANO_RIGHT.pkl"
 
     model_root: str= os.path.join(output_dir, 'model')
-    check_interval: int = 2
-    visual_interval_val: int = 100
-    visual_sample_interval: int = 4
+    
 
 if __name__=="__main__":
     config = MyOptions()

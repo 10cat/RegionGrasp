@@ -13,8 +13,10 @@ import config
 from copy import deepcopy
 
 import random
+import pickle
 from utils.utils import func_timer, makepath
 from dataset.Dataset_origin import GrabNetDataset_orig
+from dataset.obman_preprocess import ObManResample, ObManThumb
 
 set_seed = lambda val: np.random.seed(val)
 
@@ -34,6 +36,73 @@ def select_ids_dataset(ds_names, seeds=[]):
         set_seed(seeds[i])
         select_ids_norm = np.random.random(len)
         np.save(os.path.join(dataset.ds_path, f'{name}_ids_norm.npy'), select_ids_norm)
+        
+        
+class ObManDataset(ObManThumb):
+    def __init__(self, ds_root, shapenet_root, split='train', joint_nb=21, mini_factor=None, use_cache=False, root_palm=False, mode='all', segment=False, use_external_points=True, apply_obj_transform=True, expand_times=1, resample_num=8192, object_centric=False):
+        super().__init__(ds_root, shapenet_root, split, joint_nb, mini_factor, use_cache, root_palm, mode, segment, use_external_points, apply_obj_transform, expand_times, resample_num, object_centric)
+        annot_root = os.path.join(self.root, 'thumbHOI')
+        sample_id = np.load(os.path.join(annot_root, 'samples_id.npy'))
+        annotations_thumb = []
+        from tqdm import tqdm
+        for id in tqdm(sample_id, desc='loading the annotations:'):
+            annot_file = os.path.join(annot_root, f'{id}.pkl')
+            with open(annot_file, 'rb') as f:
+                annotation = pickle.load(f)
+            annotations_thumb.append(annotation)
+        self.samples_selected = sample_id
+        self.annotations_thumb = annotations_thumb
+        # import pdb; pdb.set_trace()
+        
+    def __len__(self):
+        return len(self.samples_selected)
+    
+    def __getitem__(self, idx):
+        annot = self.annotations_thumb[idx]
+        index = self.samples_selected[idx]
+        
+        sample = {}
+        obj_points, obj_trans, face_ids = self.get_obj_resampled_trans(self.meta_infos, self.obj_transforms, index, obj_centric=self.obj_centric)
+        
+        # DONE: 获取用于计算point2point_signed的obj_point_normals
+        # NOTE: 由于obj_points是由原mesh进行了resample之后得到的，所以这里索引采样点所在的面的face_normals作为点的normals
+        obj_mesh = self.get_sample_obj_mesh(index)
+        obj_verts, _ = self.get_obj_verts_faces(index)
+        hand_verts = self.get_verts3d(index)
+        hand_faces = self.get_faces3d(index)
+        if self.obj_centric:
+            obj_verts -= obj_trans
+            hand_verts -= obj_trans
+        ObjMesh = trimesh.Trimesh(vertices=obj_verts, faces=obj_mesh['faces'])
+        obj_point_normals = ObjMesh.face_normals[face_ids]
+        #import pdb; pdb.set_trace()
+        # DONE: gt_visualization
+        # HandMesh = trimesh.Trimesh(vertices=hand_verts, faces=hand_faces)
+        # root = '/home/yilin/Codes/test_visuals/train_trans'
+        # makepath(root)
+        # ObjMesh.export(os.path.join(root, f'{index}_obj.ply'))
+        # HandMesh.export(os.path.join(root, f'{index}_hand.ply'))
+            
+        # DONE: generate region_mask for o2h
+        contact_indices = annot['contact_indices']
+        region_mask = np.zeros(obj_points.shape[0])
+        region_mask[contact_indices] = 1.
+        
+        sample['obj_points'] = torch.from_numpy(obj_points)
+        sample['obj_point_normals'] = torch.from_numpy(obj_point_normals)
+        sample['hand_verts'] = torch.from_numpy(hand_verts)
+        sample['obj_trans'] = torch.from_numpy(obj_trans)
+        
+        # sample['contact_pc'] = torch.from_numpy(annot['contact_pc'])
+        sample['region_mask'] = torch.from_numpy(region_mask)
+        
+        sample['input_pc'] = torch.from_numpy(annot['input_pc'])
+        sample['sample_id'] = torch.Tensor([index])
+        
+        # import pdb; pdb.set_trace()
+        
+        return sample
+    
 
 class GrabNetDataset(GrabNetDataset_orig):
     def __init__(self, 
@@ -154,19 +223,31 @@ class GrabNetDataset(GrabNetDataset_orig):
         
         
 if __name__=="__main__":
-    dataset = GrabNetDataset(dataset_root=config.DATASET_ROOT, 
-                            ds_name="train", 
-                            frame_names_file='frame_names_thumb.npz', 
-                            grabnet_thumb=False, 
-                            obj_meshes_folder='decimate_meshes',
-                            select_ids=False, 
-                            output_root=None, 
-                            dtype=torch.float32, 
-                            only_params=False, 
-                            load_on_ram=False)
+    # dataset = GrabNetDataset(dataset_root=config.DATASET_ROOT, 
+    #                         ds_name="train", 
+    #                         frame_names_file='frame_names_thumb.npz', 
+    #                         grabnet_thumb=False, 
+    #                         obj_meshes_folder='decimate_meshes',
+    #                         select_ids=False, 
+    #                         output_root=None, 
+    #                         dtype=torch.float32, 
+    #                         only_params=False, 
+    #                         load_on_ram=False)
     
     
-    sample = dataset.__getitem__(200031)
+    # sample = dataset.__getitem__(200031)
+    
+    dataset = ObManDataset(ds_root=config.OBMAN_ROOT,
+                           shapenet_root=config.SHAPENET_ROOT,
+                           split='train',
+                           use_cache=True,
+                           object_centric=True)
+    
+    length = dataset.__len__()
+    
+    for idx in range(length):
+        sample = dataset.__getitem__(idx)
+        
 
     
     

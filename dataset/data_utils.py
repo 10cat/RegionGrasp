@@ -10,6 +10,7 @@ from mano.model import load
 import config
 from utils.visualization import colors_like
 import matplotlib.pyplot as plt
+from trimesh.constants import tol
 
 
 
@@ -224,6 +225,69 @@ if __name__ == "__main__":
     
     
     
+def signed_distance(mesh, points):
+    """
+    Find the signed distance from a mesh to a list of points.
+    * Points OUTSIDE the mesh will have NEGATIVE distance
+    * Points within tol.merge of the surface will have POSITIVE distance
+    * Points INSIDE the mesh will have POSITIVE distance
+    Parameters
+    -----------
+    mesh : trimesh.Trimesh
+      Mesh to query.
+    points : (n, 3) float
+      Points in space
+    Returns
+    ----------
+    signed_distance : (n,) float
+      Signed distance from point to mesh
+    """
     
+    # make sure we have a numpy array
+    points = np.asanyarray(points, dtype=np.float64)
+
+    # find the closest point on the mesh to the queried points
+    closest, distance, triangle_id = trimesh.proximity.closest_point(mesh, points)
+
+    # we only care about nonzero distances
+    nonzero = distance > tol.merge
+
+    if not nonzero.any():
+        return distance
+
+    # For closest points that project directly in to the triangle, compute sign from
+    # triangle normal Project each point in to the closest triangle plane
+    nonzero = np.where(nonzero)[0]
+    normals = mesh.face_normals[triangle_id]
+    projection = (points[nonzero] -
+                  (normals[nonzero].T * np.einsum(
+                      "ij,ij->i",
+                      points[nonzero] - closest[nonzero],
+                      normals[nonzero])).T)
+
+    # Determine if the projection lies within the closest triangle
+    barycentric = trimesh.triangles.points_to_barycentric(
+        mesh.triangles[triangle_id[nonzero]],
+        projection)
+    ontriangle = ~((
+        (barycentric < -tol.merge) | (barycentric > 1 + tol.merge)
+    ).any(axis=1))
+
+    # Where projection does lie in the triangle, compare vector to projection to the
+    # triangle normal to compute sign
+    sign = np.sign(np.einsum(
+        "ij,ij->i",
+        normals[nonzero[ontriangle]],
+        points[nonzero[ontriangle]] - projection[ontriangle]))
+    distance[nonzero[ontriangle]] *= -1.0 * sign
+
+    # For all other triangles, resort to raycasting against the entire mesh
+    inside = mesh.ray.contains_points(points[nonzero[~ontriangle]])
+    sign = (inside.astype(int) * 2) - 1.0
+
+    # apply sign to previously computed distance
+    distance[nonzero[~ontriangle]] *= sign
+
+    return distance, triangle_id
     
 

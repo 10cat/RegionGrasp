@@ -4,9 +4,139 @@ sys.path.append('..')
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-from option import MyOptions as cfg
+# from option import MyOptions as cfg
 from models.pointnet_encoder import PointNetEncoder
 from utils.utils import func_timer, region_masked_pointwise
+from timm.models.layers import trunc_normal_
+from models.PointTr import get_knn_index, PoseEmbedding, Attention, CrossAttention, EncoderBlock, DecoderBlock, QueryGenerator, FinePointGenerator
+from models.DGCNN import DGCNN_grouper
+
+
+class ConditionTrans(nn.Module):
+    def __init__(self, in_chans=3, embed_dim=768, num_heads=6, mlp_ratio=2., qkv_bias=False, qk_scale=None, drop_rate=0., attn_drop_rate=0., glob_feat_dim=1024, depth={'encoder':6, 'decoder':6}, num_query=224, knn_layer_num=-1, fps=False, num_pred=6144, knn_k=8):
+        
+        #CHECK: 不打算和PointTr一样使用fps将2048个点降为128个点，而直接使用最初的2048个点(N=2048, C=32), 所以embed_dim可以相应的降低维度
+        super().__init__()
+        
+        
+        self.embed_dim = embed_dim
+        self.knn_layer = knn_layer_num
+        self.num_pred = num_pred
+        self.num_query = num_query
+        self.knn_k = knn_k
+        self.fps = fps
+        
+        self.pc_embed = DGCNN_grouper()
+        
+        self.pos_embed = PoseEmbedding(in_chans=in_chans, embed_dim=embed_dim)
+        self.input_proj = nn.Sequential(
+            nn.Conv1d(128, embed_dim, 1),
+            nn.BatchNorm1d(embed_dim),
+            nn.LeakyReLU(negative_slope=0.2),
+            nn.Conv1d(embed_dim, embed_dim, 1)
+        )
+        
+        self.encoder = nn.ModuleList([
+            EncoderBlock(
+                dim=embed_dim, num_heads=num_heads, mlp_ratio=mlp_ratio, qkv_bias=qkv_bias, qk_scale=qk_scale, drop=drop_rate, attn_drop=attn_drop_rate, knn_k=knn_k)
+            for i in range(depth['encoder'])])
+        
+        
+        self.decoder = nn.ModuleList([
+            DecoderBlock(
+                dim=embed_dim, num_heads=num_heads, mlp_ratio=mlp_ratio, qkv_bias=qkv_bias, qk_scale=qk_scale, drop=drop_rate, attn_drop=attn_drop_rate, knn_k=knn_k)
+            for i in range(depth['decoder'])])
+        
+        self.query_generate = QueryGenerator(embed_dim=embed_dim, feat_dim=glob_feat_dim, num_query=num_query)
+        
+        self.finepoint_generate = FinePointGenerator(embed_dim=embed_dim, glob_feat_dim=glob_feat_dim, num_query=num_query, num_pred=num_pred)
+        
+        
+        
+    def _init_weights(self, m):
+        if isinstance(m, nn.Linear):
+            trunc_normal_(m.weight, std=.02)
+            if isinstance(m, nn.Linear) and m.bias is not None:
+                nn.init.constant_(m.bias, 0)
+        elif isinstance(m, nn.LayerNorm):
+            nn.init.constant_(m.bias, 0)
+            nn.init.constant_(m.weight, 1.0)
+        elif isinstance(m, nn.Conv1d):
+            nn.init.xavier_normal_(m.weight.data, gain=1)
+        elif isinstance(m, nn.BatchNorm1d):
+            nn.init.constant_(m.weight.data, 1)
+            nn.init.constant_(m.bias.data, 0)
+            
+    def get_input_embedding(self, input, fps=False):
+        # coor, f = self.grouper(input.transpose(1, 2).contiguous())
+        coor, f = self.pc_embed(input.transpose(1, 2).contiguous(), fps=fps)
+        # import pdb; pdb.set_trace()
+        knn_index = get_knn_index(coor)
+        # import pdb; pdb.set_trace()
+        pos = self.pos_embed(coor.transpose(1, 2).contiguous()).transpose(1, 2)
+        x = self.input_proj(f).transpose(1, 2) # 
+        
+        return coor, x, pos, knn_index
+            
+    def get_new_knn_index(self, pred_points, coor_k):
+        new_knn_index = get_knn_index(pred_points)
+        cross_knn_index = get_knn_index(pred_points, coor_k=coor_k)
+        return new_knn_index, cross_knn_index
+    
+    def forward(self, input, feat_only=False):
+        bs = input.size(0)
+        
+        coor, x, pos, knn_index = self.get_input_embedding(input, fps=self.fps)
+        # import pdb; pdb.set_trace()
+        
+        for i, blk in enumerate(self.encoder):
+            if i < self.knn_layer:
+                x = blk(x + pos, knn_index)
+            else:
+                x = blk(x + pos)
+        
+        q, coarse_pc, point_glob_feat_input = self.query_generate(x)
+        
+        new_knn_index, cross_knn_index = self.get_new_knn_index(coarse_pc, coor_k=coor)
+        
+        for i, blk in enumerate(self.decoder):
+            if i < self.knn_layer:
+                q = blk(q, x, new_knn_index, cross_knn_index)
+            else:
+                q = blk(q, x)
+                
+        if feat_only:
+            point_glob_feat_rebuild = self.finepoint_generate(q, coarse_pc, input, feat_only=feat_only)
+            global_feature = torch.cat([point_glob_feat_input, point_glob_feat_rebuild], dim=-1) # B, N+M, 1024
+            global_feature = torch.max(global_feature, dim=-1)[0]
+            return global_feature 
+        else:
+            coarse_pc, fine_pc = self.finepoint_generate(q, coarse_pc, input, feat_only=feat_only)
+            return q, coarse_pc, fine_pc
+    
+class ConditionBERT(ConditionTrans):
+    def __init__(self, in_chans=3, embed_dim=768, num_heads=6, mlp_ratio=2., qkv_bias=False, qk_scale=None, drop_rate=0., attn_drop_rate=0., glob_feat_dim=1024, depth={'encoder':6, 'decoder':6}, num_query=224, knn_layer=-1, fps=True, num_pred=8192):
+        super().__init__(in_chans, embed_dim, num_heads, mlp_ratio, qkv_bias, qk_scale, drop_rate, attn_drop_rate, glob_feat_dim, depth, num_query, knn_layer, fps, num_pred)
+        
+    def forward(self, input):
+        bs = input.size(0)
+         
+        coor, x, pos, knn_index = self.get_input_embedding(input, fps=self.fps)
+        
+        assert len(self.encoder) == len(self.decoder), "The encoder and decoder should have same depth in Iterative mode"
+        
+        for i, blk in enumerate(self.encoder):
+            if i == 0:
+                pred_pc = torch.zeros([bs, self.num_query, 3]).to('cuda')
+            if i > self.knn_layer:
+                knn_index, new_knn_index, cross_knn_index = None, None, None
+            x = blk(x + pos, knn_index)
+            q, pred_pc = self.query_generate(x, pred_pc)
+            new_knn_index, cross_knn_index = self.get_new_knn_index(pred_pc, coor_k=coor)
+            q = self.decoder[i](q, x, new_knn_index, cross_knn_index)
+        
+        return q, pred_pc
+
 
 class ConditionNet(nn.Module):
     def __init__(self, input_channel_obj, input_channel_hand):
@@ -91,8 +221,6 @@ class ConditionNet(nn.Module):
 
         return [feat_oom], [map_om]
 
-
-        
 class SDmapNet(nn.Module):
     def __init__(self, input_dim, layer_dims, output_dim):
         super(SDmapNet, self).__init__()
@@ -131,15 +259,38 @@ class SDmapNet(nn.Module):
         
 
 if __name__ == "__main__":
-    B = cfg.batch_size
-    obj_pc = torch.randn(B, 3, 3000)
-    region_mask = torch.zeros(B, 1, 3000)
-    hand_xyz = torch.randn(B, 3, 778)
+    import os
+    from tqdm import tqdm
+    os.environ['CUDA_VISIBLE_DEVICES'] = "1"
+    B = 8
+    Ndata = 180000
+    
+    obj_pc = torch.randn(Ndata, B, 2048, 3) # N = 2048
+    gt_mask_pc = torch.randn(Ndata, B, 32, 3) # M = 32
+    
+    
+    # net = ConditionTrans(in_chans=3, embed_dim=132, num_heads=4, mlp_ratio=2.,glob_feat_dim=1024, depth={'encoder':3, 'decoder':3}, num_query=32, knn_layer=1).to('cuda')
+    net = ConditionBERT(in_chans=3, embed_dim=132, num_heads=4, mlp_ratio=2.,glob_feat_dim=1024, depth={'encoder':3, 'decoder':3}, num_query=32, knn_layer=1).to('cuda')
+    mseloss = nn.MSELoss().to('cuda')
+    
+    for epoch in range(10):
+        for i in tqdm(range(Ndata), desc=f"epoch {epoch}"):
+            sample = obj_pc[i]
+            sample = sample.to('cuda')
+            q, pred_mask_pc = net.forward(sample)
+            loss = mseloss(pred_mask_pc, gt_mask_pc.to('cuda'))
+            loss.backward()
+            torch.cuda.empty_cache()
+    
+    
+    # obj_pc = torch.randn(B, 3, 3000)
+    ## region_mask = torch.zeros(B, 1, 3000)
+    # hand_xyz = torch.randn(B, 3, 778)
 
-    # pointnet = PointNetEncoder(global_feat=False, feature_transform=False, channel=3)
-    model = ConditionNet(input_channel_obj=3, input_channel_hand=3)
+    # # pointnet = PointNetEncoder(global_feat=False, feature_transform=False, channel=3)
+    # model = ConditionNet(input_channel_obj=3, input_channel_hand=3)
 
-    feat_om, map1, map2 = model(obj_pc, region_mask, hand_xyz)
+    # feat_om, map1, map2 = model(obj_pc, region_mask, hand_xyz)
 
 
     # import pdb; pdb.set_trace()

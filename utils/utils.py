@@ -13,7 +13,7 @@ from pytorch3d.structures import Meshes
 import sys
 sys.path.append('.')
 sys.path.append('..')
-from option import MyOptions as cfg
+# from option import MyOptions as cfg
 
 to_cpu = lambda tensor: tensor.detach().cpu().numpy() # 好！直接用lambda代入法一句话代替函数
 
@@ -68,7 +68,7 @@ def makepath(desired_path, isfile=False):
         if not os.path.exists(desired_path): os.makedirs(desired_path)
     return desired_path
 
-def get_std(log_vars):
+def get_std(log_vars, cfg):
     p_std = 0
     if cfg.std_type == 'softplus':
         p_std = F.softplus(log_vars)
@@ -136,8 +136,15 @@ def size_splits(tensor, split_sizes, dim=0):
     return tuple(tensor.narrow(int(dim), int(start), int(length)) 
                  for start, length in zip(splits, split_sizes))
 
-def region_masked_pointwise(obj_pc, mask):
-    obj_pc_masked = obj_pc * (mask)
+def region_masked_pointwise(obj_pc, mask, cfg):
+    # DONE: 不改变点乘，但是改成dense加权形式,即没有选中的点权重设小但不为0，选中为condition的点权重设大 (e.g. 0.1 / 3.0)
+    if cfg.mask_dense_weight:
+        weight = torch.ones_like(mask, dtype=torch.float32) * 0.1
+        cond = (mask > 0)
+        weight[cond] = cfg.mask_cond_weight
+    else:
+        weight = mask
+    obj_pc_masked = obj_pc * (weight)
     return obj_pc_masked
 
 def edges_for(x, vpe):
@@ -262,8 +269,8 @@ def rotation_matrix_to_quaternion(rotation_matrix, eps=1e-6):
     return q
 
 
-def quaternion_to_angle_axis(quaternion: torch.Tensor) -> torch.Tensor:
-    
+def quaternion_to_angle_axis(quaternion: torch.Tensor) :
+   
     """Convert quaternion vector to angle axis of rotation.
     Adapted from ceres C++ library: ceres-solver/include/ceres/rotation.h
     Args:
@@ -275,7 +282,8 @@ def quaternion_to_angle_axis(quaternion: torch.Tensor) -> torch.Tensor:
         - Output: :math:`(*, 3)`
     Example:
         >>> quaternion = torch.rand(2, 4)  # Nx4
-        >>> angle_axis = quaternion_to_angle_axis(quaternion)  # Nx3"""
+        >>> angle_axis = quaternion_to_angle_axis(quaternion)
+    """
    
     if not torch.is_tensor(quaternion):
         raise TypeError("Input type is not a torch.Tensor. Got {}".format(
@@ -344,18 +352,39 @@ def point2point_signed(x, y, x_normals=None, y_normals=None):
 
     return y2x_signed, x2y_signed, yidx_near, xidx_near
 
-def signed_distance_batch(device, rhand_vs, rh_f, obj_vs, object_faces=None):
+def signed_distance_batch(device, rhand_vs, rh_f, obj_vs, cfg, object_faces=None):
     rh_normals = Meshes(verts=rhand_vs, faces=rh_f).to(device).verts_normals_packed().view(-1, cfg.num_rhand_verts, 3)
     if object_faces is not None:
         # obj_mesh_faces = torch.Tensor(obj_mesh_faces)
         # obj_vs = obj_vs.tolist()
         obj_vs_list = [obj_vs[i] for i in range(obj_vs.shape[0])] # need to be consistent length list with obj_mesh_faces
-        obj_normals = Meshes(verts=obj_vs_list, faces=object_faces).to(device).verts_normals_packed().view(-1, cfg.num_obj_verts, 3)
+        obj_normals = Meshes(verts=obj_vs_list, faces=object_faces).to(device).verts_normals_packed().view(-1, obj_vs.shape[1], 3)
     else:
         obj_normals = None
     o2h_signed, h2o_signed, o_nearest_ids, h_nearest_ids = point2point_signed(rhand_vs, obj_vs, rh_normals, obj_normals)
     
     return o2h_signed, h2o_signed, o_nearest_ids, h_nearest_ids
+
+def decode_hand_params_batch(hand_params, batch_size, cfg, device):
+    """decode the mano hand model(vertices, faces) from given mano hand parameters
+    Args:
+        hand_params (dict): mano parameters
+        batch_size (int): batch szie for initializing rh_model
+        device : the device where 'outputs' is on, cannot directly use hand_params.device because 'hand_params' is dict
+
+    Returns:
+        mano hand model (vertices[B, 3, 778], faces[B, 3, 1553])
+    """
+    B = batch_size
+    import mano
+    rh_model = mano.load(model_path=cfg.mano_rh_path,
+                            model_type='mano',
+                                num_pca_comps=45,
+                                batch_size=B,
+                                flat_hand_mean=True)
+    rh_model = rh_model.to(device)
+    rhand_pred = rh_model(**hand_params)
+    return rhand_pred, rh_model
 
 def dataset_object_faces_batch(sample_ids, dataset, device):
     sample_ids = sample_ids.reshape(-1).tolist()

@@ -36,6 +36,13 @@ hand_comp_colors=['green', 'blue', 'purple', 'yellow', 'orange', 'red'] # 'thumb
 
 thumb_center = [1295, 1296, 1297, 1298, 1299, 1300, 1301, 1302, 1303, 1304, 1305, 1306, 1307, 1308, 1311, 1312, 1313, 1314, 1315, 1316, 1317, 1318, 1319, 1320, 1321, 1322, 1323, 1324, 1325, 1326, 1329, 1330, 1333, 1334, 1335, 1336, 1337, 1338, 1339, 1340, 1341, 1342, 1344, 1345, 1346, 1347, 1348, 1349, 1350, 1351, 1352, 1353, 1354, 1355, 1356, 1357, 1358, 1359, 1360, 1361, 1362, 1363, 1364, 1365, 1366, 1367, 1368, 1369, 1370, 1371, 1372, 1373, 1374, 1375, 1376, 1377, 1378, 1379, 1380, 1381, 1382]
 
+force_resample = False
+num_resample_points = 8192
+num_mask_points = 32
+expand_times = 1
+ratio_lower = 0.05
+ratio_upper = 0.30
+
 """
 Filepath settings
 """
@@ -56,12 +63,19 @@ if machine == '97':
 
 if machine == '41':
     DATASET_ROOT = "/ssd_data/yilin/GrabNet"
+    
+    OBMAN_ROOT = "/ssd_data/yilin/obman"
+    
+    SHAPENET_ROOT = "/ssd_data/yilin/ShapeNetCore.v2"
+    
+    mano_root = "/home/yilin/smpl_models/mano"
 
     mano_dir = "/home/yilin/smpl_models/mano/MANO_RIGHT.pkl" # MANO right hand model path
     
     visual_root = "/ssd_data/yilin/Outputs"
     
     dataset_visual_dir = "/ssd_data/yilin/Outputs/GrabNet_visual"
+    obman_visual_dir = "/ssd_data/yilin/Outputs/ObMan_visual"
 
     OUTPUT_ROOT = "/ssd_data/yilin/Outputs/ConditionHOI"
 
