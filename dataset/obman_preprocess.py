@@ -184,7 +184,7 @@ class ObManThumb(ObManResample):
                                  flat_hand_mean=True)
         self.use_mano = use_mano
         
-        
+    @func_timer
     def thumb_query_point(self, HandMesh, ObjMesh, pene_th=0.002, contact_th=-0.005):
         thumb_vertices_ids = faces2verts_no_rep(HandMesh.faces[config.thumb_center])
         thumb_vertices = HandMesh.vertices[thumb_vertices_ids]
@@ -213,7 +213,7 @@ class ObManThumb(ObManResample):
             
         return point
     
-    
+    @func_timer
     def get_KNN_in_pc(self, PC, point_q, K=410):
         PC_tree = KDTree(PC)
         distance, indices = PC_tree.query(point_q.reshape(1, -1), K)
@@ -305,7 +305,7 @@ class ObManThumb(ObManResample):
         
         # TODO: random sampling Np = 2048 from the rem_ps
         np.random.seed(idx)
-        input_pc, sampled_indices = self.input_pc_sample(idx, ObjPoints)
+        input_pc, sampled_indices = self.input_pc_sample(idx, input_pc_hr)
         
         annot['contact_indices'] = contact_indices
         annot['contact_pc'] = contact_pc
@@ -350,7 +350,7 @@ def get_thumb_condition(ds_root, args):
                            use_cache=args.no_cache,
                            object_centric=args.obj_centric,
                            use_mano=args.mano)
-    output_root = os.path.join(dataset.root, 'thumbHOI')
+    output_root = os.path.join(dataset.root, 'thumbHOI_new')
     makepath(output_root)
     samples_list = []
     for idx in tqdm(range(dataset.__len__())):

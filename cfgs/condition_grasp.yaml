@@ -11,8 +11,8 @@ dataset: {
         others: {subset: 'test'}}}
 
 # training settings
-visible_devices: "2"
-batch_size: 32
+visible_devices: "1"
+batch_size: 64
 num_epoch: 60
 early_stopping: 100
 use_cuda: True
@@ -47,7 +47,7 @@ optimizer : {
 
 model: {
     cnet: {
-      chkpt_path: '/ssd_data/yilin/Outputs/ConditionHOI/pretrain_comp_d6_2loss/models/checkpoint_50.pth',
+      chkpt_path: '/ssd_data/yilin/Outputs/ConditionHOI/pretrain_comp_d3_2loss/models/checkpoint_50.pth',
       type: 'trans',
       kwargs: {
         embed_dim: 384,
@@ -55,8 +55,8 @@ model: {
         mlp_ratio: 2.,
         glob_feat_dim: 1024,
         depth: {
-          encoder: 6, 
-          decoder: 8},
+          encoder: 3, 
+          decoder: 4},
         knn_k: 8,
         knn_layer_num: 1,
         num_query: 96,
