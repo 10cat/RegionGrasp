@@ -9,6 +9,7 @@ from models.pointnet_encoder import PointNetEncoder
 from utils.utils import func_timer, region_masked_pointwise
 from timm.models.layers import trunc_normal_
 from models.PointTr import get_knn_index, PoseEmbedding, Attention, CrossAttention, EncoderBlock, DecoderBlock, QueryGenerator, FinePointGenerator
+from models.PointMAE import MaskTransformer, TransformerDecoder, Grouper
 from models.DGCNN import DGCNN_grouper
 
 
@@ -136,6 +137,72 @@ class ConditionBERT(ConditionTrans):
             q = self.decoder[i](q, x, new_knn_index, cross_knn_index)
         
         return q, pred_pc
+    
+    
+class ConditionMAE(nn.Module):
+    def __init__(self, cfg):
+        super().__init__()
+        trans_cfg = cfg.transformer
+        self.trans_dim = trans_cfg.trans_dim
+        self.MAE_encoder = MaskTransformer(trans_cfg.MAE_encoder)
+        self.group_size = cfg.group_size
+        self.num_group = cfg.num_group
+        self.drop_path_rate = trans_cfg.drop_path_rate
+        self.decoder_pos_embed = nn.Sequential(
+            nn.Linear(3, 128),
+            nn.GELU(),
+            nn.Linear(128, self.trans_dim)
+        )
+        self.decoder_depth = trans_cfg.decoder_depth
+        self.decoder_num_heads = trans_cfg.decoder_num_heads
+        dpr = [x.item() for x in torch.linspace(0, self.drop_path_rate, self.decoder_depth)]
+        self.MAE_decoder = TransformerDecoder(
+            embed_dim=self.trans_dim,
+            depth=self.decoder_depth,
+            drop_path_rate=dpr,
+            num_heads=self.decoder_num_heads
+        )
+        
+        self.group_divider = Grouper(num_group=self.num_group, group_size=self.group_size)
+        
+        self.mask_token = nn.Parameter(torch.zeros(1, 1, self.trans_dim))
+        
+        # prediction head
+        self.increase_dim = nn.Sequential(
+            nn.Conv1d(self.trans_dim, 3*self.group_size, 1)
+        )
+        
+        trunc_normal_(self.mask_token, std=.02) # initialize the mask_token parameters
+        
+    def forward(self, pts, vis=False, feat_only=False, **kwargs):
+        
+        neighborhood, center = self.group_divider(pts)
+        
+        if feat_only:
+            x_vis, mask = self.MAE_encoder(neighborhood, center, noaug=True)
+            return x_vis
+        
+        x_vis, mask = self.MAE_encoder(neighborhood, center)
+        
+        B,_,C = x_vis.shape
+        pos_emd_vis = self.decoder_pos_embed(center[~mask]).reshape(B, -1, C)
+        pos_emd_mask = self.decoder_pos_embed(center[mask]).reshape(B, -1, C)
+        
+        _,N,_ = pos_emd_mask.shape
+        
+        mask_token = self.mask_token.expand(B, N, -1)
+        x_full = torch.cat([x_vis, mask_token], dim=1)
+        pos_full = torch.cat([pos_emd_vis, pos_emd_mask], dim=1)
+        
+        x_rec = self.MAE_decoder(x_full, pos_full, N)
+        
+        B, M, C = x_rec.shape
+        rebuild_points = self.increase_dim(x_rec.transpose(1, 2)).transpose(1, 2).reshape(B * M, -1, 3)
+        
+        gt_points = neighborhood[mask].reshape(B * M, -1, 3)
+        
+        return rebuild_points, gt_points
+        
 
 
 class ConditionNet(nn.Module):

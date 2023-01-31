@@ -12,12 +12,31 @@ from pytorch3d.ops import sample_farthest_points
 # from option import MyOptions as cfg
 
 def fps(pc, num):
+    """farthest point sampling
+
+    Args:
+        pc (tensor): 目标点云 [B, N, 3]
+        num (int): 需要得到的中心点数量 
+
+    Returns:
+        tensor: 经过fps得到的中心点 [B, num, 3]
+    """
     _, fps_idx = sample_farthest_points(pc, K=num) 
     # import pdb; pdb.set_trace()
-    sub_pc = torch.gather(pc.transpose(1, 2).contiguous(), dim=-1, index=fps_idx.unsqueeze(1).repeat(1, 3, 1)).transpose(1,2).contiguous()
-    return sub_pc
+    center = torch.gather(pc.transpose(1, 2).contiguous(), dim=-1, index=fps_idx.unsqueeze(1).repeat(1, 3, 1)).transpose(1,2).contiguous()
+    return center
 
 def knn_point(nsample, xyz, xyz_q):
+    """在点云中xyz计算出以xyz_q为中心的KNN(K = nsample)结果
+
+    Args:
+        nsample (int): K = nsample
+        xyz (tensor): 目标点云 [B, N, 3]
+        xyz_q (tensor): query中心点 [B, Nq, 3]
+
+    Returns:
+        tensor of indices: [B, Nq, K]
+    """
     
     sq_dist = square_distance(xyz_q, xyz) # [B, Nq, N]
     _, group_index = torch.topk(sq_dist, nsample, dim=-1, largest=False, sorted=False)
@@ -100,7 +119,7 @@ class Attention(nn.Module):
         attn = torch.softmax(qk_scale_dot, dim=-1)
         attn = self.attn_drop(attn)
         
-        out = (attn @ v).transpose(1, 2).reshape(B, N, C) # (B, H, N, N) @ (B, H, N, CH) -> (B, H, N, CH) -> (B, N, C)
+        out = (attn @ v).transpose(1, 2).reshape(B, N, C) # (B, H, N, N) @ (B, H, N, CH) -> (B, H, N, CH) -> (B, N, C) reshape不能实现维度自动调换，只能实现 K = M*N 或 M*N = K 因此需要transpose到相应位置后再reshape
         out = self.proj(out)
         out = self.proj_drop(out)
         return out
