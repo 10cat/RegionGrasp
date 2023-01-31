@@ -45,7 +45,7 @@ class cGraspvae(nn.Module):
                         condition_size=self.condition_size, cfg=cfg)
         self.cfg = cfg
 
-    def forward(self, obj_pc, hand_xyz, region_mask=None, condition_vec=None):
+    def forward(self, obj_pc, hand_xyz, mask_center=None, region_mask=None, condition_vec=None):
         """
         :param obj_pc:[B, 3+n, N1]
         :param hand_xyz: [B, 3, 778]
@@ -60,27 +60,42 @@ class cGraspvae(nn.Module):
         #     assert region_mask is not None
         #     obj_rc_glb_feature, _, _ = self.obj_rc_encoder(obj_pc, region_mask)
         #     condition_vec = obj_rc_glb_feature
-        condition_vec = self.cnet(obj_pc, feat_only=True)
+        mask = None
+        if self.cfg.model.cnet_type == 'mae':
+            assert mask_center is not None, "Requires the center point of the masked region"
+            condition_vec, mask = self.cnet(obj_pc, mask_center=mask_center)
+        elif self.cfg.model.cnet_type == 'obj_comp':
+            condition_vec = self.cnet(obj_pc, feat_only=True)
+        else:
+            raise NotImplementedError
         recon, means, log_var, z = self.cvae(x=hand_glb_feature, c=condition_vec)
         # import pdb; pdb.set_trace()
         pose, trans = recon
         recon = hand_params_decode(pose, trans)
         # recon = recon.contiguous().view(B, 61)
-        return recon, [means, log_var, z]
+        return recon, [means, log_var, z], mask
 
-    def inference(self, obj_pc, region_mask=None, condition_vec=None):
+    def inference(self, obj_pc, mask_center=None, region_mask=None, condition_vec=None):
         B = obj_pc.size(0)
         # obj_pc_masked = region_masked_pointwise(obj_pc, region_mask)
         # if condition_vec is None:
         #     assert region_mask is not None
         #     obj_rc_glb_feature, _, _ = self.obj_rc_encoder(obj_pc, region_mask)
         #     condition_vec = obj_rc_glb_feature
-        condition_vec = self.cnet(obj_pc, feat_only=True)
+        mask = None
+        if self.cfg.model.cnet_type == 'mae':
+            assert mask_center is not None, "Requires the center point of the masked region"
+            condition_vec, mask = self.cnet(obj_pc, mask_center=mask_center)
+        elif self.cfg.model.cnet_type == 'obj_comp':
+            condition_vec = self.cnet(obj_pc, feat_only=True)
+        else:
+            raise NotImplementedError
+        
         recon, z = self.cvae.inference(n=B, c=condition_vec)
         # recon = recon.contiguous().view(B, 61)
         pose, trans = recon
         recon = hand_params_decode(pose, trans)
-        return recon
+        return recon, mask
 
 def hand_params_decode(pose, trans):
     batch_size = trans.shape[0]

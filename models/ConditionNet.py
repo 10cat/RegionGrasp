@@ -1,6 +1,7 @@
 import sys
 sys.path.append('.')
 sys.path.append('..')
+import numpy as np
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
@@ -8,7 +9,7 @@ import torch.nn.functional as F
 from models.pointnet_encoder import PointNetEncoder
 from utils.utils import func_timer, region_masked_pointwise
 from timm.models.layers import trunc_normal_
-from models.PointTr import get_knn_index, PoseEmbedding, Attention, CrossAttention, EncoderBlock, DecoderBlock, QueryGenerator, FinePointGenerator
+from models.PointTr import get_knn_index, PoseEmbedding, Attention, CrossAttention, EncoderBlock, DecoderBlock, QueryGenerator, FinePointGenerator, knn_point
 from models.PointMAE import MaskTransformer, TransformerDecoder, Grouper
 from models.DGCNN import DGCNN_grouper
 
@@ -138,86 +139,114 @@ class ConditionBERT(ConditionTrans):
         
         return q, pred_pc
     
-    
 class ConditionMAE(nn.Module):
-    def __init__(self, cfg):
+    def __init__(self, config):
         super().__init__()
-        trans_cfg = cfg.transformer
-        self.trans_dim = trans_cfg.trans_dim
+        self.config = config
+        trans_cfg = config.transformer # config = 全局cfg.model
+        self.trans_dim = config.trans_dim
+        self.depth = config.depth
+        self.num_heads = config.num_heads
+        self.group_size = config.group_size
+        self.num_group = config.num_group
+        self.encoder_dims = config.encoder_dims
+        
+        self.group_divider = Grouper(self.num_group, self.group_size)
+        
         self.MAE_encoder = MaskTransformer(trans_cfg)
-        self.group_size = cfg.group_size
-        self.num_group = cfg.num_group
-        self.drop_path_rate = trans_cfg.drop_path_rate
-        self.decoder_pos_embed = nn.Sequential(
-            nn.Linear(3, 128),
-            nn.GELU(),
-            nn.Linear(128, self.trans_dim)
-        )
-        self.decoder_depth = trans_cfg.decoder_depth
-        self.decoder_num_heads = trans_cfg.decoder_num_heads
-        dpr = [x.item() for x in torch.linspace(0, self.drop_path_rate, self.decoder_depth)]
-        self.MAE_decoder = TransformerDecoder(
-            embed_dim=self.trans_dim,
-            depth=self.decoder_depth,
-            drop_path_rate=dpr,
-            num_heads=self.decoder_num_heads
-        )
         
-        self.group_divider = Grouper(num_group=self.num_group, group_size=self.group_size)
+        self.condition_dim = config.condition_dim
         
-        self.mask_token = nn.Parameter(torch.zeros(1, 1, self.trans_dim))
-        
-        # prediction head
         self.increase_dim = nn.Sequential(
-            nn.Conv1d(self.trans_dim, 3*self.group_size, 1)
+            nn.Conv1d(self.trans_dim, self.condition_dim, 1),
+            nn.BatchNorm1d(self.condition_dim),
+            nn.LeakyReLU(negative_slope=0.2),
+            nn.Conv1d(self.condition_dim, self.condition_dim, 1)
         )
         
-        trunc_normal_(self.mask_token, std=.02) # initialize the mask_token parameters
         
-    def forward(self, pts, vis=False, feat_only=False, **kwargs):
+        self.fuse = nn.Sequential(
+            nn.Conv1d(2*self.condition_dim, self.condition_dim, 1),
+            nn.BatchNorm1d(self.condition_dim)
+        )
         
-        neighborhood, center = self.group_divider(pts)
+    def mask_region_patch(self, center, mask_center):
+        B, G, _ = center.shape
+        batch_mask = np.zeros([B, G])
+        mask_center = mask_center.reshape(B, 1, 3)
+        k_idx = knn_point(self.config.region_size, center, mask_center).reshape(B, G)
+        for i in range(B):
+            mask = np.zeros(G)
+            mask[k_idx[i]] = 1
+            batch_mask[i, :] = mask
+            
+        batch_mask = torch.from_numpy(batch_mask).to(torch.bool)
+        return batch_mask
+    
+    def get_region_mask(self, mask, p_idx, obj_points):
+        """_summary_
+
+        Args:
+            mask (_type_): _description_
+            p_idx (_type_): _description_
+            obj_points (_type_): _description_
+
+        Returns:
+            _type_: _description_
+        """        
+        B, G, S = p_idx
+        B, N, _ = obj_points.shape
+        p_idx = p_idx[mask].reshape(B, -1, S)
         
-        if feat_only:
-            x_vis, mask = self.MAE_encoder(neighborhood, center, noaug=True)
-            return x_vis
+        full_mask = np.zeros(B, N)
+        for batch in range(B):
+            mask = np.zeros(N)
+            indices = p_idx[batch]
+            index = []
+            for i in range(G):
+                index += indices[i].tolist()
+            index = list(set(index))
+            mask[index] = 1
+            full_mask[batch, :] = mask
+        full_mask = torch.from_numpy(full_mask)
+        return full_mask
         
-        x_vis, mask = self.MAE_encoder(neighborhood, center)
+    def forward(self, pts, mask_center=None):
+        neighborhood, center, p_idx = self.group_divider(pts, return_idx=True)
+        embed_feat, _ = self.MAE_encoder(neighborhood, center, noaug = True)
+        feat = self.increase_dim(embed_feat)
+        if mask_center is not None:
+            
+            import pdb; pdb.set_trace()
+            # CHECK: 1)feat维度; 2)mask维度 3)mask之后的维度
+            # mask - B, G
+            # feat - B, G, 1024
+            mask = self.mask_region_path(center, mask_center)
+            
+            masked_feat = feat[mask].reshape(B, -1, self.condition_dim)
+            other_feat = feat[~mask].reshape(B, -1, self.condition_dim)
+            
+            # 分别做max pooling
+            masked_feat = torch.max(masked_feat, dim=1)[0]
+            other_feat = torch.max(other_feat, dim=1)[0]
+            
+            condition_feat = torch.cat([masked_feat, other_feat], dim=-1) # B, 2048
+            
+            # conv1d特征融合
+            condition_feat = self.fuse(condition_feat) # B, 1024
+            
+            full_mask = self.get_region_mask(mask, p_idx, pts) # B, 2048
+            
+            return condition_feat, full_mask
         
-        B,_,C = x_vis.shape
-        pos_emd_vis = self.decoder_pos_embed(center[~mask]).reshape(B, -1, C)
-        pos_emd_mask = self.decoder_pos_embed(center[mask]).reshape(B, -1, C)
+        condition_feat = torch.max(feat, dim=1)[0] 
+        return condition_feat, None
         
-        _,N,_ = pos_emd_mask.shape
-        
-        mask_token = self.mask_token.expand(B, N, -1)
-        x_full = torch.cat([x_vis, mask_token], dim=1)
-        pos_full = torch.cat([pos_emd_vis, pos_emd_mask], dim=1)
-        
-        x_rec = self.MAE_decoder(x_full, pos_full, N)
-        
-        B, M, C = x_rec.shape
-        rebuild_points = self.increase_dim(x_rec.transpose(1, 2)).transpose(1, 2).reshape(B * M, -1, 3)
-        
-        gt_points = neighborhood[mask].reshape(B * M, -1, 3)
-        
-        if vis: #visualization
-            vis_points = neighborhood[~mask].reshape(B * (self.num_group - M), -1, 3)
-            full_vis = vis_points + center[~mask].unsqueeze(1)
-            full_rebuild = rebuild_points + center[mask].unsqueeze(1)
-            full = torch.cat([full_vis, full_rebuild], dim=0)
-            # full_points = torch.cat([rebuild_points,vis_points], dim=0)
-            full_center = torch.cat([center[mask], center[~mask]], dim=0)
-            # full = full_points + full_center.unsqueeze(1)
-            # import pdb; pdb.set_trace()
-            ret2 = full_vis.reshape(B, -1, 3)
-            # ret1 = full.reshape(B, -1, 3)
-            ret1 = full_rebuild.reshape(B, -1, 3)
-            full_center = full_center.reshape(B, -1, 3)
-            # return ret1, ret2
-            return ret1, ret2, full_center, rebuild_points, gt_points
-        
-        return rebuild_points, gt_points
+            
+            
+            
+            
+
         
 
 

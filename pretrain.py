@@ -19,7 +19,8 @@ import random
 from utils.utils import set_random_seed
 
 from dataset.obman_preprocess import ObManObj
-from models.ConditionNet import ConditionMAE, ConditionTrans, ConditionBERT
+from models.ConditionNet import ConditionTrans, ConditionBERT
+from models.PointMAE import PointMAE
 from models.cGrasp_vae import cGraspvae
 from traineval_utils.loss import ChamferDistanceL2Loss, PointCloudCompletionLoss, cGraspvaeLoss, MPMLoss
 from utils.optim import *
@@ -65,7 +66,7 @@ def mae(cfg=None):
     mode = cfg.run_mode
     bs = cfg.batch_size
     
-    net = ConditionMAE(cfg.model)
+    net = PointMAE(cfg.model)
     
     if mode == 'train':
         trainset = get_dataset(cfg, mode='train')
@@ -107,12 +108,14 @@ if __name__ == "__main__":
     # import pdb; pdb.set_trace()
     parser = argparse.ArgumentParser()
     parser.add_argument('--cfgs', type=str, required=True)
+    parser.add_argument('--cfgs_fodler', type=str, default='pretrain')
     parser.add_argument('--exp_name', type=str, default=None)
     parser.add_argument('--cuda_id', type=str, default="0")
     # parser.add_argument('--no_cuda', action='store_false')
     parser.add_argument('--wandb', action='store_true')
     parser.add_argument('--resume', action='store_true')
     parser.add_argument('--mae', action='store_true')
+    parser.add_argument('--comp', action='store_true')
     parser.add_argument('--machine', type=str, default='41')
     
     parser.add_argument('--checkpoint', type=str, default=None)
@@ -127,7 +130,7 @@ if __name__ == "__main__":
     
     # cfg = MyOptions()
     # DONE: 读取配置文件并转化成字典，同时加入args的配置
-    conf = cfgsu.get_config(args, 'pretrain')
+    conf = cfgsu.get_config(args, args.cfgs_fodler)
     conf.update(cfgsu.config_exp_name(args))
     conf.update(cfgsu.config_paths(args.machine, conf['exp_name']))
     conf.update(args.__dict__) # args的配置也记录下来

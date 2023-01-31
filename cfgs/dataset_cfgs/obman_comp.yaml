@@ -1,0 +1,6 @@
+type: comp
+kwargs:  {
+  use_cache: True,
+  object_centric: True,
+  resample_num: 8192
+}

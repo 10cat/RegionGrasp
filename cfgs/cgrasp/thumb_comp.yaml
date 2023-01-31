@@ -1,0 +1,120 @@
+project_name: "ConditionHOI_cgrasp"
+# dataset settings
+dataset: {
+  name: obman,
+
+  train: {_base_: ./cfgs/dataset_cfgs/obman_comp.yaml,
+          others: {subset: 'train'}},
+  val: {_base_: ./cfgs/dataset_cfgs/obman_comp.yaml,
+        others: {subset: 'val'}},
+  test: {_base_: ./cfgs/dataset_cfgs/obman_comp.yaml,
+        others: {subset: 'test'}}}
+
+# training settings
+batch_size: 32
+num_epoch: 60
+early_stopping: 100
+use_cuda: True
+optimizer : {
+  type: Adam,
+  pretrain_lr: 1e-4,
+  kwargs : {
+    lr: 1e-4
+    }
+}
+
+# model settings
+
+model: {
+    cnet_type: obj_comp,
+    cnet: {
+      chkpt_path: '/ssd_data/yilin/Outputs/ConditionHOI/pretrain_comp_d3_2loss/models/checkpoint_50.pth',
+      type: 'trans',
+      kwargs: {
+        embed_dim: 384,
+        num_heads: 6,
+        mlp_ratio: 2.,
+        glob_feat_dim: 1024,
+        depth: {
+          encoder: 3, 
+          decoder: 4},
+        knn_k: 8,
+        knn_layer_num: 1,
+        num_query: 96,
+        num_pred: 6144,
+        fps: True
+      }
+    },
+    vae: {
+      kwargs: {
+        encoder_sizes: [1024, 512, 256],
+        latent_size: 64,
+        condition_size: 1024
+      } 
+    }
+      
+}
+std_type: 'softplus'
+
+# loss settings
+
+coef: {
+  kl_coef: 0.005,
+  lambda_edge: 30.,
+  lambda_mesh_rec_w:  30.,
+  lambda_dist_h:  35.,
+  lambda_dist_o:  35.,
+}
+
+hoi_hparams: {
+  th_penet: -0.005,
+  th_contact: 0.005,
+  weight_contact: .1,
+  weight_penet: 1.5,
+  weight_region: 1.5,
+}
+vpe_path: "./cfgs/verts_per_edge.npy"
+c_weights_path: "./cfgs/rhand_weight.npy"
+
+
+
+# checkpoint / visual / 
+check_interval: 1
+visual_interval: {
+  train:{
+    batch: 500,
+    sample: null
+  },
+  val: {
+    batch: 10,
+    sample: null
+  }
+}
+
+
+# eval_inference_iteration
+eval_iter: 5
+
+# test settings 
+test_part: False
+test_select_k: 0.25
+testmetrics: False
+metrics_select : {
+  contact: True,
+  inter: True,
+  simul: False,
+  cond: True
+}
+voxel : {
+  mode: voxels_hand,
+  pitch: 0.01
+}
+threshold : {
+  penetrate: -0.005,
+  cond_dist: -0.005, #CHECK
+  coverage: 0.6
+}
+
+
+
+
