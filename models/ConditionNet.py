@@ -144,7 +144,7 @@ class ConditionMAE(nn.Module):
         super().__init__()
         trans_cfg = cfg.transformer
         self.trans_dim = trans_cfg.trans_dim
-        self.MAE_encoder = MaskTransformer(trans_cfg.MAE_encoder)
+        self.MAE_encoder = MaskTransformer(trans_cfg)
         self.group_size = cfg.group_size
         self.num_group = cfg.num_group
         self.drop_path_rate = trans_cfg.drop_path_rate
@@ -200,6 +200,22 @@ class ConditionMAE(nn.Module):
         rebuild_points = self.increase_dim(x_rec.transpose(1, 2)).transpose(1, 2).reshape(B * M, -1, 3)
         
         gt_points = neighborhood[mask].reshape(B * M, -1, 3)
+        
+        if vis: #visualization
+            vis_points = neighborhood[~mask].reshape(B * (self.num_group - M), -1, 3)
+            full_vis = vis_points + center[~mask].unsqueeze(1)
+            full_rebuild = rebuild_points + center[mask].unsqueeze(1)
+            full = torch.cat([full_vis, full_rebuild], dim=0)
+            # full_points = torch.cat([rebuild_points,vis_points], dim=0)
+            full_center = torch.cat([center[mask], center[~mask]], dim=0)
+            # full = full_points + full_center.unsqueeze(1)
+            # import pdb; pdb.set_trace()
+            ret2 = full_vis.reshape(B, -1, 3)
+            # ret1 = full.reshape(B, -1, 3)
+            ret1 = full_rebuild.reshape(B, -1, 3)
+            full_center = full_center.reshape(B, -1, 3)
+            # return ret1, ret2
+            return ret1, ret2, full_center, rebuild_points, gt_points
         
         return rebuild_points, gt_points
         

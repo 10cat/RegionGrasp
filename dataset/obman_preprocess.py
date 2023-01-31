@@ -20,8 +20,8 @@ from dataset.data_utils import faces2verts_no_rep, contact_to_dict
 from dataset.obman_orig import obman
 
 class ObManResample(obman):
-    def __init__(self, ds_root, shapenet_root, split='train', joint_nb=21, mini_factor=None, use_cache=False, root_palm=False, mode='all', segment=False, use_external_points=True, apply_obj_transform=True, expand_times=1, resample_num = 8192):
-        super().__init__(ds_root, shapenet_root, split, joint_nb, mini_factor, use_cache, root_palm, mode, segment, use_external_points, apply_obj_transform)
+    def __init__(self, ds_root, shapenet_root, mano_root, split='train', joint_nb=21, mini_factor=None, use_cache=False, root_palm=False, mode='all', segment=False, use_external_points=True, apply_obj_transform=True, expand_times=1, resample_num = 8192):
+        super().__init__(ds_root, shapenet_root, mano_root, split, joint_nb, mini_factor, use_cache, root_palm, mode, segment, use_external_points, apply_obj_transform)
         self.unique_objs = np.unique(
                     [(meta_info['obj_class_id'], meta_info['obj_sample_id'])
                      for meta_info in self.meta_infos],
@@ -86,8 +86,8 @@ class ObManResample(obman):
         return np.array(trans_points).astype(np.float32), obj_trans, np.array(face_ids)
 
 class ObManObj(ObManResample):
-    def __init__(self, ds_root, shapenet_root, split='train', joint_nb=21, mini_factor=None, use_cache=False, root_palm=False, mode='all', segment=False, use_external_points=True, apply_obj_transform=True, expand_times=1, resample_num=8192, object_centric=False, ratio_lower=None, ratio_upper=None, num_mask_points=None):
-        super().__init__(ds_root, shapenet_root, split, joint_nb, mini_factor, use_cache, root_palm, mode, segment, use_external_points, apply_obj_transform, expand_times, resample_num)
+    def __init__(self, ds_root, shapenet_root, mano_root, split='train', joint_nb=21, mini_factor=None, use_cache=False, root_palm=False, mode='all', segment=False, use_external_points=True, apply_obj_transform=True, expand_times=1, resample_num=8192, object_centric=False, ratio_lower=None, ratio_upper=None, num_mask_points=None):
+        super().__init__(ds_root, shapenet_root, mano_root, split, joint_nb, mini_factor, use_cache, root_palm, mode, segment, use_external_points, apply_obj_transform, expand_times, resample_num)
         
         self.meta_infos_exp, self.obj_transforms_exp = self.expand_set(expand_times)
         self.mask_centers, self.mask_Ks = self.get_mask_ratio(ratio_lb=ratio_lower, 
@@ -166,9 +166,48 @@ class ObManObj(ObManResample):
         
         return sample
     
+class ObManObj_MAE(ObManResample):
+    def __init__(self, ds_root, shapenet_root, mano_root, split='train', joint_nb=21, mini_factor=None, use_cache=False, root_palm=False, mode='all', segment=False, use_external_points=True, apply_obj_transform=True, expand_times=1, resample_num=2048, object_centric=True):
+        super().__init__(ds_root, shapenet_root, mano_root, split, joint_nb, mini_factor, use_cache, root_palm, mode, segment, use_external_points, apply_obj_transform, expand_times, resample_num)
+        
+        self.obj_centric = object_centric
+        
+        self.npoints = resample_num
+        
+        self.permutation = np.arange(self.npoints)
+        
+    def pc_norm(self, pc):
+        """ pc: NxC, return NxC """
+        centroid = np.mean(pc, axis=0)
+        pc = pc - centroid
+        m = np.max(np.sqrt(np.sum(pc**2, axis=1)))
+        pc = pc / m
+        return pc
+        
+
+    def random_sample(self, pc, num):
+        np.random.shuffle(self.permutation)
+        pc = pc[self.permutation[:num]]
+        return pc
+        
+    def __len__(self):
+        return len(self.meta_infos)
+    
+    def __getitem__(self, idx):
+        sample = {}
+        obj_points, obj_trans, _ = self.get_obj_resampled_trans(self.meta_infos, self.obj_transforms, idx)
+        obj_points = self.random_sample(obj_points, self.npoints)
+        if self.obj_centric:
+            obj_points = self.pc_norm(obj_points)
+        sample['input_points'] = torch.from_numpy(obj_points)
+        sample['ids'] = idx
+        
+        return sample
+        
+        
 class ObManThumb(ObManResample):
-    def __init__(self, ds_root, shapenet_root, split='train', joint_nb=21, mini_factor=None, use_cache=False, root_palm=False, mode='all', segment=False, use_external_points=True, apply_obj_transform=True, expand_times=1, resample_num=8192, object_centric=False, use_mano=False):
-        super().__init__(ds_root, shapenet_root, split, joint_nb, mini_factor, use_cache, root_palm, mode, segment, use_external_points, apply_obj_transform, expand_times, resample_num)
+    def __init__(self, ds_root, shapenet_root, mano_root, split='train', joint_nb=21, mini_factor=None, use_cache=False, root_palm=False, mode='all', segment=False, use_external_points=True, apply_obj_transform=True, expand_times=1, resample_num=8192, object_centric=False, use_mano=False):
+        super().__init__(ds_root, shapenet_root, mano_root, split, joint_nb, mini_factor, use_cache, root_palm, mode, segment, use_external_points, apply_obj_transform, expand_times, resample_num)
         self.obj_centric = object_centric
         # import pdb; pdb.set_trace()
         mano_trans_path = os.path.join(ds_root, 'mano-fit', split, 'mano_trans.json')

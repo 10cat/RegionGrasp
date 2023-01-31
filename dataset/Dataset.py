@@ -39,8 +39,8 @@ def select_ids_dataset(ds_names, seeds=[]):
         
         
 class ObManDataset(ObManThumb):
-    def __init__(self, ds_root, shapenet_root, split='train', joint_nb=21, mini_factor=None, use_cache=False, root_palm=False, mode='all', segment=False, use_external_points=True, apply_obj_transform=True, expand_times=1, resample_num=8192, object_centric=False):
-        super().__init__(ds_root, shapenet_root, split, joint_nb, mini_factor, use_cache, root_palm, mode, segment, use_external_points, apply_obj_transform, expand_times, resample_num, object_centric)
+    def __init__(self, ds_root, shapenet_root, mano_root, split='train', joint_nb=21, mini_factor=None, use_cache=False, root_palm=False, mode='all', segment=False, use_external_points=True, apply_obj_transform=True, expand_times=1, resample_num=8192, object_centric=False):
+        super().__init__(ds_root, shapenet_root, mano_root, split, joint_nb, mini_factor, use_cache, root_palm, mode, segment, use_external_points, apply_obj_transform, expand_times, resample_num, object_centric)
         annot_root = os.path.join(self.root, 'thumbHOI')
         sample_id = np.load(os.path.join(annot_root, 'samples_id.npy'))
         annotations_thumb = []
@@ -52,7 +52,18 @@ class ObManDataset(ObManThumb):
             annotations_thumb.append(annotation)
         self.samples_selected = sample_id
         self.annotations_thumb = annotations_thumb
+        np.random.seed(1024)
+        self.choice = np.random.random(2048)
         # import pdb; pdb.set_trace()
+        
+    def get_obj_input(self, obj_pc, contact_mask):
+        contact = contact_mask > 0
+        remained_pc = obj_pc[~contact]
+        N = remained_pc.shape[0]
+        indices = np.floor(self.choice * N).astype(np.int32)
+        sample_pc = [remained_pc[int(index)] for index in indices]
+        sample_pc = np.array(sample_pc)
+        return sample_pc
         
     def __len__(self):
         return len(self.samples_selected)
@@ -88,6 +99,8 @@ class ObManDataset(ObManThumb):
         region_mask = np.zeros(obj_points.shape[0])
         region_mask[contact_indices] = 1.
         
+        input_pc = self.get_obj_input(obj_points, region_mask)
+        
         sample['obj_points'] = torch.from_numpy(obj_points)
         sample['obj_point_normals'] = torch.from_numpy(obj_point_normals)
         sample['hand_verts'] = torch.from_numpy(hand_verts)
@@ -96,7 +109,7 @@ class ObManDataset(ObManThumb):
         # sample['contact_pc'] = torch.from_numpy(annot['contact_pc'])
         sample['region_mask'] = torch.from_numpy(region_mask)
         
-        sample['input_pc'] = torch.from_numpy(annot['input_pc'])
+        sample['input_pc'] = torch.from_numpy(input_pc)
         sample['sample_id'] = torch.Tensor([index])
         
         # import pdb; pdb.set_trace()
@@ -127,6 +140,7 @@ class GrabNetDataset(GrabNetDataset_orig):
             self.select_ids_norm = None
             
         # for visualization
+        
         self.region_face_ids = {} 
         self.region_center_ids = {}
         

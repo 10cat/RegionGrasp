@@ -6,6 +6,8 @@ import torch
 import torch.nn as nn
 import torch.optim as optim
 
+from timm.scheduler import CosineLRScheduler
+
 # from option import MyOptions as cfg
 
 
@@ -83,12 +85,29 @@ def build_optim_sche(model, cfg=None):
     opt_cfg = cfg.optimizer
     if opt_cfg.type == 'AdamW':
         # NOTE: add weight decay for AdamW
-        
         param_groups = add_weight_decay(model, weight_decay=opt_cfg.kwargs.weight_decay)
         optimizer = optim.AdamW(param_groups, **opt_cfg.kwargs)
         
     sche_cfg = cfg.scheduler
-    scheduler = build_lambda_sche(optimizer, sche_cfg.kwargs)
+    if sche_cfg.type == 'LambdaLR':
+        scheduler = build_lambda_sche(optimizer, sche_cfg.kwargs)
+    elif sche_cfg.type == 'CosLR':
+        scheduler = CosineLRScheduler(optimizer,
+                t_initial=sche_cfg.kwargs.epochs,
+                cycle_mul=1,
+                cycle_limit=1,
+                lr_min=1e-6,
+                cycle_decay=0.1,
+                # decay_rate=0.1,
+                warmup_lr_init=1e-6,
+                warmup_t=sche_cfg.kwargs.initial_epochs,
+                t_in_epochs=True)
+    elif sche_cfg.type == 'StepLR':
+        scheduler = torch.optim.lr_scheduler.StepLR(optimizer, **sche_cfg.kwargs)
+    elif sche_cfg.type == 'function':
+        scheduler = None
+    else:
+        raise NotImplementedError()
     if cfg.get('bnmscheduler') is not None:
         bnsche_config = cfg.bnmscheduler
         if bnsche_config.type == 'Lambda':

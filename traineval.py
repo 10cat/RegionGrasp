@@ -169,6 +169,7 @@ if __name__ == "__main__":
     # import pdb; pdb.set_trace()
     parser = argparse.ArgumentParser()
     parser.add_argument('--wandb', action='store_true')
+    parser.add_argument('--cuda_id', type=str, default="0")
     parser.add_argument('--resume', action='store_true')
     parser.add_argument('--pretrain', action='store_true')
     parser.add_argument('--grasp', action='store_true')
@@ -187,9 +188,9 @@ if __name__ == "__main__":
     
     # cfg = MyOptions()
     # DONE: 读取配置文件并转化成字典，同时加入args的配置
-    conf = cfgsu.get_config(args)
-    conf.update(cfgsu.config_exp_name(args.exp_name))
-    conf.update(cfgsu.config_paths(args.machine, args.exp_name))
+    conf = cfgsu.get_config(args, 'pretrain')
+    conf.update(cfgsu.config_exp_name(args))
+    conf.update(cfgsu.config_paths(args.machine, conf['exp_name']))
     conf.update(args.__dict__) # args的配置也记录下来
     
     cfg = EasyDict()
@@ -197,7 +198,7 @@ if __name__ == "__main__":
     cfg = cfgsu.merge_new_config(cfg, conf)
     # conf = OmegaConf.structured(cfg)
     # import pdb; pdb.set_trace()
-    os.environ['CUDA_VISIBLE_DEVICES'] = cfg.visible_devices
+    os.environ['CUDA_VISIBLE_DEVICES'] = cfg.cuda_id
     
     
 

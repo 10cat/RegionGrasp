@@ -206,6 +206,16 @@ class PointCloudCompletionLoss(nn.Module):
         dict_loss['fine_loss'] = loss_fine * param_fine
         return dict_loss
         
+class MPMLoss(nn.Module):
+    def __init__(self):
+        super().__init__()
+        self.pc_loss = ChamferDistanceL2Loss()
+        
+    def forward(self, pred_pc, gt_pc, dict_loss):
+        dict_loss['recon_chamfer_loss'] = self.pc_loss(pred_pc, gt_pc)
+        
+        return dict_loss
+
 
 class ChamferDistanceL2Loss(nn.Module):
     def __init__(self):

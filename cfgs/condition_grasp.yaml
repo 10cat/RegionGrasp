@@ -11,14 +11,13 @@ dataset: {
         others: {subset: 'test'}}}
 
 # training settings
-visible_devices: "1"
-batch_size: 64
+batch_size: 32
 num_epoch: 60
 early_stopping: 100
 use_cuda: True
 optimizer : {
   type: Adam,
-  pretrain_lr: 1e-6,
+  pretrain_lr: 1e-4,
   kwargs : {
     lr: 1e-4
     }

@@ -153,7 +153,7 @@ class TransformerEncoder(nn.Module):
     def forward(self, x, pos):
         for _, block in enumerate(self.blocks):
             x = block(x + pos)
-        return 
+        return x
     
 class TransformerDecoder(nn.Module):
     def __init__(self, embed_dim=384, depth=4, num_heads=6, mlp_ratio=4., qkv_bias=False, qk_scale=None,
@@ -194,17 +194,17 @@ class MaskTransformer(nn.Module):
         super().__init__()
         self.config = config
         # define the transformer argparse
-        self.mask_ratio = config.transformer_config.mask_ratio 
-        self.trans_dim = config.transformer_config.trans_dim
-        self.depth = config.transformer_config.depth 
-        self.drop_path_rate = config.transformer_config.drop_path_rate
-        self.num_heads = config.transformer_config.num_heads 
+        self.mask_ratio = config.mask_ratio 
+        self.trans_dim = config.trans_dim
+        self.depth = config.depth 
+        self.drop_path_rate = config.drop_path_rate
+        self.num_heads = config.num_heads 
         # print_log(f'[args] {config.transformer_config}', logger = 'Transformer')
         # embedding
-        self.encoder_dims =  config.transformer_config.encoder_dims
+        self.encoder_dims =  config.encoder_dims
         self.encoder = Encoder(encoder_channel = self.encoder_dims)
 
-        self.mask_type = config.transformer_config.mask_type
+        self.mask_type = config.mask_type
 
         self.pos_embed = nn.Sequential(
             nn.Linear(3, 128),
@@ -259,6 +259,7 @@ class MaskTransformer(nn.Module):
                 
     def mask_center_rand(self, center, noaug=False):
         B, G, _ = center.shape
+        # import pdb; pdb.set_trace()
         if noaug or self.mask_ratio == 0:
             # 不进行任何的mask
             return torch.zeros(center.shape[:2]).bool()
@@ -289,7 +290,7 @@ class MaskTransformer(nn.Module):
         assert S == G, "Make sure the second dim of the encoder output equal to the center number"
         
         
-        x_vis = group_input_tokens[~bool_masked_pos].reshape(B, -1, C)
+        x_vis = group_input_tokens[~bool_masked_pos].reshape(B, -1, C) # B, 52(int 0.3*128), 384
         center_vis = center[~bool_masked_pos].reshape(B, -1, 3)
         
         # pos embed for visible patch only

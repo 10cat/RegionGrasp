@@ -20,7 +20,7 @@ from utils.meters import AverageMeter, AverageMeters
 from utils.visualization import colors_like, visual_hand, visual_obj
 
 
-def model_update(optimizer, total_loss, scheduler):
+def model_update(optimizer, total_loss, scheduler, epoch=None):
     optimizer.zero_grad()
     total_loss.backward()
     optimizer.step()
@@ -29,7 +29,10 @@ def model_update(optimizer, total_loss, scheduler):
             for item in scheduler:
                 item.step()
         else:
-            scheduler.step()
+            if epoch is not None:
+                scheduler.step(epoch)
+            else:
+                scheduler.step()
 
 class MetersMonitor(object):
     def __init__(self):
@@ -226,10 +229,76 @@ class PretrainEpoch():
             if no_improve_epochs > self.cfg.early_stopping:
                 stop_flag = True
             
-            
         self.log(self.Losses)
         return model, stop_flag
     
+    
+    
+class PretrainMAEEpoch(PretrainEpoch):
+    def __init__(self, loss, optimizer, scheduler, output_dir, mode='train', cfg=None):
+        super().__init__(loss, optimizer, scheduler, output_dir, mode, cfg)
+        
+    def model_forward(self, pointmae, input, vis=False):
+        dict_loss = {}
+        input = input.to('cuda')
+        if vis==False:
+            rebuild_points, gt_points = pointmae(input)
+            full_vis, full_pred, full_center = None, None, None
+        else:
+            full_vis, full_pred, full_center, rebuild_points, gt_points = pointmae(input, vis=True)
+        dict_loss = self.loss.forward(rebuild_points, gt_points, dict_loss)
+        return full_vis, full_pred, full_center, rebuild_points, gt_points, dict_loss
+    
+    def visual(self, batch_idx, full_vis, full_pred, full, sample_ids, epoch, batch_interval=None, sample_interval=None):
+        if batch_idx % batch_interval == 0:
+            if sample_interval is None:
+                i = 0
+                pcs = [full[i], full_pred[i], full_vis[i]]
+                pcs = [pc.detach().to('cpu').numpy() for pc in pcs]
+                gt_colors = 'green'
+                pred_colors = 'yellow'
+                
+                self.Visual.visual(pcs=pcs[0], pc_colors=gt_colors, sample_id=int(sample_ids[i]), epoch=epoch, name='orig')
+                self.Visual.visual(pcs=pcs[1], pc_colors=pred_colors, sample_id=int(sample_ids[i]), epoch=epoch, name='pred')
+                self.Visual.visual(pcs=pcs[2], pc_colors=gt_colors, sample_id=int(sample_ids[i]), epoch=epoch, name='vis')
+            else:
+                raise NotImplementedError()
+    
+    def __call__(self, dataloader, epoch, model):
+        stop_flag = False
+        pbar = tqdm(dataloader, desc=f"{self.mode} epoch {epoch}:")
+        for batch_idx, sample in enumerate(pbar):
+            input = sample['input_points']
+            sample_ids = sample['ids']
+            if self.mode != 'train':
+                with torch.no_grad(): full_pred, full_vis, full_center, rebuild_pc, gt_pc, dict_loss = self.model_forward(model, input, vis=True)
+            else:
+                _, _, _, rebuild_pc, gt_pc, dict_loss = self.model_forward(model, input)
+            
+            total_loss = sum(dict_loss.values())
+            
+            if self.mode == 'train':
+                model_update(self.optimizer, total_loss, self.scheduler, epoch=epoch)
+            
+            msg_loss, losses = self.Losses.report(dict_loss, total_loss, mode=self.mode)
+            msg = msg_loss
+            pbar.set_postfix_str(msg)
+            
+            # TODO: validation的可视化部分
+            if self.mode == 'val':
+                self.visual(batch_idx, full_vis, full_pred, input, sample_ids, epoch, 
+                            batch_interval=self.batch_interval, 
+                            sample_interval=self.sample_interval)
+            # break
+            
+        if self.mode == 'val':
+            no_improve_epochs = self.Checkpt.save_checkpoints(epoch, model, metric_value=losses[f'{self.mode}_total_loss'])
+            if no_improve_epochs > self.cfg.early_stopping:
+                stop_flag = True
+            
+        self.log(self.Losses)
+        return model, stop_flag    
+            
     
 class EpochVAE():
     def __init__(self, loss, dataset, optimizer, scheduler, output_dir, mode='train', cfg=None):

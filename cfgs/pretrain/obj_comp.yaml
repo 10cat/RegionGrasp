@@ -11,7 +11,6 @@ dataset: {
         others: {subset: 'test'}}}
 
 # training settings
-visible_devices: "1"
 batch_size: 32
 num_epoch: 200
 early_stopping: 5

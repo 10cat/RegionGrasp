@@ -3,7 +3,7 @@ import sys
 sys.path.append('.')
 sys.path.append('..')
 
-from dataset.obman_preprocess import ObManObj
+from dataset.obman_preprocess import ObManObj, ObManObj_MAE
 from dataset.Dataset import GrabNetDataset, ObManDataset
 
 
@@ -16,13 +16,22 @@ def get_dataset(cfg, mode='train'):
         configs = cfg.dataset[mode]._base_.kwargs
         # import pdb; pdb.set_trace() # dataset配置问题
         if cfg.run_type == 'pretrain':
-            dataset = ObManObj(ds_root = ds_root,
-                               shapenet_root = shapenet_root,
-                               split = mode,
-                               **configs)
+            if cfg.mae:
+                dataset = ObManObj_MAE(ds_root = ds_root,
+                                    shapenet_root = shapenet_root,
+                                    mano_root = cfg.mano_root,
+                                    split = mode,
+                                    **configs)
+            else:
+                dataset = ObManObj(ds_root = ds_root,
+                                shapenet_root = shapenet_root,
+                                mano_root = cfg.mano_root,
+                                split = mode,
+                                **configs)
         else:
             dataset = ObManDataset(ds_root = ds_root,
                                   shapenet_root = shapenet_root,
+                                  mano_root = cfg.mano_root,
                                   split = mode,
                                   **configs)
             
