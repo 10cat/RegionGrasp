@@ -24,7 +24,7 @@ from models.cGrasp_vae import cGraspvae
 from traineval_utils.loss import ChamferDistanceL2Loss, PointCloudCompletionLoss, cGraspvaeLoss
 from utils.optim import *
 from utils.datasets import get_dataset
-from utils.epoch_utils import EpochVAE_comp, MetersMonitor, model_update, PretrainEpoch, EpochVAE, ValEpochVAE
+from utils.epoch_utils import EpochVAE_comp, ValEpochVAE_comp, EpochVAE_mae, ValEpochVAE_mae,  MetersMonitor, model_update, PretrainEpoch
     
 def cgrasp_comp(cfg=None):
     mode = cfg.run_mode
@@ -56,7 +56,7 @@ def cgrasp_comp(cfg=None):
         valloader = data.DataLoader(valset, batch_size=bs, shuffle=False)
         
         # TODO: cnet/vae其他参数设置不同学习率
-        optimizer, scheduler = build_optim_sche_grasp(model, cfg=cfg)
+        optimizer, scheduler = build_optim_sche_grasp(model, part_model={'cnet': model.cnet}, cfg=cfg)
         
         # TODO: loss改写
         device = 'cuda' if cfg.use_cuda else 'cpu'
@@ -80,7 +80,22 @@ def cgrasp_mae(cfg=None):
     # model_type = cfg.model.cnet.type
     bs = cfg.batch_size
     
-    cnet = ConditionMAE(**cfg.model.cnet.kwargs)
+    cnet = ConditionMAE(cfg.model.cnet.kwargs)
+    
+    if cfg.model.cnet.chkpt_path:
+        checkpoint = torch.load(cfg.model.cnet.chkpt_path)
+        # 只载入state_dict = 'MAE_encoder'部分的参数 至 state_dict = 'MAE_encoder'
+        # import pdb; pdb.set_trace()
+        mae_state_dict = {}
+        for key, param in checkpoint['state_dict'].items():
+            if key.startswith('MAE_encoder.'):
+                key = key.replace('MAE_encoder.', '')
+                mae_state_dict[key] = param
+        cnet.MAE_encoder.load_state_dict(mae_state_dict)
+        print('checkpoint for MAE_encoder in cnet loaded!')
+    
+    model = cGraspvae(cnet,
+                      **cfg.model.vae.kwargs, cfg=cfg)
     
     if mode == 'train':
         # DONE: dataset -- obj_points / obj_point_normals / obj_trans / input_pc / hand_verts
@@ -92,7 +107,7 @@ def cgrasp_mae(cfg=None):
         valloader = data.DataLoader(valset, batch_size=bs, shuffle=False)
         
         # TODO: cnet/vae其他参数设置不同学习率
-        optimizer, scheduler = build_optim_sche_grasp(model, cfg=cfg)
+        optimizer, scheduler = build_optim_sche_grasp(model, part_model={'cnet_mae': model.cnet.MAE_encoder}, cfg=cfg)
         
         # TODO: loss改写
         device = 'cuda' if cfg.use_cuda else 'cpu'
@@ -100,6 +115,8 @@ def cgrasp_mae(cfg=None):
         cgrasp_loss = cGraspvaeLoss(device, cfg)
         cgrasp_loss.to(device)
         
+        trainepoch = EpochVAE_mae(cgrasp_loss, trainset, optimizer, scheduler, output_dir=cfg.output_dir, mode='train', cfg=cfg)
+        valepoch = ValEpochVAE_mae(cgrasp_loss, valset, optimizer, scheduler, output_dir=cfg.output_dir, mode='val', cfg=cfg)
         
         for epoch in range(cfg.num_epoch):
             model, _ = trainepoch(trainloader, epoch, model)
@@ -159,7 +176,8 @@ if __name__ == "__main__":
     # conf = OmegaConf.structured(cfg)
     # import pdb; pdb.set_trace()
     os.environ['CUDA_VISIBLE_DEVICES'] = cfg.cuda_id
-    
+    os.environ['OMP_NUM_THREAD'] = '1'
+    torch.set_num_threads(1)
     
 
     if cfg.wandb:

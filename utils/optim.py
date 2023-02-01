@@ -50,10 +50,10 @@ class BNMomentumScheduler(object):
             epoch = self.last_epoch + 1
         return self.lmbd(epoch)
     
-def add_weight_decay(model, weight_decay=1e-5, skip_list=()):
+def add_weight_decay(named_params, weight_decay=1e-5, skip_list=()):
     decay = []
     no_decay = []
-    for name, param in model.named_parameters():
+    for name, param in named_params:
         if not param.requires_grad:
             continue  # frozen weights
         if len(param.shape) == 1 or name.endswith(".bias") or name in skip_list:
@@ -83,14 +83,26 @@ def build_lambda_bnsche(model, cfg=None):
 
 def build_optim_sche(model, cfg=None):
     opt_cfg = cfg.optimizer
+    optimizer = build_optim(opt_cfg, model.named_paramters())
+        
+    scheduler = build_scheduler(optimizer, cfg, model=model)
+    return optimizer, scheduler
+
+def build_optim(opt_cfg, named_parameters=None, param_groups=None):
     if opt_cfg.type == 'AdamW':
         # NOTE: add weight decay for AdamW
-        param_groups = add_weight_decay(model, weight_decay=opt_cfg.kwargs.weight_decay)
+        param_groups = add_weight_decay(named_parameters, weight_decay=opt_cfg.kwargs.weight_decay)
         optimizer = optim.AdamW(param_groups, **opt_cfg.kwargs)
+    elif opt_cfg.type == 'Adam':
+        assert param_groups is not None
+        optimizer = optim.Adam(param_groups, **opt_cfg.kwargs)
         
+    return optimizer
+
+def build_scheduler(optimizer, cfg, model=None):
     sche_cfg = cfg.scheduler
     if sche_cfg.type == 'LambdaLR':
-        scheduler = build_lambda_sche(optimizer, sche_cfg.kwargs)
+            scheduler = build_lambda_sche(optimizer, sche_cfg.kwargs)
     elif sche_cfg.type == 'CosLR':
         scheduler = CosineLRScheduler(optimizer,
                 t_initial=sche_cfg.kwargs.epochs,
@@ -114,27 +126,47 @@ def build_optim_sche(model, cfg=None):
             bnscheduler = build_lambda_bnsche(model, bnsche_config.kwargs)
         scheduler = [scheduler, bnscheduler]
     return optimizer, scheduler
-
-def build_optim_sche_grasp(model, cfg=None):
+        
+def build_optim_sche_grasp(full_model, part_model = None, cfg=None):
+    optimizer, scheduler = [], []
+    if part_model is not None:
+        part_params_all = []
+        for name, part in part_model.items():
+            part_cfg = cfg.optim[name]
+            part_model_params = part.parameters()
+            part_params_all += part_model_params
     
-    opt_cfg = cfg.optimizer
-    cnet_module_params = model.cnet.parameters()
-    cnet_module_params_id = list(map(id, cnet_module_params))
-    base_params = filter(lambda p: id(p) not in cnet_module_params_id, model.parameters())
-    param_groups = [{'params': base_params},
-                    {'params': cnet_module_params, 'lr':opt_cfg.pretrain_lr}]
-    
-    if opt_cfg.type == 'Adam':
-        optimizer = optim.Adam(param_groups, **opt_cfg.kwargs)
-    elif opt_cfg.type == 'AdamW':
-        param_groups.append(add_weight_decay(model, weight_decay=opt_cfg.kwargs.weight_decay))
-        optimizer = optim.AdamW(param_groups, **opt_cfg.kwargs)
-    
-    if cfg.get('scheduler'):
-        sche_cfg = cfg.scheduler
-        scheduler = build_lambda_sche(optimizer, sche_cfg.kwargs)
+            optimizer_part = build_optim(part_cfg.optimizer, named_parameters=part.named_parameters(), param_groups=part.parameters())
+            
+            optimizer.append(optimizer_part)
+            
+            if part_cfg.get('scheduler'):
+                scheduler_part = build_scheduler(optimizer_part, part_cfg)
+                scheduler.append(scheduler_part)
+        part_model_params_id = list(map(id, part_params_all))
+        base_params = filter(lambda p: id(p) not in part_model_params_id, full_model.parameters())
+        print("Multiple optimizers / schedulers loaded")
+        
     else:
-        scheduler = None
+        assert cfg.optim.get('others')
+        base_params = full_model.parameters()
+    
+    optimizer_other = build_optim(cfg.optim.others.optimizer, named_parameters=None, param_groups=base_params)
+    
+    if cfg.optim.others.get('scheduler'):
+        scheduler_others = build_scheduler(optimizer_other, cfg.optim.others)
+    else:
+        scheduler_others = None
+        
+    if not optimizer:
+        optimizer = optimizer_other
+        scheduler = scheduler_others
+    else:
+        optimizer.append(optimizer_other)
+        if not scheduler:
+            scheduler.append(scheduler_others)
+        else:
+            scheduler = scheduler_others
     return optimizer, scheduler
     
     

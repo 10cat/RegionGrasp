@@ -19,11 +19,21 @@ from utils.utils import decode_hand_params_batch, func_timer, makepath
 from utils.meters import AverageMeter, AverageMeters
 from utils.visualization import colors_like, visual_hand, visual_obj
 
-
 def model_update(optimizer, total_loss, scheduler, epoch=None):
-    optimizer.zero_grad()
+    if isinstance(optimizer, list):
+        for optim in optimizer:
+            optim.zero_grad()
+    else:
+        optim.zero_grad()
+        
     total_loss.backward()
-    optimizer.step()
+    
+    if isinstance(optimizer, list):
+        for optim in optimizer:
+            optim.step()
+    else:
+        optim.step()
+        
     if scheduler is not None:
         if isinstance(scheduler, list):
             for item in scheduler:
@@ -49,6 +59,7 @@ class MetersMonitor(object):
     def report(self, dict_loss, total_loss, mode):
         self.update(dict_loss)
         self.update({'total_loss':total_loss})
+        # self.update({'epoch': epoch})
         logdict = self.get_avg(mode)
         msg = ''
         for item in logdict.items():
@@ -191,8 +202,9 @@ class PretrainEpoch():
             else:
                 raise NotImplementedError()
     
-    def log(self, losses):
+    def log(self, losses, epoch):
         Allmeters = losses.get_avg(self.mode)
+        Allmeters.update({'epoch':epoch})
         if self.cfg.wandb: wandb.log(Allmeters)
         
     def __call__(self, dataloader, epoch, model):
@@ -341,7 +353,8 @@ class EpochVAE_comp():
     
     def log(self, losses, epoch):
         Allmeters = losses.get_avg(self.mode)
-        if self.cfg.wandb: wandb.log(Allmeters, step=epoch)
+        Allmeters.update({'epoch':epoch})
+        if self.cfg.wandb: wandb.log(Allmeters)
     
     def visual_gt(self, rhand_vs, rhand_faces, obj_pc, region_mask, obj_trans, sample_ids, batch_idx, epoch, batch_interval=None, sample_interval=None):
         if batch_idx % batch_interval == 0:
@@ -355,11 +368,11 @@ class EpochVAE_comp():
                 obj_mesh = self.dataset.get_sample_obj_mesh(sample_id)
                 obj_verts, _ = self.dataset.get_obj_verts_faces(sample_id)
                 obj_verts -= obj_trans[i]
-                self.VisualMesh.visual(vertices=obj_verts, faces=obj_mesh['faces'], mesh_color='grey', sample_id=sample_id, epoch=epoch, name='obj')
+                self.VisualMesh.visual(vertices=obj_verts, faces=obj_mesh['faces'], mesh_color='white', sample_id=sample_id, epoch=epoch, name='obj')
                 region_mask = region_mask[i]
                 obj_pc = obj_pc[i]
                 mask = region_mask > 0.
-                self.VisualPC.visual(pcs=[obj_pc[~mask], obj_pc[mask]], pc_colors=['green', 'yellow'], sample_id=sample_id, epoch=epoch, name='obj')
+                self.VisualPC.visual(pcs=[obj_pc[~mask], obj_pc[mask]], pc_colors=['green', 'pink'], sample_id=sample_id, epoch=epoch, name='obj')
         return
         
     def __call__(self, dataloader, epoch, model):
@@ -390,59 +403,8 @@ class EpochVAE_comp():
             # break
             
             
-        self.log(self.Losses, epoch)
+        self.log(self.Losses, epoch=epoch)
         return model, stop_flag
-    
-class EpochVAE_mae(EpochVAE_comp):
-    def __init__(self, loss, dataset, optimizer, scheduler, output_dir, mode='train', cfg=None):
-        super().__init__(loss, dataset, optimizer, scheduler, output_dir, mode, cfg)
-        
-    def model_forward(self, model, obj_input, hand_input=None, mask_center=None):
-        device = 'cuda' if self.cfg.use_cuda else 'cpu'
-        if self.mode == 'train':
-            hand_params, sample_stats, mask = model(obj_input.to(device), hand_input.to(device), mask_center=mask_center.to(device))
-            return hand_params, sample_stats, mask
-        else:
-            with torch.no_grad():
-                hand_params_list = []
-                for iter in range(self.cfg.eval_iter):
-                    B = obj_input.shape[0]
-                    hand_params, mask =  model.inference(obj_input.to(device), mask_center=mask_center.to(device))
-                    hand_params_list.append(hand_params)
-                    torch.cuda.empty_cache()
-            return hand_params_list, mask
-        
-    def __call__(self, dataloader, epoch, model):
-        stop_flag = False
-        pbar = tqdm(dataloader, desc=f"{self.mode} epoch {epoch}:")
-        for batch_idx, sample in enumerate(pbar):
-            obj_input_pc = sample['input_pc']
-            gt_rhand_vs = sample['hand_verts'].transpose(2, 1) # gt for the masked points
-            mask_centers = sample['mask_center']
-            import pdb; pdb.set_trace()
-            sample_ids = sample['sample_id']
-            
-            hand_params, sample_stats, region_mask = self.model_forward(model, obj_input_pc, gt_rhand_vs, mask_centers)
-            
-            obj_points = obj_input_pc
-            obj_normals = sample['obj_point_normals']
-            
-            _, dict_loss, signed_dists, rhand_vs_pred, rhand_faces = self.loss(hand_params, sample_stats, obj_points, gt_rhand_vs, region_mask, obj_normals=obj_normals)
-            
-            total_loss = sum(dict_loss.values())
-            
-            model_update(self.optimizer, total_loss, self.scheduler)
-            
-            torch.cuda.empty_cache()
-            msg_loss, losses = self.Losses.report(dict_loss, total_loss, mode=self.mode)
-            msg = msg_loss
-            pbar.set_postfix_str(msg)
-                
-            break
-            
-            
-            
-            
     
 class ValEpochVAE_comp(EpochVAE_comp):
     def __init__(self, loss, dataset, optimizer, scheduler, output_dir, mode='train', cfg=None):
@@ -496,17 +458,129 @@ class ValEpochVAE_comp(EpochVAE_comp):
                                 batch_interval=self.batch_interval,
                                 sample_interval=self.sample_interval)
                 
-            break
+            # break
             
         if self.mode == 'val':
             no_improve_epochs = self.Checkpt.save_checkpoints(epoch, model, metric_value=losses[f'{self.mode}_total_loss'])
             if no_improve_epochs > self.cfg.early_stopping:
                 stop_flag = True
             
-        self.log(self.Losses, epoch)
+        self.log(self.Losses, epoch=epoch)
         return model, stop_flag
         
     
+class EpochVAE_mae(EpochVAE_comp):
+    def __init__(self, loss, dataset, optimizer, scheduler, output_dir, mode='train', cfg=None):
+        super().__init__(loss, dataset, optimizer, scheduler, output_dir, mode, cfg)
+        
+    def model_forward(self, model, obj_input, hand_input=None, mask_center=None):
+        device = 'cuda' if self.cfg.use_cuda else 'cpu'
+        if self.mode == 'train':
+            hand_params, sample_stats, mask = model(obj_input.to(device), hand_input.to(device), mask_center=mask_center.to(device))
+            return hand_params, sample_stats, mask
+        else:
+            with torch.no_grad():
+                hand_params_list = []
+                for iter in range(self.cfg.eval_iter):
+                    B = obj_input.shape[0]
+                    hand_params, mask =  model.inference(obj_input.to(device), mask_center=mask_center.to(device))
+                    hand_params_list.append(hand_params)
+                    torch.cuda.empty_cache()
+            return hand_params_list, mask
+        
+    def __call__(self, dataloader, epoch, model):
+        stop_flag = False
+        pbar = tqdm(dataloader, desc=f"{self.mode} epoch {epoch}:")
+        for batch_idx, sample in enumerate(pbar):
+            obj_input_pc = sample['input_pc']
+            gt_rhand_vs = sample['hand_verts'].transpose(2, 1)
+            mask_centers = sample['mask_center']
+            # import pdb; pdb.set_trace()
+            sample_ids = sample['sample_id']
+            
+            hand_params, sample_stats, region_mask = self.model_forward(model, obj_input_pc, gt_rhand_vs, mask_centers)
+            
+            obj_points = obj_input_pc
+            obj_normals = sample['obj_point_normals']
+            
+            _, dict_loss, signed_dists, rhand_vs_pred, rhand_faces = self.loss(hand_params, sample_stats, obj_points, gt_rhand_vs, region_mask, obj_normals=obj_normals)
+            
+            total_loss = sum(dict_loss.values())
+            
+            model_update(self.optimizer, total_loss, self.scheduler)
+            
+            torch.cuda.empty_cache()
+            msg_loss, losses = self.Losses.report(dict_loss, total_loss, mode=self.mode)
+            msg = msg_loss
+            pbar.set_postfix_str(msg)
+            
+            # if batch_idx > 5:
+            #     break
+        
+        self.log(self.Losses, epoch=epoch)
+        return model, stop_flag
+        
+class ValEpochVAE_mae(EpochVAE_mae):
+    def __init__(self, loss, dataset, optimizer, scheduler, output_dir, mode='train', cfg=None):
+        super().__init__(loss, dataset, optimizer, scheduler, output_dir, mode, cfg)
+        
+    def __call__(self, dataloader, epoch, model):
+        stop_flag = False
+        pbar = tqdm(dataloader, desc=f"{self.mode} epoch {epoch}:")
+        for batch_idx, sample in enumerate(pbar):
+            with torch.no_grad():
+                obj_input_pc = sample['input_pc']
+                gt_rhand_vs = sample['hand_verts'].transpose(2, 1) # gt for the masked points
+                mask_centers = sample['mask_center']
+                # import pdb; pdb.set_trace()
+                sample_ids = sample['sample_id']
+                
+                hand_params_list, region_mask = self.model_forward(model, obj_input_pc, gt_rhand_vs, mask_centers)
+                
+                obj_points = obj_input_pc
+                obj_normals = sample['obj_point_normals']
+                
+                # NOTE: validation generation in several iters
+                Loss_iters = AverageMeters() # loss/metrics计算方式：取5个iter的平均
+                for iter in range(self.cfg.eval_iter):
+                    hand_params = hand_params_list[iter] # 输出每个iter的生成效果
+                    _, dict_loss, signed_dists, rhand_vs_pred, rhand_faces = self.loss(hand_params, None, obj_points, gt_rhand_vs, region_mask, obj_normals=obj_normals)
+                    for key, val in dict_loss.items():
+                        Loss_iters.add_value(key, val)
+                    if batch_idx % self.batch_interval == 0:
+                        rhand_vs_pred_0 = rhand_vs_pred[0].detach().to('cpu').numpy()
+                        rhand_faces_0 = rhand_faces[0].detach().to('cpu').numpy()
+                        sample_id = int(sample_ids.detach().to('cpu').numpy()[0])
+                        self.VisualMesh.visual(vertices=rhand_vs_pred_0, faces=rhand_faces_0, mesh_color='skin', sample_id=sample_id, epoch=epoch, name=f'pred_hand_{iter}')
+                
+                dict_loss = Loss_iters.avg(mode=self.mode) # 取5个iter的平均loss
+                
+                total_loss = sum(dict_loss.values())
+                
+                msg_loss, losses = self.Losses.report(dict_loss, total_loss, mode=self.mode)
+                msg = msg_loss
+                pbar.set_postfix_str(msg)
+                
+                if self.mode == 'val':
+                    self.visual_gt(rhand_vs = gt_rhand_vs.transpose(2, 1).detach().to('cpu').numpy(),
+                                rhand_faces = rhand_faces.detach().to('cpu').numpy(),
+                                obj_pc=obj_points.detach().to('cpu').numpy(),
+                                region_mask=region_mask.detach().to('cpu').numpy(),
+                                obj_trans=sample['obj_trans'].detach().to('cpu').numpy(),
+                                sample_ids=sample_ids.detach().to('cpu').numpy(),
+                                epoch=epoch,
+                                batch_idx=batch_idx,
+                                batch_interval=self.batch_interval,
+                                sample_interval=self.sample_interval)
+            # if batch_idx > 5:
+            #     break
+        if self.mode == 'val':
+            no_improve_epochs = self.Checkpt.save_checkpoints(epoch, model, metric_value=losses[f'{self.mode}_total_loss'])
+            if no_improve_epochs > self.cfg.early_stopping:
+                stop_flag = True
+            
+        self.log(self.Losses, epoch=epoch)
+        return model, stop_flag
         
         
     

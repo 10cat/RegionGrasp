@@ -15,12 +15,24 @@ batch_size: 32
 num_epoch: 60
 early_stopping: 100
 use_cuda: True
-optimizer : {
-  type: Adam,
-  pretrain_lr: 1e-4,
-  kwargs : {
-    lr: 1e-4
+optim: {
+  cnet: {
+    optimizer:  {
+      type: Adam,
+      kwargs:{
+        lr: 1e-4
+      }
+    },
+  },
+
+  others: { 
+    optimizer: {
+      type: Adam,
+      kwargs : {
+        lr: 1e-4
+      }
     }
+  }
 }
 
 # model settings

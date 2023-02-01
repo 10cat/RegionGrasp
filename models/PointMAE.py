@@ -83,6 +83,7 @@ class Grouper(nn.Module):
         B, N, _ = xyz.shape
         center = fps(xyz, self.num_group)
         idx = knn_point(self.group_size, xyz, center)
+        idx_orig = idx
         
         assert idx.size(1) == self.num_group
         assert idx.size(2) == self.group_size
@@ -95,7 +96,7 @@ class Grouper(nn.Module):
         # normalize based on centers
         neighborhood = neighborhood - center.unsqueeze(2)
         if return_idx:
-            return neighborhood, center, idx
+            return neighborhood, center, idx_orig
         return neighborhood, center
 
 

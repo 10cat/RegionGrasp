@@ -77,7 +77,7 @@ class ObManDataset(ObManThumb):
         obj_point_normals = ObjMesh.face_normals[face_ids]
         
         contact_points = annot['contact_pc']
-        mask_center = contact_points.mean()
+        mask_center = np.mean(contact_points, axis=0)
         
         sample['input_pc'] = torch.from_numpy(obj_points)
         sample['mask_center'] = torch.from_numpy(mask_center)
