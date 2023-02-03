@@ -16,7 +16,7 @@ from sklearn.neighbors import KDTree
 
 from utils.utils import func_timer, makepath
 from utils.visualization import colors_like
-from dataset.data_utils import faces2verts_no_rep, contact_to_dict
+from dataset.data_utils import faces2verts_no_rep, contact_to_dict, signed_distance
 from dataset.obman_orig import obman
 
 class ObManResample(obman):
@@ -226,14 +226,14 @@ class ObManThumb(ObManResample):
         
     @func_timer
     def thumb_query_point(self, HandMesh, ObjMesh, pene_th=0.002, contact_th=-0.005):
-        thumb_vertices_ids = faces2verts_no_rep(HandMesh.faces[config.thumb_center])
-        thumb_vertices = HandMesh.vertices[thumb_vertices_ids]
-        ObjQuery = trimesh.proximity.ProximityQuery(ObjMesh)
+        thumb_vertices = HandMesh.vertices[self.thumb_vertices_ids]
+        # ObjQuery = trimesh.proximity.ProximityQuery(ObjMesh)
         #  -- 以thumb_vertices_ids为query计算signed distances并返回相对应的closest faces
-        # NOTE: the on_surface return is not signed_dists, 所以需要专门计算signed dists， 再用on_surface返回obj上最近的面
-        h2o_signed_dists = ObjQuery.signed_distance(thumb_vertices)
-        _, _, h2o_closest_fid = ObjQuery.on_surface(thumb_vertices)
-        
+        #  the on_surface return is not signed_dists, 所以需要专门计算signed dists， 再用on_surface返回obj上最近的面
+        # h2o_signed_dists = ObjQuery.signed_distance(thumb_vertices)
+        # _, _, h2o_closest_fid = ObjQuery.on_surface(thumb_vertices)
+        # TODO: trimesh.proximity.signed_distance包含了closest_points而没有输出triangle_ids,改写使输出triangle_ids -- 这样只用计算一次closest_points
+        h2o_signed_dists, h2o_closest_fid = signed_distance(ObjMesh, thumb_vertices)
         # -- 用sdf_th阈值进一步选取thumb上真正的contact部分
         # NOTE: OUTSIDE mesh -> NEG； INSIDE the mesh -> POS
         penet_flag = h2o_signed_dists < pene_th
@@ -242,7 +242,7 @@ class ObManThumb(ObManResample):
         obj_contact_fids = h2o_closest_fid[flag]
         # import pdb; pdb.set_trace()
         if obj_contact_fids.shape[0] == 0:
-            return None
+            return None, None
         elif obj_contact_fids.shape[0] == 1:
             point = ObjMesh.triangles_center[obj_contact_fids[0]]
         else:
@@ -251,7 +251,7 @@ class ObManThumb(ObManResample):
             # TODO mean of the tri_centers
             point =  np.mean(tri_centers, axis=0)
             
-        return point
+        return point, obj_contact_fids
     
     @func_timer
     def get_KNN_in_pc(self, PC, point_q, K=410):
@@ -329,16 +329,16 @@ class ObManThumb(ObManResample):
         # HandMeshGT.export(os.path.join(root, f'{idx}_hand_gt.ply'))
         
         
-        point_contact = self.thumb_query_point(HandMesh, ObjMesh)
+        point_contact, contact_fids  = self.thumb_query_point(HandMesh, ObjMesh)
         if point_contact is None:
             # DONE: 筛掉没有手接触的sample
             return None
         
-        dists, contact_indices = self.get_KNN_in_pc(ObjPoints, point_contact)
+        # dists, contact_indices = self.get_KNN_in_pc(ObjPoints, point_contact)
         
         # import pdb; pdb.set_trace()
         
-        contact_pc, input_pc_hr = self.divide_pointcloud(ObjPoints, contact_indices)
+        # contact_pc, input_pc_hr = self.divide_pointcloud(ObjPoints, contact_indices)
         
         # DONE:region_visual --> 820有点太大了，先取一半吧410
         # PC_contact = trimesh.PointCloud(vertices=contact_ps, colors=colors_like(config.colors['yellow']))
@@ -352,11 +352,11 @@ class ObManThumb(ObManResample):
         # import pdb; pdb.set_trace()
         
         # TODO: random sampling Np = 2048 from the rem_ps
-        np.random.seed(idx)
-        input_pc, sampled_indices = self.input_pc_sample(idx, input_pc_hr)
+        # np.random.seed(idx)
+        # input_pc, sampled_indices = self.input_pc_sample(idx, input_pc_hr)
         
         annot['center_point'] = point_contact
-        annot['contact_faces'] = contact_indices
+        annot['contact_faces'] = contact_fids
         # annot['contact_pc'] = contact_pc
         # annot['input_pc_hr'] = input_pc_hr
         # annot['input_pc'] = input_pc
