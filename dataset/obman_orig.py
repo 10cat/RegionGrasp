@@ -28,6 +28,7 @@ class obman(data.Dataset):
     def __init__(self,
                  ds_root,
                  shapenet_root,
+                 mano_root,
                  split='train',
                  joint_nb=21,
                  mini_factor=None,
@@ -42,6 +43,7 @@ class obman(data.Dataset):
         self.root_all = ds_root
         self.root = os.path.join(ds_root, split)
         self.root_palm = root_palm
+        self.mano_root = mano_root
         
         if not shapenet_root.endswith('/'):
             # shapenet_root = shapenet_root[:-1]
@@ -85,7 +87,7 @@ class obman(data.Dataset):
         # Load mano faces
         self.faces = {}
         for side in ['left', 'right']:
-            with open(os.path.join(config.mano_root,'mano_faces_{}.pkl'.format(side)), 'rb') as p_f:
+            with open(os.path.join(self.mano_root,'mano_faces_{}.pkl'.format(side)), 'rb') as p_f:
                 self.faces[side] = pickle.load(p_f)
 
         # NOTE:shapenet model_normalized.pkl path

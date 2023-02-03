@@ -393,10 +393,7 @@ class Epoch(nn.Module):
             else:  
                 self.one_batch(sample, idx)
             torch.cuda.empty_cache()
-<<<<<<< HEAD
-=======
             #break
->>>>>>> 5ef87f3edb85a5087625307c37e89234e6fa46b7
         
         best_val = self.save_checkpoints(epoch, best_val)
         self.metrics_log(epoch)
@@ -548,15 +545,10 @@ class ValEpoch(Epoch):
             dict_metrics = self.metrics_compute(outputs, data, signed_dists)
         self.update_meters(dict_losses=dict_losses, dict_metrics=dict_metrics)
 
-<<<<<<< HEAD
         # --- Visualization --- #
         if idx % cfg.visual_interval_val == 0: self.visual(rhand_vs_pred, data, sample_ids=sample['sample_idx'], batch_id=idx)
         del data
         del outputs
-=======
-        
-
->>>>>>> 5ef87f3edb85a5087625307c37e89234e6fa46b7
         # self.handparam_post()
         # self.visual_post()
         # self.lognotes()

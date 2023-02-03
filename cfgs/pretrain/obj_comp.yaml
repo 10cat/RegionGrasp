@@ -1,17 +1,16 @@
 project_name: "ConditionHOI_pretrain"
 # dataset settings
 dataset: {
-  name: obman,
+  name: obman_pretrain,
 
-  train: {_base_: ./cfgs/dataset_cfgs/obman_pretrain.yaml,
+  train: {_base_: ./cfgs/dataset_cfgs/obman_pretrain_comp.yaml,
           others: {subset: 'train'}},
-  val: {_base_: ./cfgs/dataset_cfgs/obman_pretrain.yaml,
+  val: {_base_: ./cfgs/dataset_cfgs/obman_pretrain_comp.yaml,
         others: {subset: 'val'}},
-  test: {_base_: ./cfgs/dataset_cfgs/obman_pretrain.yaml,
+  test: {_base_: ./cfgs/dataset_cfgs/obman_pretrain_comp.yaml,
         others: {subset: 'test'}}}
 
 # training settings
-visible_devices: "1"
 batch_size: 32
 num_epoch: 200
 early_stopping: 5

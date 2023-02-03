@@ -58,7 +58,7 @@ class cGraspvaeLoss(nn.Module):
         self.latent_size = cfg.model.vae.kwargs.latent_size
         self.batch_size = cfg.batch_size
         self.mano_rh_path = cfg.mano_rh_path
-        self.coefs = cfg.coef
+        self.coefs = cfg.loss.coef
         
 
     def dist_loss(self, h2o_signed, h2o_signed_pred, o2h_signed, o2h_signed_pred, region):
@@ -82,7 +82,7 @@ class cGraspvaeLoss(nn.Module):
 
         return loss_kl
 
-    def forward(self, hand_params, sample_stats, obj_vs, rhand_vs, region, obj_normals=None, obj_mesh_faces=None):
+    def forward(self, hand_params, sample_stats, obj_vs, rhand_vs, region, obj_normals=None, obj_mesh_faces=None, mode=None):
 
         B = rhand_vs.size(0)
         
@@ -101,24 +101,36 @@ class cGraspvaeLoss(nn.Module):
         rhand_faces = rh_f_single.repeat(B, 1, 1).to(self.device).to(torch.long)
         # import pdb; pdb.set_trace() # to check decode module
         
-        rh_normals = Meshes(verts=rhand_vs, faces=rhand_faces).to(self.device).verts_normals_packed().view(-1, 778, 3)
-        rh_normals_pred = Meshes(verts=rhand_vs_pred, faces=rhand_faces).to(self.device).verts_normals_packed().view(-1, 778, 3) # packed representation of the vertex normals
         
-        if obj_mesh_faces is not None:
-            # obj_mesh_faces = torch.Tensor(obj_mesh_faces)
-            # obj_vs = obj_vs.tolist()
-            num_obj_verts = obj_vs.shape[1]
-            obj_vs_list = [obj_vs[i] for i in range(obj_vs.shape[0])] # need to be consistent length list with obj_mesh_faces
-            obj_normals = Meshes(verts=obj_vs_list, faces=obj_mesh_faces).to(self.device).verts_normals_packed().view(-1, num_obj_verts, 3)
-        elif obj_normals is None:
-            obj_normals = None
-        # import pdb; pdb.set_trace()
-        obj_normals = obj_normals.to(torch.float32).to(self.device)
-        o2h_signed, h2o_signed, _, _ = point2point_signed(rhand_vs, obj_vs, rh_normals, obj_normals)
-        o2h_signed_pred, h2o_signed_pred, _, _ = point2point_signed(rhand_vs_pred, obj_vs, rh_normals_pred, obj_normals)
-
+        
+        dict_loss = {}
+        loss_cfg = self.cfg.loss[mode]
         #### dist Loss ####
-        loss_dist_h, loss_dist_o = self.dist_loss(h2o_signed, h2o_signed_pred, o2h_signed, o2h_signed_pred, region)
+        if loss_cfg.loss_dist_h or loss_cfg.loss_dist_o:
+            rh_normals = Meshes(verts=rhand_vs, faces=rhand_faces).to(self.device).verts_normals_packed().view(-1, 778, 3)
+            rh_normals_pred = Meshes(verts=rhand_vs_pred, faces=rhand_faces).to(self.device).verts_normals_packed().view(-1, 778, 3) # packed representation of the vertex normals
+            
+            if obj_mesh_faces is not None:
+                # obj_mesh_faces = torch.Tensor(obj_mesh_faces)
+                # obj_vs = obj_vs.tolist()
+                num_obj_verts = obj_vs.shape[1]
+                obj_vs_list = [obj_vs[i] for i in range(obj_vs.shape[0])] # need to be consistent length list with obj_mesh_faces
+                obj_normals = Meshes(verts=obj_vs_list, faces=obj_mesh_faces).to(self.device).verts_normals_packed().view(-1, num_obj_verts, 3)
+            elif obj_normals is None:
+                obj_normals = None
+            # import pdb; pdb.set_trace()
+            obj_normals = obj_normals.to(torch.float32).to(self.device)
+            o2h_signed, h2o_signed, _, _ = point2point_signed(rhand_vs, obj_vs, rh_normals, obj_normals)
+            o2h_signed_pred, h2o_signed_pred, _, _ = point2point_signed(rhand_vs_pred, obj_vs, rh_normals_pred, obj_normals)
+            loss_dist_h, loss_dist_o = self.dist_loss(h2o_signed, h2o_signed_pred, o2h_signed, o2h_signed_pred, region)
+            
+            if loss_cfg.loss_dist_h:
+                dict_loss.update({'loss_dist_h': loss_dist_h})
+            if loss_cfg.loss_dist_o:
+                dict_loss.update({'loss_dist_o': loss_dist_o})
+        else:
+            o2h_signed_pred, o2h_signed, h2o_signed, h2o_signed_pred = None, None, None, None
+            
 
         #### KL Loss ####
         if sample_stats is not None: 
@@ -127,20 +139,18 @@ class cGraspvaeLoss(nn.Module):
         else:
             # validation / test中loss_kl = 0
             loss_kl = torch.tensor(0.0, dtype=float).to(self.device)
+        dict_loss.update({'loss_kl': loss_kl})
 
         #### verts Loss ####
-        loss_mesh_rec_w = self.coefs['lambda_mesh_rec_w'] * (1 - self.coefs['kl_coef']) * torch.mean(torch.einsum('ijk,j->ijk', torch.abs((rhand_vs - rhand_vs_pred)), self.v_weights2)) # should be v_weights2 instead of v_weights
+        loss_mesh_rec = self.coefs['lambda_mesh_rec'] * (1 - self.coefs['kl_coef']) * torch.mean(torch.einsum('ijk,j->ijk', torch.abs((rhand_vs - rhand_vs_pred)), self.v_weights2)) # should be v_weights2 instead of v_weights
+        if loss_cfg.loss_mesh_rec:
+            dict_loss.update({'loss_mesh_rec': loss_mesh_rec})
 
         #### edge Loss ####
         loss_edge = self.coefs['lambda_edge'] * (1 - self.coefs['kl_coef']) * self.LossL1(edges_for(rhand_vs_pred, self.vpe), edges_for(rhand_vs, self.vpe))
-
-        dict_loss = {'loss_kl': loss_kl,
-                     'loss_edge': loss_edge,
-                     'loss_mesh_rec': loss_mesh_rec_w,
-                     'loss_dist_h': loss_dist_h,
-                     'loss_dist_o': loss_dist_o
-                     }
-        
+        if loss_cfg.loss_edge:
+            dict_loss.update({'loss_edge': loss_edge})
+            
         loss_total = torch.stack(list(dict_loss.values())).sum()
 
         signed_dists = [o2h_signed_pred, o2h_signed, h2o_signed, h2o_signed_pred]
@@ -155,7 +165,7 @@ class HOILoss(nn.Module):
         self.v_weights2 = torch.pow(self.v_weights, 1.0/2.5) # 这个到底是啥呀？ 能不能用在其他数据集上？
         self.vpe = torch.from_numpy(np.load(cfg.vpe_path)).to(self.device).to(torch.long) # 这个到底是啥呀？ 能不能用在其他数据集上？
         self.hparams = cfg.hoi_hparams
-        self.coefs = cfg.coef
+        self.coefs = cfg.loss.coef
         
         
     def h2o_weight(self, dists):
@@ -206,6 +216,16 @@ class PointCloudCompletionLoss(nn.Module):
         dict_loss['fine_loss'] = loss_fine * param_fine
         return dict_loss
         
+class MPMLoss(nn.Module):
+    def __init__(self):
+        super().__init__()
+        self.pc_loss = ChamferDistanceL2Loss()
+        
+    def forward(self, pred_pc, gt_pc, dict_loss):
+        dict_loss['recon_chamfer_loss'] = self.pc_loss(pred_pc, gt_pc)
+        
+        return dict_loss
+
 
 class ChamferDistanceL2Loss(nn.Module):
     def __init__(self):

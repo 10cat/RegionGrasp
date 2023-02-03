@@ -79,10 +79,11 @@ class Grouper(nn.Module):
         self.num_group = num_group
         self.group_size = group_size
         
-    def forward(self, xyz):
+    def forward(self, xyz, return_idx=False):
         B, N, _ = xyz.shape
         center = fps(xyz, self.num_group)
         idx = knn_point(self.group_size, xyz, center)
+        idx_orig = idx
         
         assert idx.size(1) == self.num_group
         assert idx.size(2) == self.group_size
@@ -94,6 +95,8 @@ class Grouper(nn.Module):
         
         # normalize based on centers
         neighborhood = neighborhood - center.unsqueeze(2)
+        if return_idx:
+            return neighborhood, center, idx_orig
         return neighborhood, center
 
 
@@ -153,7 +156,7 @@ class TransformerEncoder(nn.Module):
     def forward(self, x, pos):
         for _, block in enumerate(self.blocks):
             x = block(x + pos)
-        return 
+        return x
     
 class TransformerDecoder(nn.Module):
     def __init__(self, embed_dim=384, depth=4, num_heads=6, mlp_ratio=4., qkv_bias=False, qk_scale=None,
@@ -194,17 +197,17 @@ class MaskTransformer(nn.Module):
         super().__init__()
         self.config = config
         # define the transformer argparse
-        self.mask_ratio = config.transformer_config.mask_ratio 
-        self.trans_dim = config.transformer_config.trans_dim
-        self.depth = config.transformer_config.depth 
-        self.drop_path_rate = config.transformer_config.drop_path_rate
-        self.num_heads = config.transformer_config.num_heads 
+        self.mask_ratio = config.mask_ratio 
+        self.trans_dim = config.trans_dim
+        self.depth = config.depth 
+        self.drop_path_rate = config.drop_path_rate
+        self.num_heads = config.num_heads 
         # print_log(f'[args] {config.transformer_config}', logger = 'Transformer')
         # embedding
-        self.encoder_dims =  config.transformer_config.encoder_dims
+        self.encoder_dims =  config.encoder_dims
         self.encoder = Encoder(encoder_channel = self.encoder_dims)
 
-        self.mask_type = config.transformer_config.mask_type
+        self.mask_type = config.mask_type
 
         self.pos_embed = nn.Sequential(
             nn.Linear(3, 128),
@@ -259,6 +262,7 @@ class MaskTransformer(nn.Module):
                 
     def mask_center_rand(self, center, noaug=False):
         B, G, _ = center.shape
+        # import pdb; pdb.set_trace()
         if noaug or self.mask_ratio == 0:
             # 不进行任何的mask
             return torch.zeros(center.shape[:2]).bool()
@@ -289,7 +293,7 @@ class MaskTransformer(nn.Module):
         assert S == G, "Make sure the second dim of the encoder output equal to the center number"
         
         
-        x_vis = group_input_tokens[~bool_masked_pos].reshape(B, -1, C)
+        x_vis = group_input_tokens[~bool_masked_pos].reshape(B, -1, C) # B, 52(int 0.3*128), 384
         center_vis = center[~bool_masked_pos].reshape(B, -1, 3)
         
         # pos embed for visible patch only
@@ -300,3 +304,83 @@ class MaskTransformer(nn.Module):
         x_vis = self.norm(x_vis)
         
         return x_vis, bool_masked_pos
+
+class PointMAE(nn.Module):
+    def __init__(self, config):
+        super().__init__()
+        trans_cfg = config.transformer
+        self.trans_dim = trans_cfg.trans_dim
+        self.MAE_encoder = MaskTransformer(trans_cfg)
+        self.group_size = config.group_size
+        self.num_group = config.num_group
+        self.drop_path_rate = trans_cfg.drop_path_rate
+        self.decoder_pos_embed = nn.Sequential(
+            nn.Linear(3, 128),
+            nn.GELU(),
+            nn.Linear(128, self.trans_dim)
+        )
+        self.decoder_depth = trans_cfg.decoder_depth
+        self.decoder_num_heads = trans_cfg.decoder_num_heads
+        dpr = [x.item() for x in torch.linspace(0, self.drop_path_rate, self.decoder_depth)]
+        self.MAE_decoder = TransformerDecoder(
+            embed_dim=self.trans_dim,
+            depth=self.decoder_depth,
+            drop_path_rate=dpr,
+            num_heads=self.decoder_num_heads
+        )
+        
+        self.group_divider = Grouper(num_group=self.num_group, group_size=self.group_size)
+        
+        self.mask_token = nn.Parameter(torch.zeros(1, 1, self.trans_dim))
+        
+        # prediction head
+        self.increase_dim = nn.Sequential(
+            nn.Conv1d(self.trans_dim, 3*self.group_size, 1)
+        )
+        
+        trunc_normal_(self.mask_token, std=.02) # initialize the mask_token parameters
+        
+    def forward(self, pts, vis=False, feat_only=False, **kwargs):
+        
+        neighborhood, center = self.group_divider(pts)
+        
+        if feat_only:
+            x_vis, mask = self.MAE_encoder(neighborhood, center, noaug=True)
+            return x_vis
+        
+        x_vis, mask = self.MAE_encoder(neighborhood, center)
+        
+        B,_,C = x_vis.shape
+        pos_emd_vis = self.decoder_pos_embed(center[~mask]).reshape(B, -1, C)
+        pos_emd_mask = self.decoder_pos_embed(center[mask]).reshape(B, -1, C)
+        
+        _,N,_ = pos_emd_mask.shape
+        
+        mask_token = self.mask_token.expand(B, N, -1)
+        x_full = torch.cat([x_vis, mask_token], dim=1)
+        pos_full = torch.cat([pos_emd_vis, pos_emd_mask], dim=1)
+        
+        x_rec = self.MAE_decoder(x_full, pos_full, N)
+        
+        B, M, C = x_rec.shape
+        rebuild_points = self.increase_dim(x_rec.transpose(1, 2)).transpose(1, 2).reshape(B * M, -1, 3)
+        
+        gt_points = neighborhood[mask].reshape(B * M, -1, 3)
+        
+        if vis: #visualization
+            vis_points = neighborhood[~mask].reshape(B * (self.num_group - M), -1, 3)
+            full_vis = vis_points + center[~mask].unsqueeze(1)
+            full_rebuild = rebuild_points + center[mask].unsqueeze(1)
+            full = torch.cat([full_vis, full_rebuild], dim=0)
+            # full_points = torch.cat([rebuild_points,vis_points], dim=0)
+            full_center = torch.cat([center[mask], center[~mask]], dim=0)
+            # full = full_points + full_center.unsqueeze(1)
+            # import pdb; pdb.set_trace()
+            ret2 = full_vis.reshape(B, -1, 3)
+            # ret1 = full.reshape(B, -1, 3)
+            ret1 = full_rebuild.reshape(B, -1, 3)
+            full_center = full_center.reshape(B, -1, 3)
+            # return ret1, ret2
+            return ret1, ret2, full_center, rebuild_points, gt_points
+        
+        return rebuild_points, gt_points

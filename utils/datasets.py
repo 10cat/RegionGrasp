@@ -3,28 +3,56 @@ import sys
 sys.path.append('.')
 sys.path.append('..')
 
-from dataset.obman_preprocess import ObManObj
-from dataset.Dataset import GrabNetDataset, ObManDataset
+from dataset.obman_preprocess import ObManObj, ObManObj_MAE
+from dataset.Dataset import GrabNetDataset, ObManDataset, ObManDataset_obj_comp
 
 
 def get_dataset(cfg, mode='train'):
     ds_name = cfg.dataset.name
     
-    if ds_name == 'obman':
+    if ds_name == 'obman_pretrain':
         ds_root = cfg.obman_root
         shapenet_root = cfg.shapenet_root
         configs = cfg.dataset[mode]._base_.kwargs
         # import pdb; pdb.set_trace() # dataset配置问题
-        if cfg.run_type == 'pretrain':
+        if cfg.mae:
+            dataset = ObManObj_MAE(ds_root = ds_root,
+                                shapenet_root = shapenet_root,
+                                mano_root = cfg.mano_root,
+                                split = mode,
+                                **configs)
+        elif cfg.comp:
             dataset = ObManObj(ds_root = ds_root,
-                               shapenet_root = shapenet_root,
-                               split = mode,
-                               **configs)
+                            shapenet_root = shapenet_root,
+                            mano_root = cfg.mano_root,
+                            split = mode,
+                            **configs)
         else:
+            raise NotImplementedError
+        
+    elif ds_name == 'obman':
+        ds_root = cfg.obman_root
+        shapenet_root = cfg.shapenet_root
+        configs = cfg.dataset[mode]._base_.kwargs
+        if cfg.mae:
+            assert cfg.dataset[mode]._base_.type == 'mae'
             dataset = ObManDataset(ds_root = ds_root,
-                                  shapenet_root = shapenet_root,
-                                  split = mode,
-                                  **configs)
+                                    shapenet_root = shapenet_root,
+                                    mano_root = cfg.mano_root,
+                                    split = mode,
+                                    **configs)
+        elif cfg.comp:
+            assert cfg.dataset[mode]._base_.type == 'comp'
+            dataset = ObManDataset_obj_comp(ds_root = ds_root,
+                                    shapenet_root = shapenet_root,
+                                    mano_root = cfg.mano_root,
+                                    split = mode,
+                                    **configs)
+        else:
+            raise NotImplementedError
+        
+    else:
+        raise NotImplementedError
             
     return dataset
         

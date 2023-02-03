@@ -16,12 +16,12 @@ from sklearn.neighbors import KDTree
 
 from utils.utils import func_timer, makepath
 from utils.visualization import colors_like
-from dataset.data_utils import faces2verts_no_rep, contact_to_dict
+from dataset.data_utils import faces2verts_no_rep, contact_to_dict, signed_distance
 from dataset.obman_orig import obman
 
 class ObManResample(obman):
-    def __init__(self, ds_root, shapenet_root, split='train', joint_nb=21, mini_factor=None, use_cache=False, root_palm=False, mode='all', segment=False, use_external_points=True, apply_obj_transform=True, expand_times=1, resample_num = 8192):
-        super().__init__(ds_root, shapenet_root, split, joint_nb, mini_factor, use_cache, root_palm, mode, segment, use_external_points, apply_obj_transform)
+    def __init__(self, ds_root, shapenet_root, mano_root, split='train', joint_nb=21, mini_factor=None, use_cache=False, root_palm=False, mode='all', segment=False, use_external_points=True, apply_obj_transform=True, expand_times=1, resample_num = 8192):
+        super().__init__(ds_root, shapenet_root, mano_root, split, joint_nb, mini_factor, use_cache, root_palm, mode, segment, use_external_points, apply_obj_transform)
         self.unique_objs = np.unique(
                     [(meta_info['obj_class_id'], meta_info['obj_sample_id'])
                      for meta_info in self.meta_infos],
@@ -86,8 +86,8 @@ class ObManResample(obman):
         return np.array(trans_points).astype(np.float32), obj_trans, np.array(face_ids)
 
 class ObManObj(ObManResample):
-    def __init__(self, ds_root, shapenet_root, split='train', joint_nb=21, mini_factor=None, use_cache=False, root_palm=False, mode='all', segment=False, use_external_points=True, apply_obj_transform=True, expand_times=1, resample_num=8192, object_centric=False, ratio_lower=None, ratio_upper=None, num_mask_points=None):
-        super().__init__(ds_root, shapenet_root, split, joint_nb, mini_factor, use_cache, root_palm, mode, segment, use_external_points, apply_obj_transform, expand_times, resample_num)
+    def __init__(self, ds_root, shapenet_root, mano_root, split='train', joint_nb=21, mini_factor=None, use_cache=False, root_palm=False, mode='all', segment=False, use_external_points=True, apply_obj_transform=True, expand_times=1, resample_num=8192, object_centric=False, ratio_lower=None, ratio_upper=None, num_mask_points=None):
+        super().__init__(ds_root, shapenet_root, mano_root, split, joint_nb, mini_factor, use_cache, root_palm, mode, segment, use_external_points, apply_obj_transform, expand_times, resample_num)
         
         self.meta_infos_exp, self.obj_transforms_exp = self.expand_set(expand_times)
         self.mask_centers, self.mask_Ks = self.get_mask_ratio(ratio_lb=ratio_lower, 
@@ -166,9 +166,48 @@ class ObManObj(ObManResample):
         
         return sample
     
+class ObManObj_MAE(ObManResample):
+    def __init__(self, ds_root, shapenet_root, mano_root, split='train', joint_nb=21, mini_factor=None, use_cache=False, root_palm=False, mode='all', segment=False, use_external_points=True, apply_obj_transform=True, expand_times=1, resample_num=2048, object_centric=True):
+        super().__init__(ds_root, shapenet_root, mano_root, split, joint_nb, mini_factor, use_cache, root_palm, mode, segment, use_external_points, apply_obj_transform, expand_times, resample_num)
+        
+        self.obj_centric = object_centric
+        
+        self.npoints = resample_num
+        
+        self.permutation = np.arange(self.npoints)
+        
+    def pc_norm(self, pc):
+        """ pc: NxC, return NxC """
+        centroid = np.mean(pc, axis=0)
+        pc = pc - centroid
+        m = np.max(np.sqrt(np.sum(pc**2, axis=1)))
+        pc = pc / m
+        return pc
+        
+
+    def random_sample(self, pc, num):
+        np.random.shuffle(self.permutation)
+        pc = pc[self.permutation[:num]]
+        return pc
+        
+    def __len__(self):
+        return len(self.meta_infos)
+    
+    def __getitem__(self, idx):
+        sample = {}
+        obj_points, obj_trans, _ = self.get_obj_resampled_trans(self.meta_infos, self.obj_transforms, idx)
+        obj_points = self.random_sample(obj_points, self.npoints)
+        if self.obj_centric:
+            obj_points = self.pc_norm(obj_points)
+        sample['input_points'] = torch.from_numpy(obj_points)
+        sample['ids'] = idx
+        
+        return sample
+        
+        
 class ObManThumb(ObManResample):
-    def __init__(self, ds_root, shapenet_root, split='train', joint_nb=21, mini_factor=None, use_cache=False, root_palm=False, mode='all', segment=False, use_external_points=True, apply_obj_transform=True, expand_times=1, resample_num=8192, object_centric=False, use_mano=False):
-        super().__init__(ds_root, shapenet_root, split, joint_nb, mini_factor, use_cache, root_palm, mode, segment, use_external_points, apply_obj_transform, expand_times, resample_num)
+    def __init__(self, ds_root, shapenet_root, mano_root, split='train', joint_nb=21, mini_factor=None, use_cache=False, root_palm=False, mode='all', segment=False, use_external_points=True, apply_obj_transform=True, expand_times=1, resample_num=8192, object_centric=False, use_mano=False):
+        super().__init__(ds_root, shapenet_root, mano_root, split, joint_nb, mini_factor, use_cache, root_palm, mode, segment, use_external_points, apply_obj_transform, expand_times, resample_num)
         self.obj_centric = object_centric
         # import pdb; pdb.set_trace()
         mano_trans_path = os.path.join(ds_root, 'mano-fit', split, 'mano_trans.json')
@@ -180,20 +219,21 @@ class ObManThumb(ObManResample):
                                  model_type='mano',
                                  use_pca=True,
                                  num_pca_comps=45,
-                                 batch_size=1,
                                  flat_hand_mean=True)
+        
+        self.rh_mano.use_pca = True
         self.use_mano = use_mano
         
     @func_timer
     def thumb_query_point(self, HandMesh, ObjMesh, pene_th=0.002, contact_th=-0.005):
-        thumb_vertices_ids = faces2verts_no_rep(HandMesh.faces[config.thumb_center])
-        thumb_vertices = HandMesh.vertices[thumb_vertices_ids]
-        ObjQuery = trimesh.proximity.ProximityQuery(ObjMesh)
+        thumb_vertices = HandMesh.vertices[self.thumb_vertices_ids]
+        # ObjQuery = trimesh.proximity.ProximityQuery(ObjMesh)
         #  -- 以thumb_vertices_ids为query计算signed distances并返回相对应的closest faces
-        # NOTE: the on_surface return is not signed_dists, 所以需要专门计算signed dists， 再用on_surface返回obj上最近的面
-        h2o_signed_dists = ObjQuery.signed_distance(thumb_vertices)
-        _, _, h2o_closest_fid = ObjQuery.on_surface(thumb_vertices)
-        
+        #  the on_surface return is not signed_dists, 所以需要专门计算signed dists， 再用on_surface返回obj上最近的面
+        # h2o_signed_dists = ObjQuery.signed_distance(thumb_vertices)
+        # _, _, h2o_closest_fid = ObjQuery.on_surface(thumb_vertices)
+        # TODO: trimesh.proximity.signed_distance包含了closest_points而没有输出triangle_ids,改写使输出triangle_ids -- 这样只用计算一次closest_points
+        h2o_signed_dists, h2o_closest_fid = signed_distance(ObjMesh, thumb_vertices)
         # -- 用sdf_th阈值进一步选取thumb上真正的contact部分
         # NOTE: OUTSIDE mesh -> NEG； INSIDE the mesh -> POS
         penet_flag = h2o_signed_dists < pene_th
@@ -202,7 +242,7 @@ class ObManThumb(ObManResample):
         obj_contact_fids = h2o_closest_fid[flag]
         # import pdb; pdb.set_trace()
         if obj_contact_fids.shape[0] == 0:
-            return None
+            return None, None
         elif obj_contact_fids.shape[0] == 1:
             point = ObjMesh.triangles_center[obj_contact_fids[0]]
         else:
@@ -211,7 +251,7 @@ class ObManThumb(ObManResample):
             # TODO mean of the tri_centers
             point =  np.mean(tri_centers, axis=0)
             
-        return point
+        return point, obj_contact_fids
     
     @func_timer
     def get_KNN_in_pc(self, PC, point_q, K=410):
@@ -240,12 +280,14 @@ class ObManThumb(ObManResample):
         return sample_pc, indices
     
     def get_verts3d_mano(self, idx):
+        
         hand_trans = torch.tensor(self.mano_trans[idx]).reshape(1, -1)
         hand_rot = torch.tensor(self.mano_rot[idx]).reshape(1, -1)
         hand_pose = torch.tensor(self.hand_poses[idx]).reshape(1, -1)
         hand_shape = torch.tensor(self.hand_shapes[idx]).reshape(1, -1)
         hand_verts = self.rh_mano(betas=hand_shape, global_orient=hand_rot,
                                   hand_pose=hand_pose, transl=hand_trans).vertices.squeeze(0)
+        # import pdb; pdb.set_trace()
         
         return hand_verts
     
@@ -267,30 +309,36 @@ class ObManThumb(ObManResample):
         obj_mesh = self.get_sample_obj_mesh(idx)
         obj_verts, _ = self.get_obj_verts_faces(idx)
         # import pdb; pdb.set_trace()
+        
+        # hand_verts_gt = self.get_verts3d(idx)
+        # hand_faces_gt = self.get_faces3d(idx)
+        
         if self.obj_centric:
             hand_verts -= obj_trans
             obj_verts -= obj_trans
-        
         HandMesh = trimesh.Trimesh(vertices=hand_verts, faces=hand_faces)
         ObjMesh = trimesh.Trimesh(vertices=obj_verts, faces=obj_mesh['faces'])
+        # HandMeshGT = trimesh.Trimesh(vertices=hand_verts_gt, faces=hand_faces_gt)
         
         # import pdb; pdb.set_trace()
-        # DONE: visualization check - 位移是否正确
+        # #DONE: visualization check - 位移是否正确
         # root = '/home/yilin/Codes/test_visuals/train_trans_annot'
         # makepath(root)
         # ObjMesh.export(os.path.join(root, f'{idx}_obj.ply'))
         # HandMesh.export(os.path.join(root, f'{idx}_hand.ply'))
+        # HandMeshGT.export(os.path.join(root, f'{idx}_hand_gt.ply'))
         
-        point_contact = self.thumb_query_point(HandMesh, ObjMesh)
+        
+        point_contact, contact_fids  = self.thumb_query_point(HandMesh, ObjMesh)
         if point_contact is None:
             # DONE: 筛掉没有手接触的sample
             return None
         
-        dists, contact_indices = self.get_KNN_in_pc(ObjPoints, point_contact)
+        # dists, contact_indices = self.get_KNN_in_pc(ObjPoints, point_contact)
         
         # import pdb; pdb.set_trace()
         
-        contact_pc, input_pc_hr = self.divide_pointcloud(ObjPoints, contact_indices)
+        # contact_pc, input_pc_hr = self.divide_pointcloud(ObjPoints, contact_indices)
         
         # DONE:region_visual --> 820有点太大了，先取一半吧410
         # PC_contact = trimesh.PointCloud(vertices=contact_ps, colors=colors_like(config.colors['yellow']))
@@ -304,14 +352,15 @@ class ObManThumb(ObManResample):
         # import pdb; pdb.set_trace()
         
         # TODO: random sampling Np = 2048 from the rem_ps
-        np.random.seed(idx)
-        input_pc, sampled_indices = self.input_pc_sample(idx, input_pc_hr)
+        # np.random.seed(idx)
+        # input_pc, sampled_indices = self.input_pc_sample(idx, input_pc_hr)
         
-        annot['contact_indices'] = contact_indices
-        annot['contact_pc'] = contact_pc
-        annot['input_pc_hr'] = input_pc_hr
-        annot['input_pc'] = input_pc
-        annot['sampled_indices'] = sampled_indices
+        annot['center_point'] = point_contact
+        annot['contact_faces'] = contact_fids
+        # annot['contact_pc'] = contact_pc
+        # annot['input_pc_hr'] = input_pc_hr
+        # annot['input_pc'] = input_pc
+        # annot['sampled_indices'] = sampled_indices
         
         return annot
     
@@ -346,6 +395,7 @@ def get_thumb_condition(ds_root, args):
     # use_cache = ~args.preprocess
     dataset = ObManThumb(ds_root=ds_root, 
                            shapenet_root=config.SHAPENET_ROOT,
+                           mano_root=config.mano_root,
                            split=args.split,
                            use_cache=args.no_cache,
                            object_centric=args.obj_centric,
@@ -369,6 +419,7 @@ def get_thumb_condition(ds_root, args):
 def get_new_objpretrain(ds_root, args):
     objdataset = ObManObj(ds_root=ds_root,
                           shapenet_root=config.SHAPENET_ROOT,
+                          mano_root=config.mano_root,
                           split=args.split,
                           use_cache=True,
                           expand_times=5,

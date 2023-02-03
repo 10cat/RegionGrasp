@@ -14,12 +14,6 @@ class MyOptions:
     Base Configuration
     """
     w_wandb: bool = True
-<<<<<<< HEAD
-    machine: int = '97'
-    exp_name: str = 'thumb_cond_train0_1' # 1
-    note: str = '解决thumb_cond_train0存在的bug: 计算signed_dist_loss时，rhand_vs_pred错与rhand_normals对应；rhand_vs错与rhand_normals_pred对应'
-    run_type: str = 'train'
-=======
     machine: int = '41'
     exp_name: str = 'obj_pretrain_comp_d3' # 1
     note: str = '让reigon_masked pointfeat不那么稀疏'
@@ -27,20 +21,13 @@ class MyOptions:
     obj_centric: bool = True
     checkpoint_epoch: int = 14 # -1 when training
     
->>>>>>> 5ef87f3edb85a5087625307c37e89234e6fa46b7
     batch_size: int = 32 # train: 32; test/val: 16
     test_part: bool = False
     select_k: float = 0.25 # 选取batch_size * select_k这么多
     
-<<<<<<< HEAD
-    use_cuda: bool = True
-    visible_device: str="0"
-    cuda_id: int = 0
-=======
     use_cuda: bool = True #TODO: set as args
     visible_device: str="0" #TODO: set as args
     cuda_id: int = 0 #TODO: set as args
->>>>>>> 5ef87f3edb85a5087625307c37e89234e6fa46b7
     
     frame_names: str = 'frame_names_thumb.npz' #TODO: to config.py
     obj_meshes: str = 'decimate_meshes' #TODO: to config.py

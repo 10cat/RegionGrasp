@@ -3,11 +3,11 @@ project_name: "ConditionHOI_cgrasp"
 dataset: {
   name: obman,
 
-  train: {_base_: ./cfgs/dataset_cfgs/obman.yaml,
+  train: {_base_: ./cfgs/dataset_cfgs/obman_comp.yaml,
           others: {subset: 'train'}},
-  val: {_base_: ./cfgs/dataset_cfgs/obman.yaml,
+  val: {_base_: ./cfgs/dataset_cfgs/obman_comp.yaml,
         others: {subset: 'val'}},
-  test: {_base_: ./cfgs/dataset_cfgs/obman.yaml,
+  test: {_base_: ./cfgs/dataset_cfgs/obman_comp.yaml,
         others: {subset: 'test'}}}
 
 # training settings
@@ -15,36 +15,30 @@ batch_size: 32
 num_epoch: 60
 early_stopping: 100
 use_cuda: True
-optimizer : {
-  type: Adam,
-  pretrain_lr: 1e-4,
-  kwargs : {
-    lr: 1e-4
+optim: {
+  cnet: {
+    optimizer:  {
+      type: Adam,
+      kwargs:{
+        lr: 1e-4
+      }
+    },
+  },
+
+  others: { 
+    optimizer: {
+      type: Adam,
+      kwargs : {
+        lr: 1e-4
+      }
     }
+  }
 }
-
-# scheduler: {
-#   type: LambdaLR,
-#   kwargs : {
-#     decay_step: 21,
-#     lr_decay: 0.76,
-#     lowest_decay: 0.02,
-#     }
-# }
-
-# bnmscheduler: {
-#   type: Lambda,
-#   kwargs: {
-#     decay_step: 21,
-#     bn_decay: 0.5,
-#     bn_momentum: 0.9,
-#     lowest_decay: 0.01
-#   }
-# }
 
 # model settings
 
 model: {
+    cnet_type: obj_comp,
     cnet: {
       chkpt_path: '/ssd_data/yilin/Outputs/ConditionHOI/pretrain_comp_d3_2loss/models/checkpoint_50.pth',
       type: 'trans',
