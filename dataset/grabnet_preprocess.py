@@ -156,7 +156,7 @@ class GrabNetThumb(GrabNetResample):
             point_contact, obj_contact_fids = self.thumb_query_point(hand_mesh, obj_mesh)
             if point_contact is None:
                     # DONE: 筛掉没有手接触的sample
-                return data_out, None
+                return data_out, None, None
             
             dists, contact_indices = self.get_KNN_in_pc(obj_points, point_contact)
             
@@ -186,28 +186,57 @@ class GrabNetThumb(GrabNetResample):
                 pickle.dump(annot, f)
                 
             
-        return data_out, contact_mask
+        return data_out, np.array(point_contact), np.array(obj_contact_fids)
+    
+def readpkl(dataset, idx):
+    path = os.path.join(dataset.contact_data_path, f'{idx}.pkl')
+    with open(path, 'rb') as f:
+        annot = pickle.load(f)
+    contact_center = annot['center_point']
+    contact_faces = annot['contact_faces']
+    return contact_center, contact_faces
         
 def get_thumb_condition(ds_root, args):
     dataset = GrabNetThumb(dataset_root = ds_root,
                            ds_name = args.split,
-                           dtype=np.float32)
+                           dtype=np.float32,
+                           )
     frame_names_thumb_list = []
     ds_orig = dataset.ds
     ds_thumb = {k:[] for k in list(ds_orig.keys())}
-    ds_thumb['contact_mask'] = []
+    ds_thumb['contact_center'] = []
+    # ds_thumb['contact_faces'] = []
     sample_ids = []
-    for idx in tqdm(range(args.start, dataset.__len__()), desc=f'Annotating thumb contact in {dataset.ds_name} set'):
-        data_out, contact_mask = dataset.__getitem__(idx)
-        if contact_mask is None:
+    
+    if args.use_cache:
+        indices = [int(dir.split('/')[-1].split('.')[0]) for dir in os.listdir(dataset.contact_data_path)]
+        indices.sort()
+        pbar = tqdm(indices, desc=f'Loading the saved pkl files')
+    else:
+        pbar = tqdm(range(args.start, dataset.__len__()), desc=f'Annotating thumb contact in {dataset.ds_name} set')
+        
+    # import pdb; pdb.set_trace()
+        
+    for idx in pbar:
+        # print(idx)
+        if args.use_cache:
+            center_point, obj_faces = readpkl(dataset, idx)
+        else:
+            data_out, center_point, obj_faces = dataset.__getitem__(idx)
+            
+        if center_point is None:
             continue
+        
         frame_names_thumb_list.append(dataset.frame_names_orig[idx])
         sample_ids.append(idx)
         for key in list(ds_thumb.keys()):
-            if key != 'contact_mask':
+            if key not in ['contact_center']:
                 ds_thumb[key].append(ds_orig[key][idx])
-            else:
-                ds_thumb[key].append(contact_mask)
+            elif key == 'contact_center':
+                ds_thumb[key].append(center_point)
+        
+        # if idx > 5:     
+        #     break
                 
     
     # NOTE: output 1) frame_names_thumb: 存储每个frame对应文件路径名的文件 2）d_thumb:frame基本数据+新标注的contact_mask
@@ -215,7 +244,7 @@ def get_thumb_condition(ds_root, args):
     frame_names_path = os.path.join(dataset.ds_path, 'frame_names_thumb_N.npz')
     np.savez(frame_names_path, frame_names=frame_names_thumb)
     ds_thumb = {k: np.array(ds_thumb[k]) for k in list(ds_thumb.keys())}
-    ds_thumb_path = os.path.join(dataset.ds_path, f'grabnet_{args.ds_name}_thumb_N.npz')
+    ds_thumb_path = os.path.join(dataset.ds_path, f'grabnet_{dataset.ds_name}_thumb_N.npz')
     np.savez(ds_thumb_path, 
              global_orient_rhand_rotmat = ds_thumb['global_orient_rhand_rotmat'], 
              fpose_rhand_rotmat = ds_thumb['fpose_rhand_rotmat'], 
@@ -225,14 +254,18 @@ def get_thumb_condition(ds_root, args):
              global_orient_rhand_rotmat_f = ds_thumb['global_orient_rhand_rotmat_f'], 
              fpose_rhand_rotmat_f = ds_thumb['fpose_rhand_rotmat_f'], 
              trans_rhand_f = ds_thumb['trans_rhand_f'],
-             contact_mask = ds_thumb['contact_mask'])
+             contact_center = ds_thumb['contact_center'])
+    
     list_path = os.path.join(dataset.ds_path, 'samples_id.npy')
     np.save(list_path, np.array(sample_ids))
+    
+
     
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument('--split', type=str, default='train')
     parser.add_argument('--start', type=int, default=0)
+    parser.add_argument('--use_cache', action='store_true')
     args = parser.parse_args()
     import psutil
     p = psutil.Process()
