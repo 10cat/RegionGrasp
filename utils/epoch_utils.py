@@ -488,6 +488,9 @@ class EpochVAE_mae(EpochVAE_comp):
                     torch.cuda.empty_cache()
             return hand_params_list, mask
         
+    def loss_compute(self, hand_params, sample_stats, obj_points, gt_rhand_vs, region_mask, obj_normals=None):
+        return self.loss(hand_params, sample_stats, obj_points, gt_rhand_vs, region_mask, obj_normals=obj_normals, mode=self.mode)
+        
     def __call__(self, dataloader, epoch, model):
         stop_flag = False
         pbar = tqdm(dataloader, desc=f"{self.mode} epoch {epoch}:")
@@ -503,7 +506,7 @@ class EpochVAE_mae(EpochVAE_comp):
             obj_points = obj_input_pc
             obj_normals = sample['obj_point_normals']
             
-            _, dict_loss, signed_dists, rhand_vs_pred, rhand_faces = self.loss(hand_params, sample_stats, obj_points, gt_rhand_vs, region_mask, obj_normals=obj_normals)
+            _, dict_loss, _, rhand_vs_pred, rhand_faces = self.loss_compute(hand_params, sample_stats, obj_points, gt_rhand_vs, region_mask, obj_normals=obj_normals)
             
             total_loss = sum(dict_loss.values())
             
@@ -513,6 +516,23 @@ class EpochVAE_mae(EpochVAE_comp):
             msg_loss, losses = self.Losses.report(dict_loss, total_loss, mode=self.mode)
             msg = msg_loss
             pbar.set_postfix_str(msg)
+            
+            # if batch_idx % self.batch_interval == 0:
+            #     rhand_vs_pred_0 = rhand_vs_pred[0].detach().to('cpu').numpy()
+            #     rhand_faces_0 = rhand_faces[0].detach().to('cpu').numpy()
+            #     sample_id = int(sample_ids.detach().to('cpu').numpy()[0])
+            #     self.VisualMesh.visual(vertices=rhand_vs_pred_0, faces=rhand_faces_0, mesh_color='skin', sample_id=sample_id, epoch=epoch, name=f'pred_hand')
+                
+            #     self.visual_gt(rhand_vs = gt_rhand_vs.transpose(2, 1).detach().to('cpu').numpy(),
+            #                         rhand_faces = rhand_faces.detach().to('cpu').numpy(),
+            #                         obj_pc=obj_points.detach().to('cpu').numpy(),
+            #-                         region_mask=region_mask.detach().to('cpu').numpy(),
+            #                         obj_trans=sample['obj_trans'].detach().to('cpu').numpy(),
+            #                         sample_ids=sample_ids.detach().to('cpu').numpy(),
+            #                         epoch=epoch,
+            #                         batch_idx=batch_idx,
+            #                         batch_interval=self.batch_interval,
+            #                         sample_interval=self.sample_interval)
             
             # if batch_idx > 5:
             #     break
@@ -544,7 +564,7 @@ class ValEpochVAE_mae(EpochVAE_mae):
                 Loss_iters = AverageMeters() # loss/metrics计算方式：取5个iter的平均
                 for iter in range(self.cfg.eval_iter):
                     hand_params = hand_params_list[iter] # 输出每个iter的生成效果
-                    _, dict_loss, signed_dists, rhand_vs_pred, rhand_faces = self.loss(hand_params, None, obj_points, gt_rhand_vs, region_mask, obj_normals=obj_normals)
+                    _, dict_loss, _, rhand_vs_pred, rhand_faces = self.loss_compute(hand_params, None, obj_points, gt_rhand_vs, region_mask, obj_normals=obj_normals)
                     for key, val in dict_loss.items():
                         Loss_iters.add_value(key, val)
                     if batch_idx % self.batch_interval == 0:
@@ -553,10 +573,20 @@ class ValEpochVAE_mae(EpochVAE_mae):
                         sample_id = int(sample_ids.detach().to('cpu').numpy()[0])
                         self.VisualMesh.visual(vertices=rhand_vs_pred_0, faces=rhand_faces_0, mesh_color='skin', sample_id=sample_id, epoch=epoch, name=f'pred_hand_{iter}')
                 
-                dict_loss = Loss_iters.avg(mode=self.mode) # 取5个iter的平均loss
+                bug_mode = self.mode # 其实要改掉成None，但只不过和之前的对比实验不好比较了
+                dict_loss = Loss_iters.avg(mode=bug_mode) # 取5个iter的平均loss
                 
                 total_loss = sum(dict_loss.values())
                 
+                valid_keys = self.cfg.loss.train.keys()
+                valid_loss_dict = {}
+                for key in valid_keys:
+                    if self.cfg.loss.train[key]:
+                        if bug_mode is not None: key_name = bug_mode + '_' + key
+                        valid_loss_dict.update({key: dict_loss[key_name]})
+                total_loss = sum(valid_loss_dict.values())   
+                
+                # 还是记录loss_dist_h, loss_dist_o但是不计入total_loss
                 msg_loss, losses = self.Losses.report(dict_loss, total_loss, mode=self.mode)
                 msg = msg_loss
                 pbar.set_postfix_str(msg)

@@ -378,10 +378,10 @@ def decode_hand_params_batch(hand_params, batch_size, cfg, device):
     B = batch_size
     import mano
     rh_model = mano.load(model_path=cfg.mano_rh_path,
-                            model_type='mano',
-                                num_pca_comps=45,
-                                batch_size=B,
-                                flat_hand_mean=True)
+                        model_type='mano',
+                        num_pca_comps=45,
+                        batch_size=B,
+                        flat_hand_mean=True)
     rh_model = rh_model.to(device)
     rhand_pred = rh_model(**hand_params)
     return rhand_pred, rh_model

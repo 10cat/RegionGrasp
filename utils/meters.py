@@ -35,7 +35,11 @@ class AverageMeters:
     def update(self, meters):
         self.average_meters.update(meters.average_meters)
 
-    def avg(self, mode):
-        return {(mode+'_' +name): avg_meter.avg for name, avg_meter  in self.average_meters.items()}
+    def avg(self, mode=None):
+        if mode is not None:
+            string = mode + '_'
+        else:
+            string = ''
+        return {(string +name): avg_meter.avg for name, avg_meter  in self.average_meters.items()}
     
     

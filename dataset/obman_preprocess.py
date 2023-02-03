@@ -219,8 +219,9 @@ class ObManThumb(ObManResample):
                                  model_type='mano',
                                  use_pca=True,
                                  num_pca_comps=45,
-                                 batch_size=1,
                                  flat_hand_mean=True)
+        
+        self.rh_mano.use_pca = True
         self.use_mano = use_mano
         
     @func_timer
@@ -279,12 +280,14 @@ class ObManThumb(ObManResample):
         return sample_pc, indices
     
     def get_verts3d_mano(self, idx):
+        
         hand_trans = torch.tensor(self.mano_trans[idx]).reshape(1, -1)
         hand_rot = torch.tensor(self.mano_rot[idx]).reshape(1, -1)
         hand_pose = torch.tensor(self.hand_poses[idx]).reshape(1, -1)
         hand_shape = torch.tensor(self.hand_shapes[idx]).reshape(1, -1)
         hand_verts = self.rh_mano(betas=hand_shape, global_orient=hand_rot,
                                   hand_pose=hand_pose, transl=hand_trans).vertices.squeeze(0)
+        # import pdb; pdb.set_trace()
         
         return hand_verts
     
@@ -306,19 +309,25 @@ class ObManThumb(ObManResample):
         obj_mesh = self.get_sample_obj_mesh(idx)
         obj_verts, _ = self.get_obj_verts_faces(idx)
         # import pdb; pdb.set_trace()
+        
+        # hand_verts_gt = self.get_verts3d(idx)
+        # hand_faces_gt = self.get_faces3d(idx)
+        
         if self.obj_centric:
             hand_verts -= obj_trans
             obj_verts -= obj_trans
-        
         HandMesh = trimesh.Trimesh(vertices=hand_verts, faces=hand_faces)
         ObjMesh = trimesh.Trimesh(vertices=obj_verts, faces=obj_mesh['faces'])
+        # HandMeshGT = trimesh.Trimesh(vertices=hand_verts_gt, faces=hand_faces_gt)
         
         # import pdb; pdb.set_trace()
-        # DONE: visualization check - 位移是否正确
+        # #DONE: visualization check - 位移是否正确
         # root = '/home/yilin/Codes/test_visuals/train_trans_annot'
         # makepath(root)
         # ObjMesh.export(os.path.join(root, f'{idx}_obj.ply'))
         # HandMesh.export(os.path.join(root, f'{idx}_hand.ply'))
+        # HandMeshGT.export(os.path.join(root, f'{idx}_hand_gt.ply'))
+        
         
         point_contact = self.thumb_query_point(HandMesh, ObjMesh)
         if point_contact is None:
@@ -346,11 +355,12 @@ class ObManThumb(ObManResample):
         np.random.seed(idx)
         input_pc, sampled_indices = self.input_pc_sample(idx, input_pc_hr)
         
-        annot['contact_indices'] = contact_indices
-        annot['contact_pc'] = contact_pc
-        annot['input_pc_hr'] = input_pc_hr
-        annot['input_pc'] = input_pc
-        annot['sampled_indices'] = sampled_indices
+        annot['center_point'] = point_contact
+        annot['contact_faces'] = contact_indices
+        # annot['contact_pc'] = contact_pc
+        # annot['input_pc_hr'] = input_pc_hr
+        # annot['input_pc'] = input_pc
+        # annot['sampled_indices'] = sampled_indices
         
         return annot
     
@@ -385,6 +395,7 @@ def get_thumb_condition(ds_root, args):
     # use_cache = ~args.preprocess
     dataset = ObManThumb(ds_root=ds_root, 
                            shapenet_root=config.SHAPENET_ROOT,
+                           mano_root=config.mano_root,
                            split=args.split,
                            use_cache=args.no_cache,
                            object_centric=args.obj_centric,
@@ -408,6 +419,7 @@ def get_thumb_condition(ds_root, args):
 def get_new_objpretrain(ds_root, args):
     objdataset = ObManObj(ds_root=ds_root,
                           shapenet_root=config.SHAPENET_ROOT,
+                          mano_root=config.mano_root,
                           split=args.split,
                           use_cache=True,
                           expand_times=5,
