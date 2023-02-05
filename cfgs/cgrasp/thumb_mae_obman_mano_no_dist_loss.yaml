@@ -3,19 +3,20 @@ project_name: "ConditionHOI_cgrasp"
 dataset: {
   name: obman,
 
-  train: {_base_: ./cfgs/dataset_cfgs/obman_mae.yaml,
+  train: {_base_: ./cfgs/dataset_cfgs/obman_mano_mae.yaml,
           others: {subset: 'train'}},
-  val: {_base_: ./cfgs/dataset_cfgs/obman_mae.yaml,
+  val: {_base_: ./cfgs/dataset_cfgs/obman_mano_mae.yaml,
         others: {subset: 'val'}},
-  test: {_base_: ./cfgs/dataset_cfgs/obman_mae.yaml,
+  test: {_base_: ./cfgs/dataset_cfgs/obman_mano_mae.yaml,
         others: {subset: 'test'}}}
 
 # training settings
-use_mano: False
+use_mano: True
 batch_size: 32
 num_epoch: 100
 early_stopping: 100
 use_cuda: True
+
 optim: {
   cnet_mae: {
     optimizer:  {
@@ -47,6 +48,7 @@ optim: {
 # model settings
 
 model: {
+    ckpt: null,
     cnet_type: mae,
     cnet: {
       chkpt_path: '/ssd_data/yilin/Outputs/ConditionHOI/pointmae/models/checkpoint_68.pth',

@@ -113,9 +113,6 @@ class obman(data.Dataset):
         cache_path = os.path.join(
             self.cache_folder, '{}_{}_mode_{}.pkl'.format(
                 self.split, self.mini_factor, self.mode))
-        cache_path_3d = os.path.join(
-            self.cache_folder, '{}_3D_{}_mode_{}.pkl'.format(
-                self.split, self.mini_factor, self.mode))
         if os.path.exists(cache_path) and self.use_cache:
             with open(cache_path, 'rb') as cache_f:
                 annotations = pickle.load(cache_f)

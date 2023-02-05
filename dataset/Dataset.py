@@ -41,7 +41,7 @@ def select_ids_dataset(ds_names, seeds=[]):
 class ObManDataset(ObManThumb):
     def __init__(self, ds_root, shapenet_root, mano_root, split='train', joint_nb=21, mini_factor=None, use_cache=False, root_palm=False, mode='all', segment=False, use_external_points=True, apply_obj_transform=True, expand_times=1, resample_num=2048, object_centric=False, use_mano=False):
         super().__init__(ds_root, shapenet_root, mano_root, split, joint_nb, mini_factor, use_cache, root_palm, mode, segment, use_external_points, apply_obj_transform, expand_times, resample_num, object_centric, use_mano)
-        annot_root = os.path.join(self.root, 'thumbHOI')
+        annot_root = os.path.join(self.root, 'thumbHOI_new')
         sample_id = np.load(os.path.join(annot_root, 'samples_id.npy'))
         annotations_thumb = []
         from tqdm import tqdm
@@ -52,6 +52,20 @@ class ObManDataset(ObManThumb):
             annotations_thumb.append(annotation)
         self.samples_selected = sample_id
         self.annotations_thumb = annotations_thumb
+        self.use_mano = use_mano
+        
+    def get_verts3d_mano(self, idx):
+        
+        hand_trans = torch.tensor(self.mano_trans[idx])
+        hand_rot = torch.tensor(self.mano_rot[idx])
+        hand_pose = torch.tensor(self.hand_poses[idx])
+        hand_shape = torch.tensor(self.hand_shapes[idx])
+        hand_verts = self.rh_mano(betas=hand_shape.reshape(1, -1), global_orient=hand_rot.reshape(1, -1),
+                                  hand_pose=hand_pose.reshape(1, -1), transl=hand_trans.reshape(1, -1)).vertices.squeeze(0)
+        # import pdb; pdb.set_trace()
+        hand_params = torch.cat([hand_rot, hand_pose, hand_trans], dim=0)
+        
+        return hand_verts, hand_params
         
     def __len__(self):
             return len(self.samples_selected)
@@ -67,7 +81,11 @@ class ObManDataset(ObManThumb):
         # NOTE: 由于obj_points是由原mesh进行了resample之后得到的，所以这里索引采样点所在的面的face_normals作为点的normals
         obj_mesh = self.get_sample_obj_mesh(index)
         obj_verts, _ = self.get_obj_verts_faces(index)
-        hand_verts = self.get_verts3d(index)
+        if self.use_mano:
+            hand_verts_torch, hand_params_torch = self.get_verts3d_mano(idx)
+            hand_verts = hand_verts_torch.numpy().astype(np.float32)
+            hand_verts = self.cam_extr[:3, :3].dot(hand_verts.transpose()).transpose()
+            hand_faces = self.rh_mano.faces.astype(np.int32)
         hand_faces = self.get_faces3d(index)
         if self.obj_centric:
             obj_verts -= obj_trans
@@ -76,16 +94,19 @@ class ObManDataset(ObManThumb):
         ObjMesh = trimesh.Trimesh(vertices=obj_verts, faces=obj_mesh['faces'])
         obj_point_normals = ObjMesh.face_normals[face_ids]
         
-        contact_points = annot['contact_pc']
-        mask_center = np.mean(contact_points, axis=0)
+        contact_point = annot['center_point']
+        # mask_center = np.mean(contact_points, axis=0)
         
         sample['input_pc'] = torch.from_numpy(obj_points)
-        sample['mask_center'] = torch.from_numpy(mask_center)
+        sample['mask_center'] = torch.from_numpy(contact_point)
         sample['sample_id'] = torch.Tensor([index])
         sample['obj_point_normals'] = torch.from_numpy(obj_point_normals)
         # sample['region_mask'] = torch.from_numpy(region_mask)
         sample['obj_trans'] = torch.from_numpy(obj_trans)
+        sample['cam_extr'] = torch.from_numpy(self.cam_extr[:3, :3])
         sample['hand_verts'] = torch.from_numpy(hand_verts)
+        if self.use_mano:
+            sample['hand_params'] = hand_params_torch
         
         return sample
         

@@ -345,7 +345,8 @@ def point2point_signed(x, y, x_normals=None, y_normals=None):
 
     if y_normals is not None:
         x_nn = y_normals.gather(1, xidx_near_expanded)
-        in_out = torch.bmm(x_nn.view(-1, 1, 3), x2y.view(-1, 3, 1)).view(N, -1).sign()
+        # import pdb; pdb.set_trace()
+        in_out = torch.bmm(x_nn.view(-1, 1, 3), x2y.contiguous().view(-1, 3, 1)).view(N, -1).sign()
         x2y_signed = x2y.norm(dim=2) * in_out
     else:
         x2y_signed = x2y.norm(dim=2)
