@@ -82,11 +82,14 @@ class cGraspvaeLoss(nn.Module):
 
         return loss_kl
 
-    def forward(self, hand_params, sample_stats, obj_vs, rhand_vs, region, obj_normals=None, obj_mesh_faces=None, mode=None):
+    def forward(self, hand_params, sample_stats, obj_vs, rhand_vs, region, trans=None, cam_extr=None, obj_normals=None, obj_mesh_faces=None, mode=None):
 
         B = rhand_vs.size(0)
         
         rhand_pred, rh_model = decode_hand_params_batch(hand_params, B, self.cfg, self.device)
+        
+        
+        
         
         rhand_vs_pred = rhand_pred.vertices
         if rhand_vs.shape[-1] != 3:

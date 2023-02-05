@@ -379,6 +379,7 @@ def decode_hand_params_batch(hand_params, batch_size, cfg, device):
     import mano
     rh_model = mano.load(model_path=cfg.mano_rh_path,
                         model_type='mano',
+                        use_pca=cfg.use_mano,
                         num_pca_comps=45,
                         batch_size=B,
                         flat_hand_mean=True)
