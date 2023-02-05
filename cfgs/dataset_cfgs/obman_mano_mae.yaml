@@ -1,0 +1,7 @@
+type: mae
+kwargs:  {
+  use_cache: True,
+  object_centric: True,
+  resample_num: 2048,
+  use_mano: True
+}

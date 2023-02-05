@@ -179,6 +179,8 @@ if __name__ == "__main__":
     os.environ['OMP_NUM_THREAD'] = '1'
     torch.set_num_threads(1)
     
+    cfgsu.save_experiment_config(cfg)
+    
 
     if cfg.wandb:
         wandb.login()

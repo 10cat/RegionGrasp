@@ -82,13 +82,24 @@ class cGraspvaeLoss(nn.Module):
 
         return loss_kl
 
-    def forward(self, hand_params, sample_stats, obj_vs, rhand_vs, region, obj_normals=None, obj_mesh_faces=None, mode=None):
+    def forward(self, hand_params, sample_stats, obj_vs, rhand_vs, region, trans=None, cam_extr=None, obj_normals=None, gt_hand_params=None, obj_mesh_faces=None, mode=None):
 
         B = rhand_vs.size(0)
         
         rhand_pred, rh_model = decode_hand_params_batch(hand_params, B, self.cfg, self.device)
         
         rhand_vs_pred = rhand_pred.vertices
+        
+        if self.cfg.use_mano and self.cfg.dataset.name == 'obman':
+            assert trans is not None and cam_extr is not None
+            cam_extr = cam_extr.to(self.device)
+            trans = trans.to(self.device)
+            # rhand_vs_pred = cam_extr.dot(rhand_vs_pred.transpose(2, 1)).transpose(2, 1)
+            rhand_vs_pred = torch.bmm(cam_extr, rhand_vs_pred.transpose(2, 1)).transpose(2, 1)
+            # import pdb; pdb.set_trace()
+            rhand_vs_pred -= trans.unsqueeze(1)
+            # CHECK: 此处如果写成rhand_vs_pred = rhand_vs_pred - trans.unsqueeze(1), 则在计算knn_points时会报错：RuntimeError: Expected tensor for argument #1 'p1' to have the same type as tensor for argument #2 'p2'; but type torch.cuda.DoubleTensor does not equal torch.cuda.FloatTensor (while checking arguments for KNearestNeighborIdxCuda)
+        
         if rhand_vs.shape[-1] != 3:
             rhand_vs = rhand_vs.transpose(2, 1)
         rhand_vs = rhand_vs.to(self.device)
@@ -100,7 +111,6 @@ class cGraspvaeLoss(nn.Module):
         rh_f_single = torch.from_numpy(rh_model.faces.astype(np.int32)).view(1, -1, 3)
         rhand_faces = rh_f_single.repeat(B, 1, 1).to(self.device).to(torch.long)
         # import pdb; pdb.set_trace() # to check decode module
-        
         
         
         dict_loss = {}
@@ -142,14 +152,22 @@ class cGraspvaeLoss(nn.Module):
         dict_loss.update({'loss_kl': loss_kl})
 
         #### verts Loss ####
-        loss_mesh_rec = self.coefs['lambda_mesh_rec'] * (1 - self.coefs['kl_coef']) * torch.mean(torch.einsum('ijk,j->ijk', torch.abs((rhand_vs - rhand_vs_pred)), self.v_weights2)) # should be v_weights2 instead of v_weights
         if loss_cfg.loss_mesh_rec:
+            
+            loss_mesh_rec = self.coefs['lambda_mesh_rec'] * (1 - self.coefs['kl_coef']) * torch.mean(torch.einsum('ijk,j->ijk', torch.abs((rhand_vs - rhand_vs_pred)), self.v_weights2)) # should be v_weights2 instead of v_weights
             dict_loss.update({'loss_mesh_rec': loss_mesh_rec})
 
         #### edge Loss ####
-        loss_edge = self.coefs['lambda_edge'] * (1 - self.coefs['kl_coef']) * self.LossL1(edges_for(rhand_vs_pred, self.vpe), edges_for(rhand_vs, self.vpe))
         if loss_cfg.loss_edge:
+            loss_edge = self.coefs['lambda_edge'] * (1 - self.coefs['kl_coef']) * self.LossL1(edges_for(rhand_vs_pred, self.vpe), edges_for(rhand_vs, self.vpe))
             dict_loss.update({'loss_edge': loss_edge})
+            
+            
+        if loss_cfg.loss_mano:
+            recon_params = torch.cat([hand_params['global_orient'], hand_params['hand_pose'], hand_params['transl']], dim=1)
+            gt_hand_params = gt_hand_params.to(self.device)
+            loss_mano = self.coefs['lambda_mano'] * (1 - self.coefs['kl_coef']) * F.mse_loss(recon_params, gt_hand_params).sum() / recon_params.size(0)
+            dict_loss.update({'loss_mano': loss_mano})
             
         loss_total = torch.stack(list(dict_loss.values())).sum()
 

@@ -75,7 +75,11 @@ class CheckpointsManage(object):
         self.no_improve = 0
         return
     
-    def save_checkpoints(self, epoch, model, metric_value):
+    def save_checkpoints(self, epoch, model, metric_value, optimizer, scheduler):
+        if isinstance(optimizer, list):
+            optimizer_states = [optim.state_dict() for optim in optimizer]
+        else:
+            optimizer_states = optimizer.state_dict()
         if self.best_metrics is None:
             self.best_metrics = metric_value
         
@@ -83,7 +87,10 @@ class CheckpointsManage(object):
             best_model_path = os.path.join(self.root, f'best_model.pth')
             torch.save({'epoch':epoch,
                         'metrics':metric_value,
-                        'state_dict':model.state_dict()},
+                        'state_dict':model.state_dict(),
+                        'optimizer': optimizer_states,
+                        'scheduler': scheduler
+                        },
                     best_model_path)
             self.best_metrics = metric_value
             
@@ -93,7 +100,10 @@ class CheckpointsManage(object):
         checkpoint_path = os.path.join(self.root, f'checkpoint_{epoch}.pth')
         torch.save({'epoch':epoch,
                     'metrics':metric_value,
-                    'state_dict':model.state_dict()},
+                    'state_dict':model.state_dict(),
+                    'optimizer': optimizer_states,
+                    'scheduler': scheduler
+                    },
                 checkpoint_path)
         
         return self.no_improve
@@ -461,7 +471,7 @@ class ValEpochVAE_comp(EpochVAE_comp):
             # break
             
         if self.mode == 'val':
-            no_improve_epochs = self.Checkpt.save_checkpoints(epoch, model, metric_value=losses[f'{self.mode}_total_loss'])
+            no_improve_epochs = self.Checkpt.save_checkpoints(epoch, model, metric_value=losses[f'{self.mode}_total_loss'], optimizer=self.optimizer, scheduler=self.scheduler)
             if no_improve_epochs > self.cfg.early_stopping:
                 stop_flag = True
             
@@ -488,8 +498,8 @@ class EpochVAE_mae(EpochVAE_comp):
                     torch.cuda.empty_cache()
             return hand_params_list, mask
         
-    def loss_compute(self, hand_params, sample_stats, obj_points, gt_rhand_vs, region_mask, obj_normals=None):
-        return self.loss(hand_params, sample_stats, obj_points, gt_rhand_vs, region_mask, obj_normals=obj_normals, mode=self.mode)
+    def loss_compute(self, hand_params, sample_stats, obj_points, gt_rhand_vs, region_mask, trans=None, cam_extr=None, gt_hand_params=None, obj_normals=None):
+        return self.loss(hand_params, sample_stats, obj_points, gt_rhand_vs, region_mask, trans=trans, cam_extr=cam_extr, gt_hand_params=gt_hand_params, obj_normals=obj_normals, mode=self.mode)
         
     def __call__(self, dataloader, epoch, model):
         stop_flag = False
@@ -504,9 +514,8 @@ class EpochVAE_mae(EpochVAE_comp):
             hand_params, sample_stats, region_mask = self.model_forward(model, obj_input_pc, gt_rhand_vs, mask_centers)
             
             obj_points = obj_input_pc
-            obj_normals = sample['obj_point_normals']
             
-            _, dict_loss, _, rhand_vs_pred, rhand_faces = self.loss_compute(hand_params, sample_stats, obj_points, gt_rhand_vs, region_mask, obj_normals=obj_normals)
+            _, dict_loss, _, rhand_vs_pred, rhand_faces = self.loss_compute(hand_params, sample_stats, obj_points, gt_rhand_vs, region_mask, trans=sample['obj_trans'], cam_extr=sample['cam_extr'], gt_hand_params=sample['hand_params'], obj_normals=sample['obj_point_normals'])
             
             total_loss = sum(dict_loss.values())
             
@@ -558,13 +567,14 @@ class ValEpochVAE_mae(EpochVAE_mae):
                 hand_params_list, region_mask = self.model_forward(model, obj_input_pc, gt_rhand_vs, mask_centers)
                 
                 obj_points = obj_input_pc
-                obj_normals = sample['obj_point_normals']
                 
                 # NOTE: validation generation in several iters
                 Loss_iters = AverageMeters() # loss/metrics计算方式：取5个iter的平均
                 for iter in range(self.cfg.eval_iter):
                     hand_params = hand_params_list[iter] # 输出每个iter的生成效果
-                    _, dict_loss, _, rhand_vs_pred, rhand_faces = self.loss_compute(hand_params, None, obj_points, gt_rhand_vs, region_mask, obj_normals=obj_normals)
+                    
+                    _, dict_loss, _, rhand_vs_pred, rhand_faces = self.loss_compute(hand_params, None, obj_points, gt_rhand_vs, region_mask, trans=sample['obj_trans'], cam_extr=sample['cam_extr'], gt_hand_params=sample['hand_params'], obj_normals=sample['obj_point_normals'])
+                    
                     for key, val in dict_loss.items():
                         Loss_iters.add_value(key, val)
                     if batch_idx % self.batch_interval == 0:
@@ -605,7 +615,7 @@ class ValEpochVAE_mae(EpochVAE_mae):
             # if batch_idx > 5:
             #     break
         if self.mode == 'val':
-            no_improve_epochs = self.Checkpt.save_checkpoints(epoch, model, metric_value=losses[f'{self.mode}_total_loss'])
+            no_improve_epochs = self.Checkpt.save_checkpoints(epoch, model, metric_value=losses[f'{self.mode}_total_loss'], optimizer=self.optimizer, scheduler=self.scheduler)
             if no_improve_epochs > self.cfg.early_stopping:
                 stop_flag = True
             

@@ -220,11 +220,11 @@ class ObManThumb(ObManResample):
                                  use_pca=True,
                                  num_pca_comps=45,
                                  flat_hand_mean=True)
-        
         self.rh_mano.use_pca = True
         self.use_mano = use_mano
+        self.thumb_vertices_ids = faces2verts_no_rep(self.rh_mano.faces[config.thumb_center])
         
-    @func_timer
+    # @func_timer
     def thumb_query_point(self, HandMesh, ObjMesh, pene_th=0.002, contact_th=-0.005):
         thumb_vertices = HandMesh.vertices[self.thumb_vertices_ids]
         # ObjQuery = trimesh.proximity.ProximityQuery(ObjMesh)
@@ -253,7 +253,7 @@ class ObManThumb(ObManResample):
             
         return point, obj_contact_fids
     
-    @func_timer
+    # @func_timer
     def get_KNN_in_pc(self, PC, point_q, K=410):
         PC_tree = KDTree(PC)
         distance, indices = PC_tree.query(point_q.reshape(1, -1), K)

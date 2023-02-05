@@ -39,7 +39,7 @@ def merge_new_config(config, new_config):
     return config
 
 def save_experiment_config(config):
-    config_path = os.path.join(config.exp_name, 'config.yaml')
+    config_path = os.path.join(config.output_dir, 'config.yaml')
     os.system('cp %s %s' % (config.cfg_path, config_path))
     print(f'Copying the config file from {config.cfg_path} to config_path')
     
