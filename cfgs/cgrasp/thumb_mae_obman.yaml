@@ -49,7 +49,7 @@ optim: {
 model: {
     cnet_type: mae,
     cnet: {
-      chkpt_path: '/ssd_data/yilin/Outputs/ConditionHOI/pointmae/models/checkpoint_68.pth',
+      chkpt_path: 'pointmae/models/checkpoint_250.pth',
       kwargs: {
         group_size: 32,
         num_group: 128,
@@ -83,14 +83,16 @@ loss: {
   train: {
     loss_edge: True,
     loss_mesh_rec: True,
-    loss_dist_h: False,
-    loss_dist_o: False
+    loss_dist_h: True,
+    loss_dist_o: True,
+    loss_mano: False
   },
   val: {
     loss_edge: True,
     loss_mesh_rec: True,
     loss_dist_h: True,
-    loss_dist_o: True
+    loss_dist_o: True,
+    loss_mano: False
   },
   coef: {
     kl_coef: 0.005,
@@ -98,6 +100,7 @@ loss: {
     lambda_mesh_rec:  30.,
     lambda_dist_h:  35.,
     lambda_dist_o:  35.,
+    lambda_mano: 0.01
   }
   
 }

@@ -36,7 +36,7 @@ def cgrasp_comp(cfg=None):
     cnet = model(**cfg.model.cnet.kwargs)
     # CHECK: load the checkpoint
     if cfg.model.cnet.chkpt_path:
-        checkpoint = torch.load(cfg.model.cnet.chkpt_path)
+        checkpoint = torch.load(os.path.join(cfg.output_root, cfg.model.cnet.chkpt_path))
         cnet.load_state_dict(checkpoint['state_dict'])
         print('checkpoint for cnet loaded!')
         
@@ -82,8 +82,9 @@ def cgrasp_mae(cfg=None):
     
     cnet = ConditionMAE(cfg.model.cnet.kwargs)
     
+        
     if cfg.model.cnet.chkpt_path:
-        checkpoint = torch.load(cfg.model.cnet.chkpt_path)
+        checkpoint = torch.load(os.path.join(cfg.output_root, cfg.model.cnet.chkpt_path))
         # 只载入state_dict = 'MAE_encoder'部分的参数 至 state_dict = 'MAE_encoder'
         # import pdb; pdb.set_trace()
         mae_state_dict = {}
@@ -96,6 +97,13 @@ def cgrasp_mae(cfg=None):
     
     model = cGraspvae(cnet,
                       **cfg.model.vae.kwargs, cfg=cfg)
+    
+    if cfg.resume:
+        assert cfg.model.chkpt is not None, "Checkpoint not configured!"
+        checkpoint = torch.load(cfg.model.chkpt)
+        start_epoch = checkpoint['epoch']
+        model.load_state_dict(checkpoint['state_dict'])
+        print(f"Resuming the exp from {cfg.model.chkpt} ")
     
     if mode == 'train':
         # DONE: dataset -- obj_points / obj_point_normals / obj_trans / input_pc / hand_verts

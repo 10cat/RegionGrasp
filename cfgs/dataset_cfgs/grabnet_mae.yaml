@@ -1,0 +1,6 @@
+type: mae
+kwargs:  {
+  frame_names_file: 'frame_names_thumb.npz',
+  grabnet_thumb: True,
+  resample_num: 2048
+}

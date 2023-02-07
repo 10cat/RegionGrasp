@@ -507,7 +507,7 @@ class EpochVAE_mae(EpochVAE_comp):
         for batch_idx, sample in enumerate(pbar):
             obj_input_pc = sample['input_pc']
             gt_rhand_vs = sample['hand_verts'].transpose(2, 1)
-            mask_centers = sample['mask_center']
+            mask_centers = sample['contact_center']
             # import pdb; pdb.set_trace()
             sample_ids = sample['sample_id']
             
@@ -515,7 +515,10 @@ class EpochVAE_mae(EpochVAE_comp):
             
             obj_points = obj_input_pc
             
-            _, dict_loss, _, rhand_vs_pred, rhand_faces = self.loss_compute(hand_params, sample_stats, obj_points, gt_rhand_vs, region_mask, trans=sample['obj_trans'], cam_extr=sample['cam_extr'], gt_hand_params=sample['hand_params'], obj_normals=sample['obj_point_normals'])
+            if self.cfg.use_mano:
+                _, dict_loss, _, rhand_vs_pred, rhand_faces = self.loss_compute(hand_params, sample_stats, obj_points, gt_rhand_vs, region_mask, trans=sample['obj_trans'], cam_extr=sample['cam_extr'], gt_hand_params=sample['hand_params'], obj_normals=sample['obj_point_normals'])
+            else:
+                _, dict_loss, _, rhand_vs_pred, rhand_faces = self.loss_compute(hand_params, sample_stats, obj_points, gt_rhand_vs, region_mask, obj_normals=sample['obj_point_normals'])
             
             total_loss = sum(dict_loss.values())
             
@@ -573,7 +576,10 @@ class ValEpochVAE_mae(EpochVAE_mae):
                 for iter in range(self.cfg.eval_iter):
                     hand_params = hand_params_list[iter] # 输出每个iter的生成效果
                     
-                    _, dict_loss, _, rhand_vs_pred, rhand_faces = self.loss_compute(hand_params, None, obj_points, gt_rhand_vs, region_mask, trans=sample['obj_trans'], cam_extr=sample['cam_extr'], gt_hand_params=sample['hand_params'], obj_normals=sample['obj_point_normals'])
+                    if self.cfg.use_mano:
+                        _, dict_loss, _, rhand_vs_pred, rhand_faces = self.loss_compute(hand_params, None, obj_points, gt_rhand_vs, region_mask, trans=sample['obj_trans'], cam_extr=sample['cam_extr'], gt_hand_params=sample['hand_params'], obj_normals=sample['obj_point_normals'])
+                    else:
+                        _, dict_loss, _, rhand_vs_pred, rhand_faces = self.loss_compute(hand_params, None, obj_points, gt_rhand_vs, region_mask, obj_normals=sample['obj_point_normals'])
                     
                     for key, val in dict_loss.items():
                         Loss_iters.add_value(key, val)
@@ -629,5 +635,4 @@ if __name__ == "__main__":
     pc1 = np.random.rand(2048, 3)
     pc2 = np.random.rand(32, 3)
     visualizer.visual(pcs=[pc1, pc2], pc_colors=['grey', 'blue'], sample_id=0, epoch=0)
-    
     

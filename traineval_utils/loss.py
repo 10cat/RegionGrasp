@@ -82,7 +82,9 @@ class cGraspvaeLoss(nn.Module):
 
         return loss_kl
 
+
     def forward(self, hand_params, sample_stats, obj_vs, rhand_vs, region, trans=None, cam_extr=None, obj_normals=None, gt_hand_params=None, obj_mesh_faces=None, mode=None):
+
 
         B = rhand_vs.size(0)
         
@@ -99,6 +101,7 @@ class cGraspvaeLoss(nn.Module):
             # import pdb; pdb.set_trace()
             rhand_vs_pred -= trans.unsqueeze(1)
             # CHECK: 此处如果写成rhand_vs_pred = rhand_vs_pred - trans.unsqueeze(1), 则在计算knn_points时会报错：RuntimeError: Expected tensor for argument #1 'p1' to have the same type as tensor for argument #2 'p2'; but type torch.cuda.DoubleTensor does not equal torch.cuda.FloatTensor (while checking arguments for KNearestNeighborIdxCuda)
+        
         
         if rhand_vs.shape[-1] != 3:
             rhand_vs = rhand_vs.transpose(2, 1)

@@ -224,7 +224,6 @@ class ObManThumb(ObManResample):
         self.use_mano = use_mano
         self.thumb_vertices_ids = faces2verts_no_rep(self.rh_mano.faces[config.thumb_center])
         
-    # @func_timer
     def thumb_query_point(self, HandMesh, ObjMesh, pene_th=0.002, contact_th=-0.005):
         thumb_vertices = HandMesh.vertices[self.thumb_vertices_ids]
         # ObjQuery = trimesh.proximity.ProximityQuery(ObjMesh)
@@ -399,7 +398,8 @@ def get_thumb_condition(ds_root, args):
                            split=args.split,
                            use_cache=args.no_cache,
                            object_centric=args.obj_centric,
-                           use_mano=args.mano)
+                           use_mano=args.mano,
+                           resample_num=args.num_points)
     output_root = os.path.join(dataset.root, 'thumbHOI_new')
     makepath(output_root)
     samples_list = []
@@ -437,6 +437,7 @@ if __name__ == "__main__":
     parser.add_argument('--obj_centric', action='store_true')
     parser.add_argument('--no_cache', action='store_false')
     parser.add_argument('--mano', action='store_true')
+    parser.add_argument('--num_points', type=int, default=2048)
     args = parser.parse_args()
     
     if args.run == 'obj_pretrain':

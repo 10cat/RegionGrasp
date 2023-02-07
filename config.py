@@ -46,12 +46,18 @@ ratio_upper = 0.30
 """
 Filepath settings
 """
-machine = '41'
+machine = '97'
 
 if machine == '97':
 
     DATASET_ROOT = "/home/datassd/yilin/GrabNet"
     GrabNet_ROOT = "/home/datassd/yilin/GrabNet"
+    
+    OBMAN_ROOT = "/home/datassd/yilin/obman"
+    
+    SHAPENET_ROOT = "/home/datassd/yilin/ShapeNetCore.v2"
+    
+    mano_root = "/home/datassd/yilin/Codes/_toolbox/mano"
 
     mano_dir = "/home/datassd/yilin/Codes/_toolbox/mano/models/MANO_RIGHT.pkl" # MANO right hand model path
 
