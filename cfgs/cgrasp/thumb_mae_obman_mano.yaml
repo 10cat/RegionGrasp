@@ -86,13 +86,15 @@ loss: {
     loss_edge: True,
     loss_mesh_rec: True,
     loss_dist_h: True,
-    loss_dist_o: True
+    loss_dist_o: True,
+    loss_mano: False
   },
   val: {
     loss_edge: True,
     loss_mesh_rec: True,
     loss_dist_h: True,
-    loss_dist_o: True
+    loss_dist_o: True,
+    loss_mano: False
   },
   coef: {
     kl_coef: 0.005,
@@ -100,8 +102,8 @@ loss: {
     lambda_mesh_rec:  30.,
     lambda_dist_h:  35.,
     lambda_dist_o:  35.,
+    lambda_mano: 0.01
   }
-  
 }
 
 

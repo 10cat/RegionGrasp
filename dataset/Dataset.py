@@ -16,6 +16,7 @@ import random
 import pickle
 from utils.utils import func_timer, makepath
 from dataset.Dataset_origin import GrabNetDataset_orig
+from dataset.grabnet_preprocess import GrabNetThumb
 from dataset.obman_preprocess import ObManResample, ObManThumb
 
 set_seed = lambda val: np.random.seed(val)
@@ -82,10 +83,12 @@ class ObManDataset(ObManThumb):
         obj_mesh = self.get_sample_obj_mesh(index)
         obj_verts, _ = self.get_obj_verts_faces(index)
         if self.use_mano:
-            hand_verts_torch, hand_params_torch = self.get_verts3d_mano(idx)
+            hand_verts_torch, hand_params_torch = self.get_verts3d_mano(index)
             hand_verts = hand_verts_torch.numpy().astype(np.float32)
             hand_verts = self.cam_extr[:3, :3].dot(hand_verts.transpose()).transpose()
             hand_faces = self.rh_mano.faces.astype(np.int32)
+        else:
+            hand_verts = self.get_verts3d(index)
         hand_faces = self.get_faces3d(index)
         if self.obj_centric:
             obj_verts -= obj_trans
@@ -98,7 +101,7 @@ class ObManDataset(ObManThumb):
         # mask_center = np.mean(contact_points, axis=0)
         
         sample['input_pc'] = torch.from_numpy(obj_points)
-        sample['mask_center'] = torch.from_numpy(contact_point)
+        sample['contact_center'] = torch.from_numpy(contact_point)
         sample['sample_id'] = torch.Tensor([index])
         sample['obj_point_normals'] = torch.from_numpy(obj_point_normals)
         # sample['region_mask'] = torch.from_numpy(region_mask)
@@ -189,8 +192,17 @@ class ObManDataset_obj_comp(ObManThumb):
         
         return sample
     
-
-class GrabNetDataset(GrabNetDataset_orig):
+class GrabNetDataset(GrabNetThumb):
+    def __init__(self, dataset_root, ds_name='train', frame_names_file='frame_names.npz', grabnet_thumb=False, obj_meshes_folder='contact_meshes', output_root=None, dtype=torch.float32, only_params=False, load_on_ram=False, resample_num=8192):
+        super().__init__(dataset_root, ds_name, frame_names_file, grabnet_thumb, obj_meshes_folder, output_root, dtype, only_params, load_on_ram, resample_num)
+        
+    def __getitem__(self, idx):
+        sample = super().__getitem__(idx)
+        import pdb; pdb.set_trace()
+        sample['contact_center']
+        return sample
+        
+class GrabNetDataset_sdf(GrabNetDataset_orig):
     def __init__(self, 
                  dataset_root, 
                  ds_name='train', 
