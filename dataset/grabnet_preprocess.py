@@ -69,6 +69,7 @@ class GrabNetThumb(GrabNetResample):
         obj_verts = obj_mesh.vertices
         
         obj_resp_points = self.resampled_objs[obj_name]['points']
+        obj_resp_faces = self.resampled_objs[obj_name]['faces']
         rot_mat_np = np.array(data['root_orient_obj_rotmat'][0])
         trans_np = np.array(data['trans_obj'])
         
@@ -77,7 +78,7 @@ class GrabNetThumb(GrabNetResample):
         
         obj_mesh = trimesh.Trimesh(vertices=obj_verts_trans, faces=obj_mesh.faces)
         
-        return obj_mesh, obj_verts_trans, obj_resp_points_trans
+        return obj_mesh, obj_verts_trans, obj_resp_points_trans, obj_resp_faces
     
     def get_hand_data(self, data):
         hand_verts = data['verts_rhand']
@@ -149,7 +150,7 @@ class GrabNetThumb(GrabNetResample):
             data = self.get_frames_data(idx, self.frame_names)
             # import pdb; pdb.set_trace()
             data_out.update(data)
-            obj_mesh, obj_verts, obj_points= self.get_obj_data(data_out, idx)
+            obj_mesh, obj_verts, obj_points, _= self.get_obj_data(data_out, idx)
             
             hand_verts, hand_mesh = self.get_hand_data(data_out)
             

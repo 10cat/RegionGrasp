@@ -51,6 +51,14 @@ def get_dataset(cfg, mode='train'):
         else:
             raise NotImplementedError
         
+    elif ds_name == 'grabnet':
+        ds_root = cfg.grabnet_root
+        configs = cfg.dataset[mode]._base_.kwargs
+        dataset = GrabNetDataset(dataset_root=ds_root, 
+                                 ds_name=mode,
+                                 **configs)
+        
+        
     else:
         raise NotImplementedError
             

@@ -76,13 +76,10 @@ class CheckpointsManage(object):
         return
     
     def save_checkpoints(self, epoch, model, metric_value, optimizer, scheduler):
-<<<<<<< HEAD
-=======
         if isinstance(optimizer, list):
             optimizer_states = [optim.state_dict() for optim in optimizer]
         else:
             optimizer_states = optimizer.state_dict()
->>>>>>> afe71f099fdb77abf8ca7c82ba4715a13dcec4de
         if self.best_metrics is None:
             self.best_metrics = metric_value
         
@@ -91,11 +88,7 @@ class CheckpointsManage(object):
             torch.save({'epoch':epoch,
                         'metrics':metric_value,
                         'state_dict':model.state_dict(),
-<<<<<<< HEAD
-                        'optimizer':optimizer.state_dict(),
-=======
                         'optimizer': optimizer_states,
->>>>>>> afe71f099fdb77abf8ca7c82ba4715a13dcec4de
                         'scheduler': scheduler
                         },
                     best_model_path)
@@ -108,11 +101,7 @@ class CheckpointsManage(object):
         torch.save({'epoch':epoch,
                     'metrics':metric_value,
                     'state_dict':model.state_dict(),
-<<<<<<< HEAD
-                    'optimizer':optimizer.state_dict(),
-=======
                     'optimizer': optimizer_states,
->>>>>>> afe71f099fdb77abf8ca7c82ba4715a13dcec4de
                     'scheduler': scheduler
                     },
                 checkpoint_path)
@@ -258,7 +247,7 @@ class PretrainEpoch():
             # break
             
         if self.mode == 'val':
-            no_improve_epochs = self.Checkpt.save_checkpoints(epoch, model, metric_value=losses[f'{self.mode}_total_loss'], optimizer=self.optimizer, scheduler=self.scheduler)
+            no_improve_epochs = self.Checkpt.save_checkpoints(epoch, model, metric_value=losses[f'{self.mode}_total_loss'])
             if no_improve_epochs > self.cfg.early_stopping:
                 stop_flag = True
             
@@ -325,7 +314,7 @@ class PretrainMAEEpoch(PretrainEpoch):
             # break
             
         if self.mode == 'val':
-            no_improve_epochs = self.Checkpt.save_checkpoints(epoch, model, metric_value=losses[f'{self.mode}_total_loss'], optimizer=self.optimizer, scheduler=self.scheduler)
+            no_improve_epochs = self.Checkpt.save_checkpoints(epoch, model, metric_value=losses[f'{self.mode}_total_loss'])
             if no_improve_epochs > self.cfg.early_stopping:
                 stop_flag = True
             
@@ -518,7 +507,7 @@ class EpochVAE_mae(EpochVAE_comp):
         for batch_idx, sample in enumerate(pbar):
             obj_input_pc = sample['input_pc']
             gt_rhand_vs = sample['hand_verts'].transpose(2, 1)
-            mask_centers = sample['mask_center']
+            mask_centers = sample['contact_center']
             # import pdb; pdb.set_trace()
             sample_ids = sample['sample_id']
             
@@ -526,7 +515,10 @@ class EpochVAE_mae(EpochVAE_comp):
             
             obj_points = obj_input_pc
             
-            _, dict_loss, _, rhand_vs_pred, rhand_faces = self.loss_compute(hand_params, sample_stats, obj_points, gt_rhand_vs, region_mask, trans=sample['obj_trans'], cam_extr=sample['cam_extr'], gt_hand_params=sample['hand_params'], obj_normals=sample['obj_point_normals'])
+            if self.cfg.use_mano:
+                _, dict_loss, _, rhand_vs_pred, rhand_faces = self.loss_compute(hand_params, sample_stats, obj_points, gt_rhand_vs, region_mask, trans=sample['obj_trans'], cam_extr=sample['cam_extr'], gt_hand_params=sample['hand_params'], obj_normals=sample['obj_point_normals'])
+            else:
+                _, dict_loss, _, rhand_vs_pred, rhand_faces = self.loss_compute(hand_params, sample_stats, obj_points, gt_rhand_vs, region_mask, obj_normals=sample['obj_point_normals'])
             
             total_loss = sum(dict_loss.values())
             
@@ -554,8 +546,8 @@ class EpochVAE_mae(EpochVAE_comp):
             #                         batch_interval=self.batch_interval,
             #                         sample_interval=self.sample_interval)
             
-            if batch_idx > 5:
-                break
+            # if batch_idx > 5:
+            #     break
         
         self.log(self.Losses, epoch=epoch)
         return model, stop_flag
@@ -584,7 +576,10 @@ class ValEpochVAE_mae(EpochVAE_mae):
                 for iter in range(self.cfg.eval_iter):
                     hand_params = hand_params_list[iter] # 输出每个iter的生成效果
                     
-                    _, dict_loss, _, rhand_vs_pred, rhand_faces = self.loss_compute(hand_params, None, obj_points, gt_rhand_vs, region_mask, trans=sample['obj_trans'], cam_extr=sample['cam_extr'], gt_hand_params=sample['hand_params'], obj_normals=sample['obj_point_normals'])
+                    if self.cfg.use_mano:
+                        _, dict_loss, _, rhand_vs_pred, rhand_faces = self.loss_compute(hand_params, None, obj_points, gt_rhand_vs, region_mask, trans=sample['obj_trans'], cam_extr=sample['cam_extr'], gt_hand_params=sample['hand_params'], obj_normals=sample['obj_point_normals'])
+                    else:
+                        _, dict_loss, _, rhand_vs_pred, rhand_faces = self.loss_compute(hand_params, None, obj_points, gt_rhand_vs, region_mask, obj_normals=sample['obj_point_normals'])
                     
                     for key, val in dict_loss.items():
                         Loss_iters.add_value(key, val)
@@ -623,8 +618,8 @@ class ValEpochVAE_mae(EpochVAE_mae):
                                 batch_idx=batch_idx,
                                 batch_interval=self.batch_interval,
                                 sample_interval=self.sample_interval)
-            if batch_idx > 5:
-                break
+            # if batch_idx > 5:
+            #     break
         if self.mode == 'val':
             no_improve_epochs = self.Checkpt.save_checkpoints(epoch, model, metric_value=losses[f'{self.mode}_total_loss'], optimizer=self.optimizer, scheduler=self.scheduler)
             if no_improve_epochs > self.cfg.early_stopping:
@@ -640,5 +635,4 @@ if __name__ == "__main__":
     pc1 = np.random.rand(2048, 3)
     pc2 = np.random.rand(32, 3)
     visualizer.visual(pcs=[pc1, pc2], pc_colors=['grey', 'blue'], sample_id=0, epoch=0)
-    
     

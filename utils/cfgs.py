@@ -1,5 +1,6 @@
 import os
 import sys
+from utils.utils import makepath
 sys.path.append('.')
 sys.path.append('..')
 from easydict import EasyDict
@@ -39,6 +40,7 @@ def merge_new_config(config, new_config):
     return config
 
 def save_experiment_config(config):
+    makepath(config.output_dir)
     config_path = os.path.join(config.output_dir, 'config.yaml')
     os.system('cp %s %s' % (config.cfg_path, config_path))
     print(f'Copying the config file from {config.cfg_path} to config_path')
@@ -56,8 +58,8 @@ def config_paths(machine, exp_name):
     paths = {}
     if machine == '97':
         grabnet_root = "/home/datassd/yilin/GrabNet"
-        obman_root = "/home/dataset/yilin/obman"
-        # shapenet_root --> 97上没装shapenetcore
+        obman_root = "/home/datassd/yilin/obman"
+        shapenet_root = "/home/datassd/yilin/ShapeNetCore.v2"
         output_root = "/home/datassd/yilin/Outputs/ConditionHOI/"
         output_dir = "/home/datassd/yilin/Outputs/ConditionHOI/"+exp_name
         mano_root = "/home/datassd/yilin/Codes/_toolbox/mano"
@@ -70,6 +72,7 @@ def config_paths(machine, exp_name):
         output_dir = "/ssd_data/yilin/Outputs/ConditionHOI/"+exp_name
         mano_root = "/home/yilin/smpl_models/mano"
         mano_rh_path = f"/home/yilin/smpl_models/mano/MANO_RIGHT.pkl"
+    
     model_root = os.path.join(output_dir, 'model')
     
     paths['grabnet_root'] = grabnet_root

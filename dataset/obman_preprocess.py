@@ -223,11 +223,7 @@ class ObManThumb(ObManResample):
         self.rh_mano.use_pca = True
         self.use_mano = use_mano
         self.thumb_vertices_ids = faces2verts_no_rep(self.rh_mano.faces[config.thumb_center])
-<<<<<<< HEAD
-=======
         
->>>>>>> afe71f099fdb77abf8ca7c82ba4715a13dcec4de
-    # @func_timer
     def thumb_query_point(self, HandMesh, ObjMesh, pene_th=0.002, contact_th=-0.005):
         thumb_vertices = HandMesh.vertices[self.thumb_vertices_ids]
         # ObjQuery = trimesh.proximity.ProximityQuery(ObjMesh)

@@ -80,6 +80,7 @@ class GrabNetDataset_orig(data.Dataset):
             self.frame_sbjs = torch.from_numpy(self.frame_sbjs.astype(np.int8)).to(torch.long)
             self.to_torch = True
             
+        self.ds = self.get_npz_data(os.path.join(self.ds_path, 'grabnet_%s.npz'%ds_name), to_torch=self.to_torch)
         ## 读取grabnet_[ds_name].npz中提供的所有sample基本参数：mano参数 / hand pose参数 / object pose参数
         if grabnet_thumb:
             self.ds = self.get_npz_data(os.path.join(self.ds_path, 'grabnet_%s_thumb.npz'%ds_name), to_torch=self.to_torch)
