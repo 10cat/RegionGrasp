@@ -104,7 +104,6 @@ loss: {
     lambda_dist_o:  35.,
     lambda_mano: 0.01
   }
-  
 }
 
 

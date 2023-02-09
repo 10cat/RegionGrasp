@@ -46,7 +46,7 @@ ratio_upper = 0.30
 """
 Filepath settings
 """
-machine = '97'
+machine = '41'
 
 if machine == '97':
 
@@ -64,7 +64,8 @@ if machine == '97':
     visual_root = "/home/datassd/yilin/Outputs"
     
     dataset_visual_dir = "/home/datassd/yilin/Outputs/GrabNet_visual"
-
+    obman_visual_dir = "/ssd_data/yilin/Outputs/ObMan_visual"
+    
     OUTPUT_ROOT = "/home/datassd/yilin/Outputs/ConditionHOI"
 
 if machine == '41':

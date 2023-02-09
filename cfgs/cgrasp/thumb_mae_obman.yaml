@@ -129,6 +129,10 @@ visual_interval: {
   val: {
     batch: 10,
     sample: null
+  },
+  test: {
+    batch: 1,
+    sample: null
   }
 }
 
