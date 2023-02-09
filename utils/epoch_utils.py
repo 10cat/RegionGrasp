@@ -178,7 +178,10 @@ class PretrainEpoch():
         makepath(self.output_dir)
         self.model_dir = os.path.join(self.output_dir, 'models')
         makepath(self.model_dir)
-        self.visual_dir = os.path.join(self.output_dir, 'visual', mode)
+        if self.cfg.run_mode == 'train':
+            self.visual_dir = os.path.join(self.output_dir, 'visual', mode)
+        else:
+            self.visual_dir = os.path.join(self.output_dir, 'visual', self.cfg.run_mode)
         makepath(self.visual_dir)
         
         self.Losses = MetersMonitor()
@@ -338,7 +341,10 @@ class EpochVAE_comp():
         makepath(self.output_dir)
         self.model_dir = os.path.join(self.output_dir, 'models')
         makepath(self.model_dir)
-        self.visual_dir = os.path.join(self.output_dir, 'visual', mode)
+        if cfg.run_mode == 'train':
+            self.visual_dir = os.path.join(self.output_dir, 'visual', mode)
+        else:
+            self.visual_dir = os.path.join(self.output_dir, 'visual', cfg.run_mode)
         makepath(self.visual_dir)
         
         self.Losses = MetersMonitor()
