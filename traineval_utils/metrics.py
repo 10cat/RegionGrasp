@@ -26,7 +26,7 @@ class ConditionNetMetrics(nn.Module):
     def forward(self, map_om, M_target):
         return self.maploss(map_om, M_target)
 
-class cGraspvaeMetrics(nn.Module):
+class cGraspvaeMetrics():
     def __init__(self, rh_model, rh_f, device):
         super(cGraspvaeMetrics, self).__init__()
         self.rh_model = rh_model
@@ -87,7 +87,7 @@ class cGraspvaeMetrics(nn.Module):
         dists = torch.einsum('ij,ij->ij', SDist, w_SDist)
         return torch.mean(torch.sum(dists.abs(), dim=1))
             
-    def forward(self, signed_dists):
+    def __call__(self, signed_dists):
 
         """
         :params nearest_ids: (B, P2, 1)

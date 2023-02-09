@@ -341,8 +341,8 @@ class EpochVAE_comp():
         self.Checkpt = CheckpointsManage(root=self.model_dir, interval=cfg.check_interval)
         self.VisualPC = VisualPC(root=self.visual_dir)
         self.VisualMesh = VisualMesh(root=self.visual_dir)
-        self.batch_interval = cfg.visual_interval[mode].batch
-        self.sample_interval = cfg.visual_interval[mode].sample
+        self.batch_interval = cfg.batch_intv if cfg.run_mode == 'test' else cfg.visual_interval[mode].batch
+        self.sample_interval = cfg.sample_intv if cfg.run_mode == 'test' else cfg.visual_interval[mode].sample
         self.cfg = cfg
         
     def model_forward(self, model, obj_input, hand_input=None):
@@ -556,14 +556,16 @@ class ValEpochVAE_mae(EpochVAE_mae):
     def __init__(self, loss, dataset, optimizer, scheduler, output_dir, mode='train', cfg=None):
         super().__init__(loss, dataset, optimizer, scheduler, output_dir, mode, cfg)
         
-    def __call__(self, dataloader, epoch, model):
+    def __call__(self, dataloader, epoch, model, save_pred=False):
         stop_flag = False
+        if save_pred:
+            recon_rhand_params = []
         pbar = tqdm(dataloader, desc=f"{self.mode} epoch {epoch}:")
         for batch_idx, sample in enumerate(pbar):
             with torch.no_grad():
                 obj_input_pc = sample['input_pc']
                 gt_rhand_vs = sample['hand_verts'].transpose(2, 1) # gt for the masked points
-                mask_centers = sample['mask_center']
+                mask_centers = sample['contact_center']
                 # import pdb; pdb.set_trace()
                 sample_ids = sample['sample_id']
                 
@@ -589,6 +591,7 @@ class ValEpochVAE_mae(EpochVAE_mae):
                         sample_id = int(sample_ids.detach().to('cpu').numpy()[0])
                         self.VisualMesh.visual(vertices=rhand_vs_pred_0, faces=rhand_faces_0, mesh_color='skin', sample_id=sample_id, epoch=epoch, name=f'pred_hand_{iter}')
                 
+                
                 bug_mode = self.mode # 其实要改掉成None，但只不过和之前的对比实验不好比较了
                 dict_loss = Loss_iters.avg(mode=bug_mode) # 取5个iter的平均loss
                 
@@ -607,24 +610,59 @@ class ValEpochVAE_mae(EpochVAE_mae):
                 msg = msg_loss
                 pbar.set_postfix_str(msg)
                 
-                if self.mode == 'val':
-                    self.visual_gt(rhand_vs = gt_rhand_vs.transpose(2, 1).detach().to('cpu').numpy(),
-                                rhand_faces = rhand_faces.detach().to('cpu').numpy(),
-                                obj_pc=obj_points.detach().to('cpu').numpy(),
-                                region_mask=region_mask.detach().to('cpu').numpy(),
-                                obj_trans=sample['obj_trans'].detach().to('cpu').numpy(),
-                                sample_ids=sample_ids.detach().to('cpu').numpy(),
-                                epoch=epoch,
-                                batch_idx=batch_idx,
-                                batch_interval=self.batch_interval,
-                                sample_interval=self.sample_interval)
+                if self.cfg.dataset.name == 'obman':
+                    obj_trans = sample['obj_trans'].detach().to('cpu').numpy()
+                elif self.cfg.dataset.name == 'grabnet':
+                    obj_trans = None
+                else:
+                    raise NotImplementedError
+                self.visual_gt(rhand_vs = gt_rhand_vs.transpose(2, 1).detach().to('cpu').numpy(),
+                            rhand_faces = rhand_faces.detach().to('cpu').numpy(),
+                            obj_pc=obj_points.detach().to('cpu').numpy(),
+                            region_mask=region_mask.detach().to('cpu').numpy(),
+                            obj_trans=sample['obj_trans'].detach().to('cpu').numpy(),
+                            sample_ids=sample_ids.detach().to('cpu').numpy(),
+                            epoch=epoch,
+                            batch_idx=batch_idx,
+                            batch_interval=self.batch_interval,
+                            sample_interval=self.sample_interval)
+                    
+                if save_pred:
+                    keys = hand_params_list[0].keys()
+                    recon_params_list = []
+                    for hand_params in hand_params_list:
+                        recon_params = torch.cat([hand_params['global_orient'], hand_params['hand_pose'], hand_params['transl']], dim=1)
+                        recon_params_list.append(recon_params)
+                    # import pdb; pdb.set_trace()
+                    B = recon_params.shape[0]      
+                    
+                    hand_params_all = torch.cat(recon_params_list, dim=0) # B*iter_nums, D
+                    hand_params_all = hand_params_all.reshape(self.cfg.eval_iter, B, -1).transpose(0, 1) # B, iter_nums, D
+                    hand_params_all = hand_params_all.cpu()
+                    recon_rhand_params.append(hand_params_all)
             # if batch_idx > 5:
             #     break
-        if self.mode == 'val':
+            
+        if self.cfg.run_mode != 'test':
             no_improve_epochs = self.Checkpt.save_checkpoints(epoch, model, metric_value=losses[f'{self.mode}_total_loss'], optimizer=self.optimizer, scheduler=self.scheduler)
             if no_improve_epochs > self.cfg.early_stopping:
                 stop_flag = True
+                
+        if save_pred:
+            recon_rhand_params = torch.cat(recon_rhand_params)
+            pth_path = path = os.path.join(self.output_dir, f'{self.cfg.chkpt}_{self.cfg.eval_ds}set_pred.pth')
+            torch.save(recon_rhand_params, pth_path)
             
+            recon_rhand_params = recon_rhand_params.numpy()
+            data = {
+                'recon_params': recon_rhand_params
+            }
+            path = os.path.join(self.output_dir, f'{self.cfg.chkpt}_{self.cfg.eval_ds}set_pred.pkl')
+            import pickle
+            with open(path, 'wb') as f:
+                pickle.dump(data, f)
+            print(f"predicted rhand params saved!")
+                
         self.log(self.Losses, epoch=epoch)
         return model, stop_flag
         

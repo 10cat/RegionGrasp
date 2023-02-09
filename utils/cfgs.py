@@ -1,3 +1,4 @@
+from genericpath import exists
 import os
 import sys
 from utils.utils import makepath
@@ -7,11 +8,8 @@ from easydict import EasyDict
 from omegaconf import OmegaConf
 
 def get_config(args, folder=None):
-    if args.resume:
-        cfg_path = os.path.join(args.exp_name, 'config.yaml')
-        if not os.path.exists(cfg_path):
-            print('Failed to resume')
-            raise FileNotFoundError()
+    cfg_path = os.path.join(args.exp_name, 'config.yaml')
+    if args.resume and os.path.exists(cfg_path):
         print(f'Resume yaml from {cfg_path}')
     else:
         cfg_root = './cfgs'
