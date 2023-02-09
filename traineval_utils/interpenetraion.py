@@ -5,16 +5,18 @@ sys.path.append('..')
 import numpy as np
 import torch
 import trimesh
-from option import MyOptions as cfg
+# from option import MyOptions as cfg
 
-def intersect_vox_obj(hand_mesh, obj_mesh, pitch=cfg.voxel_pitch):
+def intersect_vox_obj(hand_mesh, obj_mesh, cfg):
+    pitch=cfg.voxel.pitch
     obj_vox = obj_mesh.voxelized(pitch=pitch)
     obj_points = obj_vox.points
     inside = hand_mesh.contains(obj_points)
     volume = inside.sum() * np.power(pitch, 3)
     return volume
 
-def intersect_vox_hand(hand_mesh, obj_mesh, pitch=cfg.voxel_pitch):
+def intersect_vox_hand(hand_mesh, obj_mesh, cfg):
+    pitch=cfg.voxel.pitch
     hand_vox = hand_mesh.voxelized(pitch=pitch)
     hand_points = hand_vox.points
     inside = obj_mesh.contains(hand_points)
@@ -22,14 +24,15 @@ def intersect_vox_hand(hand_mesh, obj_mesh, pitch=cfg.voxel_pitch):
     return volume
 
 from utils.utils import func_timer
-def main(sample_info, mode=cfg.voxel_mode):
+def main(sample_info, cfg):
+    mode=cfg.voxel.mode
     hand_mesh = trimesh.Trimesh(vertices=sample_info['hand_verts'], faces=sample_info['hand_faces'])
     obj_mesh = trimesh.Trimesh(vertices=sample_info['obj_verts'], faces=sample_info['obj_faces'])
 
     if mode == 'voxels_obj':
-        volume = intersect_vox_obj(hand_mesh, obj_mesh)
+        volume = intersect_vox_obj(hand_mesh, obj_mesh, cfg)
     elif mode == 'voxels_hand':
-        volume = intersect_vox_hand(hand_mesh, obj_mesh)
+        volume = intersect_vox_hand(hand_mesh, obj_mesh, cfg)
 
     return volume
 

@@ -29,8 +29,9 @@ def get_contact_area(sample_info, signed_dists=None, pene_th=0.005, contact_th=-
     # indices = np.where(signed_dists < pene_th & signed_dists > contact_th).tolist() 
     bools = (signed_dists < pene_th) * (signed_dists > contact_th)
     # import pdb; pdb.set_trace()
-    indices = np.where(bools > 0)[0].tolist()
-    v2faces = HandMesh.vertex_faces[indices] # check if tolist is needed
+    verts_indices = np.where(bools > 0)[0].tolist()
+    
+    v2faces = HandMesh.vertex_faces[verts_indices] # check if tolist is needed
     
     # import pdb; pdb.set_trace()
     ## CHECK: need to 1)select valid face index from redundant list  2)take union
@@ -42,7 +43,7 @@ def get_contact_area(sample_info, signed_dists=None, pene_th=0.005, contact_th=-
     contact_area = np.sum(contact_area)
     
 
-    return contact_area
+    return contact_area, face_indices, verts_indices
 
 
 def get_CA_IV_ratio(contact_area, intersection_volume, eps=1e-6):

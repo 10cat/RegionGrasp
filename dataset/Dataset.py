@@ -114,6 +114,48 @@ class ObManDataset(ObManThumb):
             sample['hand_params'] = hand_params_torch
         
         return sample
+    
+class ObManDataset_test(ObManDataset):
+    def __init__(self, ds_root, shapenet_root, mano_root, split='train', joint_nb=21, mini_factor=None, use_cache=False, root_palm=False, mode='all', segment=False, use_external_points=True, apply_obj_transform=True, expand_times=1, resample_num=2048, object_centric=False, use_mano=False, cfg=None):
+        super().__init__(ds_root, shapenet_root, mano_root, split, joint_nb, mini_factor, use_cache, root_palm, mode, segment, use_external_points, apply_obj_transform, expand_times, resample_num, object_centric, use_mano)
+        
+        test_pred_path = os.path.join(cfg.output_dir, f'{cfg.chkpt}_{cfg.run_mode}set_pred.pkl')
+        
+        with open(test_pred_path, 'rb') as f:
+            data = pickle.load(f)
+        self.pred_hand_params = data['recon_params']
+            
+    def __getitem__(self, idx):
+        
+        hand_params_pred = self.pred_hand_params[idx]
+        
+        index = self.samples_selected[idx]
+        
+        sample = {}
+        obj_points, obj_trans, face_ids = self.get_obj_resampled_trans(self.meta_infos, self.obj_transforms, index, obj_centric=self.obj_centric)
+        
+        # DONE: 获取用于计算point2point_signed的obj_point_normals
+        # NOTE: 由于obj_points是由原mesh进行了resample之后得到的，所以这里索引采样点所在的面的face_normals作为点的normals
+        obj_mesh = self.get_sample_obj_mesh(index)
+        obj_verts, _ = self.get_obj_verts_faces(index)
+        if self.use_mano:
+            hand_verts_torch, hand_params_torch = self.get_verts3d_mano(index)
+            hand_verts = hand_verts_torch.numpy().astype(np.float32)
+            hand_verts = self.cam_extr[:3, :3].dot(hand_verts.transpose()).transpose()
+            hand_faces = self.rh_mano.faces.astype(np.int32)
+        else:
+            hand_verts = self.get_verts3d(index)
+        hand_faces = self.get_faces3d(index)
+        if self.obj_centric:
+            obj_verts -= obj_trans
+            hand_verts -= obj_trans
+            
+        sample['hand_verts'] = torch.from_numpy(hand_verts)
+        sample['hand_params_pred'] = torch.from_numpy(hand_params_pred)
+        sample['obj_trans'] = torch.from_numpy(obj_trans)
+        sample['sample_id'] = torch.Tensor([index])
+        
+        return sample
         
         
 class ObManDataset_obj_comp(ObManThumb):

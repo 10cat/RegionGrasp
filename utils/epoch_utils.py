@@ -49,21 +49,25 @@ class MetersMonitor(object):
         self.Meters = AverageMeters()
         return
     
-    def update(self, dict):
+    def update(self, dict, dtype='torch'):
         for key in dict.keys():
-            self.Meters.add_value(key, float(dict[key].detach().to('cpu')))
+            if dtype == 'torch':
+                self.Meters.add_value(key, float(dict[key].detach().to('cpu')))
+            else:
+                self.Meters.add_value(key, float(dict[key]))
     
-    def get_avg(self, mode):
+    def get_avg(self, mode=None):
         return self.Meters.avg(mode)
     
-    def report(self, dict_loss, total_loss, mode):
-        self.update(dict_loss)
-        self.update({'total_loss':total_loss})
+    def report(self, dict_loss, total_loss=None, mode=None, dtype='torch'):
+        self.update(dict_loss, dtype)
+        if total_loss is not None:
+            self.update({'total_loss':total_loss}, dtype)
         # self.update({'epoch': epoch})
         logdict = self.get_avg(mode)
         msg = ''
-        for item in logdict.items():
-            msg += f'{item[0]}:{item[1]}; '
+        for key, val in logdict.items():
+            msg += f'{key}:{val}; '
         return msg, logdict
         
     
@@ -375,10 +379,12 @@ class EpochVAE_comp():
                 rhand_faces = rhand_faces[i]
                 # import pdb; pdb.set_trace()
                 self.VisualMesh.visual(vertices=rhand_vs, faces=rhand_faces, mesh_color='skin', sample_id=sample_id, epoch=epoch, name='gt_hand')
-                obj_mesh = self.dataset.get_sample_obj_mesh(sample_id)
-                obj_verts, _ = self.dataset.get_obj_verts_faces(sample_id)
-                obj_verts -= obj_trans[i]
-                self.VisualMesh.visual(vertices=obj_verts, faces=obj_mesh['faces'], mesh_color='white', sample_id=sample_id, epoch=epoch, name='obj')
+                # if self.cfg.dataset.name == 'obman'
+                # obj_mesh = self.dataset.get_sample_obj_mesh(sample_id)
+                obj_verts, obj_faces = self.dataset.get_obj_verts_faces(sample_id)
+                if self.cfg.dataset.name == 'obman':
+                    obj_verts -= obj_trans[i]
+                self.VisualMesh.visual(vertices=obj_verts, faces=obj_faces, mesh_color='white', sample_id=sample_id, epoch=epoch, name='obj')
                 region_mask = region_mask[i]
                 obj_pc = obj_pc[i]
                 mask = region_mask > 0.
@@ -439,8 +445,8 @@ class ValEpochVAE_comp(EpochVAE_comp):
                 Loss_iters = AverageMeters() # loss/metrics计算方式：取5个iter的平均
                 for iter in range(self.cfg.eval_iter):
                     hand_params = hand_params_list[iter] # 输出每个iter的生成效果
-                    _, dict_loss, signed_dists, rhand_vs_pred, rhand_faces = self.loss(hand_params, None, obj_points, gt_rhand_vs, region_mask, obj_normals=obj_normals)
-                    for key, val in dict_loss.items():
+                    _, dict_loss_iter, signed_dists, rhand_vs_pred, rhand_faces = self.loss(hand_params, None, obj_points, gt_rhand_vs, region_mask, obj_normals=obj_normals)
+                    for key, val in dict_loss_iter.items():
                         Loss_iters.add_value(key, val)
                     if batch_idx % self.batch_interval == 0:
                         rhand_vs_pred_0 = rhand_vs_pred[0].detach().to('cpu').numpy()
@@ -620,7 +626,7 @@ class ValEpochVAE_mae(EpochVAE_mae):
                             rhand_faces = rhand_faces.detach().to('cpu').numpy(),
                             obj_pc=obj_points.detach().to('cpu').numpy(),
                             region_mask=region_mask.detach().to('cpu').numpy(),
-                            obj_trans=sample['obj_trans'].detach().to('cpu').numpy(),
+                            obj_trans=obj_trans,
                             sample_ids=sample_ids.detach().to('cpu').numpy(),
                             epoch=epoch,
                             batch_idx=batch_idx,
