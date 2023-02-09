@@ -76,6 +76,7 @@ def cgrasp_comp(cfg=None):
                 break
             
 def cgrasp_mae(cfg=None):
+    # import pdb; pdb.set_trace()
     mode = cfg.run_mode
     # model_type = cfg.model.cnet.type
     bs = cfg.batch_size
@@ -99,11 +100,11 @@ def cgrasp_mae(cfg=None):
                       **cfg.model.vae.kwargs, cfg=cfg)
     
     if cfg.resume:
-        assert cfg.model.chkpt is not None, "Checkpoint not configured!"
-        checkpoint = torch.load(cfg.model.chkpt)
+        assert cfg.chkpt is not None, "Checkpoint not configured!"
+        checkpoint = torch.load(os.path.join(cfg.output_dir, 'models', cfg.chkpt+'.pth'))
         start_epoch = checkpoint['epoch']
         model.load_state_dict(checkpoint['state_dict'])
-        print(f"Resuming the exp from {cfg.model.chkpt} ")
+        print(f"Resuming the exp from {cfg.chkpt} ")
     
     if mode == 'train':
         # DONE: dataset -- obj_points / obj_point_normals / obj_trans / input_pc / hand_verts
@@ -132,8 +133,23 @@ def cgrasp_mae(cfg=None):
             if stop_flag:
                 print("Early stopping occur!")
                 break
+            
+    elif mode == 'test':
+        testset = get_dataset(cfg, mode=cfg.eval_ds)
+        testloader = data.DataLoader(testset, batch_size=bs, shuffle=False)
         
-    
+        optimizer, scheduler = build_optim_sche_grasp(model, part_model={'cnet_mae': model.cnet.MAE_encoder}, cfg=cfg)
+        
+        
+        device = 'cuda' if cfg.use_cuda else 'cpu'
+        model = model.to(device)
+        cgrasp_loss = cGraspvaeLoss(device, cfg)
+        cgrasp_loss.to(device)
+        
+        testepoch = ValEpochVAE_mae(cgrasp_loss, testset, optimizer, scheduler, output_dir=cfg.output_dir, mode='val', cfg=cfg)
+        
+        _, _ = testepoch(testloader, 0, model, save_pred=True)
+        
     
     
 
@@ -147,7 +163,7 @@ if __name__ == "__main__":
     
     # import pdb; pdb.set_trace()
     parser = argparse.ArgumentParser()
-    parser.add_argument('--cfgs', type=str, required=True)
+    parser.add_argument('--cfgs', type=str)
     parser.add_argument('--cfgs_fodler', type=str, default='cgrasp')
     parser.add_argument('--exp_name', type=str, default=None)
     parser.add_argument('--cuda_id', type=str, default="0")
@@ -160,10 +176,12 @@ if __name__ == "__main__":
     parser.add_argument('--comp', action='store_true')
     parser.add_argument('--grasp', action='store_true')
 
-    parser.add_argument('--checkpoint', type=str, default=None)
+    parser.add_argument('--chkpt', type=str, default=None)
     
     parser.add_argument('--start_epoch', type=int, default=None)
-    parser.add_argument('--eval_ds', type=str, default=None)
+    parser.add_argument('--eval_ds', type=str, default='test')
+    parser.add_argument('--batch_intv', type=str, default=1)
+    parser.add_argument('--sample_intv', type=str, default=None)
     parser.add_argument('--run_mode', type=str, default='train')
     parser.add_argument('--pt_model', type=str, default='trans')
 

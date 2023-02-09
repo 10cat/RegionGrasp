@@ -36,8 +36,8 @@ class GrabNetResample(GrabNetDataset_orig):
         resample_paths = []
         for name, obj_mesh in tqdm(self.object_meshes.items(), desc='Loading object resampled points'):
             resampled_points_path = os.path.join(self.resample_dir, name + '.npy')
-            resampled_faces_path = os.path.join(self.resample_dir, '_face_id.npy')
-            if os.path.exists(resampled_points_path) and not config.force_resample:
+            resampled_faces_path = os.path.join(self.resample_dir, name + '_face_id.npy')
+            if os.path.exists(resampled_points_path) and os.path.exists(resampled_faces_path) and not config.force_resample:
                 obj_xyz_resampled = np.load(resampled_points_path)
                 face_id = np.load(resampled_faces_path)
             else:
@@ -51,7 +51,8 @@ class GrabNetResample(GrabNetDataset_orig):
 class GrabNetThumb(GrabNetResample):
     def __init__(self, dataset_root, ds_name='train', frame_names_file='frame_names.npz', grabnet_thumb=False, obj_meshes_folder='contact_meshes', output_root=None, dtype=torch.float32, only_params=False, load_on_ram=False, resample_num=8192):
         super().__init__(dataset_root, ds_name, frame_names_file, grabnet_thumb, obj_meshes_folder, output_root, dtype, only_params, load_on_ram, resample_num)
-        
+        self.obj_rotmat = self.ds['root_orient_obj_rotmat']
+        self.obj_trans = self.ds['trans_obj']
         self.mano_path = config.mano_dir
         self.rh_model = load(model_path=self.mano_path, 
                              is_rhand=True, 
@@ -63,6 +64,7 @@ class GrabNetThumb(GrabNetResample):
         self.contact_data_path = os.path.join(self.ds_path, 'data_contact')
         makepath(self.contact_data_path)
         
+    @func_timer
     def get_obj_data(self, data, idx):
         obj_name = self.frame_objs[idx]
         obj_mesh = self.object_meshes[obj_name]
@@ -70,8 +72,8 @@ class GrabNetThumb(GrabNetResample):
         
         obj_resp_points = self.resampled_objs[obj_name]['points']
         obj_resp_faces = self.resampled_objs[obj_name]['faces']
-        rot_mat_np = np.array(data['root_orient_obj_rotmat'][0])
-        trans_np = np.array(data['trans_obj'])
+        rot_mat_np = np.array(self.obj_rotmat[idx][0])
+        trans_np = np.array(self.obj_trans[idx])
         
         obj_verts_trans = np.matmul(obj_verts, rot_mat_np) + trans_np
         obj_resp_points_trans = np.matmul(obj_resp_points, rot_mat_np) + trans_np

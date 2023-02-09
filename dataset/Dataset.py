@@ -14,6 +14,7 @@ from copy import deepcopy
 
 import random
 import pickle
+from tqdm import tqdm
 from utils.utils import func_timer, makepath
 from dataset.Dataset_origin import GrabNetDataset_orig
 from dataset.grabnet_preprocess import GrabNetThumb
@@ -71,6 +72,7 @@ class ObManDataset(ObManThumb):
     def __len__(self):
             return len(self.samples_selected)
     
+    
     def __getitem__(self, idx):
         annot = self.annotations_thumb[idx]
         index = self.samples_selected[idx]
@@ -100,9 +102,9 @@ class ObManDataset(ObManThumb):
         contact_point = annot['center_point']
         # mask_center = np.mean(contact_points, axis=0)
         
+        sample['sample_id'] = torch.Tensor([index])
         sample['input_pc'] = torch.from_numpy(obj_points)
         sample['contact_center'] = torch.from_numpy(contact_point)
-        sample['sample_id'] = torch.Tensor([index])
         sample['obj_point_normals'] = torch.from_numpy(obj_point_normals)
         # sample['region_mask'] = torch.from_numpy(region_mask)
         sample['obj_trans'] = torch.from_numpy(obj_trans)
@@ -195,12 +197,77 @@ class ObManDataset_obj_comp(ObManThumb):
 class GrabNetDataset(GrabNetThumb):
     def __init__(self, dataset_root, ds_name='train', frame_names_file='frame_names.npz', grabnet_thumb=False, obj_meshes_folder='contact_meshes', output_root=None, dtype=torch.float32, only_params=False, load_on_ram=False, resample_num=8192):
         super().__init__(dataset_root, ds_name, frame_names_file, grabnet_thumb, obj_meshes_folder, output_root, dtype, only_params, load_on_ram, resample_num)
+        self.obj_rotmat = self.ds['root_orient_obj_rotmat']
+        self.obj_trans = self.ds['trans_obj']
+        # frame_data_name = ['verts_rhand']
+        # for i, frame_name in enumerate(tqdm(self.frame_names, desc='Loading frames data')):
+        #     data = self.get_npz_data(frame_name, to_torch=True)
+        #     # import pdb; pdb.set_trace()
+        #     for key in frame_data_name:
+        #         if key not in self.ds:
+        #             self.ds[key] = [data[key]]
+        #         else:
+        #             self.ds[key].append(data[key])
+        #     self.obj_rotmat.append(self.ds['root_orient_obj_rotmat'][i][0])
+        #     self.obj_trans.append(self.ds['trans_obj'][i])
         
+                
+        # self.obj_verts_trans = []
+        
+        
+    def get_obj_verts_faces(self, idx):
+        obj_name = self.frame_objs[idx]
+        obj_mesh = self.object_meshes[obj_name]
+        obj_verts = obj_mesh.vertices
+        
+        rot_mat_np = np.array(self.obj_rotmat[idx][0])
+        trans_np = np.array(self.obj_trans[idx])
+        
+        obj_verts_trans = np.matmul(obj_verts, rot_mat_np) + trans_np
+        
+        return obj_verts_trans, obj_mesh.faces
+    
+    def get_obj_trans(self, idx):
+        obj_name = self.frame_objs[idx]
+        obj_mesh = self.object_meshes[obj_name]
+        
+        obj_resp_points = self.resampled_objs[obj_name]['points']
+        obj_resp_faces = self.resampled_objs[obj_name]['faces']
+        obj_point_normal = obj_mesh.face_normals[obj_resp_faces]
+        rot_mat_np = np.array(self.obj_rotmat[idx][0])
+        trans_np = np.array(self.obj_trans[idx])
+        obj_resp_points_trans = np.matmul(obj_resp_points, rot_mat_np) + trans_np
+        obj_point_normal_trans = np.matmul(obj_point_normal, rot_mat_np) + trans_np
+        
+        return obj_resp_points_trans, obj_point_normal_trans
+        
+        
+    
     def __getitem__(self, idx):
-        sample = super().__getitem__(idx)
-        import pdb; pdb.set_trace()
-        sample['contact_center']
+        sample = {k: self.ds[k][idx] for k in self.ds.keys()}
+        if not self.only_params:
+            data = self.get_frames_data(idx, self.frame_names)
+            # import pdb; pdb.set_trace()
+            sample.update(data)
+        # import pdb; pdb.set_trace() 
+        obj_resp_points_trans, obj_point_normal_trans = self.get_obj_trans(idx)
+        
+        sample['sample_id'] = torch.Tensor([idx]).to(torch.int32)
+        sample['input_pc'] = torch.from_numpy(obj_resp_points_trans).to(self.dtype)
+        # import pdb; pdb.set_trace()
+        sample['contact_center'] = sample['contact_center'].to(self.dtype)
+        sample['obj_point_normals'] = torch.from_numpy(obj_point_normal_trans).to(self.dtype)
+        sample['hand_verts'] = sample['verts_rhand'].to(self.dtype)
+        # NOTE: 手的顶点对应的键名从verts_rhand变为hand_verts, 并删除掉原来的键名verts_rhand
+        # del sample['verts_rhand']
+        # self.obj_verts_trans.append(obj_verts_trans)
+        # self.obj_rotmat.append(sample['root_orient_obj_rotmat'][0])
+        # self.obj_trans.append(sample['trans_obj'])
+        # import pdb; pdb.set_trace()
+        
         return sample
+    
+    
         
 class GrabNetDataset_sdf(GrabNetDataset_orig):
     def __init__(self, 

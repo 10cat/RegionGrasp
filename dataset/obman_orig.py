@@ -351,6 +351,7 @@ class obman(data.Dataset):
         mesh = self.obj_meshes[class_id][sample_id]
         return mesh
     
+    @func_timer
     def get_obj_verts_faces(self, idx):
         # NOTE: [obj_verts, obj_faces] -> obj_meshes
         # model_path = self.obj_paths[idx]
