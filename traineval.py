@@ -171,6 +171,11 @@ if __name__ == "__main__":
     from easydict import EasyDict
     import utils.cfgs as cfgsu
     
+    # import psutil
+    # p = psutil.Process()
+    # p.cpu_affinity(range(16))
+    # print(p.cpu_affinity())
+    
     # import pdb; pdb.set_trace()
     parser = argparse.ArgumentParser()
     parser.add_argument('--cfgs', type=str)

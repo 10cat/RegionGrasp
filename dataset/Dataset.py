@@ -17,7 +17,7 @@ import pickle
 from tqdm import tqdm
 from utils.utils import func_timer, makepath
 from dataset.Dataset_origin import GrabNetDataset_orig
-from dataset.grabnet_preprocess import GrabNetThumb
+from dataset.grabnet_preprocess import GrabNetResample, GrabNetThumb
 from dataset.obman_preprocess import ObManResample, ObManThumb
 
 set_seed = lambda val: np.random.seed(val)
@@ -38,6 +38,107 @@ def select_ids_dataset(ds_names, seeds=[]):
         set_seed(seeds[i])
         select_ids_norm = np.random.random(len)
         np.save(os.path.join(dataset.ds_path, f'{name}_ids_norm.npy'), select_ids_norm)
+        
+class PretrainDataset(data.Dataset):
+    def __init__(self, obman_root, shapenet_root, mano_root, grabnet_root, split,  resample_num=2048, rand_each_num=100, use_cache=True):
+        
+        # CHECK: get ObMan oject in training set
+        self.obman = ObManResample(ds_root=obman_root,
+                                  shapenet_root=shapenet_root,
+                                  mano_root=mano_root,
+                                  split=split,
+                                  resample_num=resample_num,
+                                  use_cache=True)
+        self.obman_objects = self.obman.obj_resampled
+        
+        
+        # CHECK: get GrabNet object in training set
+        self.grabnet = GrabNetResample(dataset_root=grabnet_root,
+                                       ds_name=split,
+                                       resample_num=resample_num)
+        self.grabnet_objects = self.grabnet.resampled_objs
+        
+        # CHECK: 合并两个数据集的object
+        objects_dict = {}
+        objects_dict.update(self.obman_objects)
+        objects_dict.update(self.grabnet_objects)
+        objects = self.combine(objects_dict)
+        self.objects = objects  
+        # import pdb; pdb.set_trace() 
+        
+        # CHECK: 随机生成obj_transform矩阵
+        self.rand_each_num = rand_each_num
+        objs_num = len(objects)
+        total_num = objs_num * rand_each_num
+        rotmats = self.rand_rot(total_num)
+        self.rotmats = rotmats
+        
+        # TODO: permutation
+        self.npoints = resample_num
+        self.permutation = np.arange(self.npoints)
+        
+    def combine(self, obj_dict):
+        obj_list = []
+        for key, val in obj_dict.items():
+            if len(val.keys()) > 2:
+                for k, v in val.items():
+                    obj_list.append(v)
+            elif not isinstance(val, dict):
+                raise TypeError
+            else:
+                obj_list.append(val)
+            
+                
+        return obj_list
+    
+    def rand_rot(self, N):
+        rot_angles = np.random.random([3, N]) * np.pi * 2
+        theta_xs, theta_ys, theta_zs = rot_angles[0], rot_angles[1], rot_angles[2]
+        RXs = np.stack([np.array([[1, 0, 0], [0, np.cos(x), -np.sin(x)], [0, np.sin(x), np.cos(x)]]) for x in theta_xs])
+        RYs = np.stack([np.array([[np.cos(y), 0, -np.sin(y)], [0, 1, 0], [np.sin(y), 0, np.cos(y)]]) for y in theta_ys])
+        RZs = np.stack([np.array([[np.cos(z), -np.sin(z), 0], [np.sin(z), np.cos(z), 0], [0, 0, 1]]) for z in theta_zs])
+        
+        Rs = RXs @ RYs @ RZs
+        
+        return Rs
+    
+    def pc_centralize(self, pc):
+        # TODO: centralize the object_pc by its mean
+        centroid = np.mean(pc, axis=0)
+        pc = pc - centroid
+        return pc
+    
+    def pc_rotate(self, pc, idx):
+        # TODO: rotate the object_pc with pre-defined rotmat
+        rotmat = self.rotmats[idx]
+        pc = np.matmul(pc, rotmat.T) # [N, 3][3, 3] -> N, 3
+        return pc
+    
+    def shuffle_points(self, pc, num):
+        # TODO: shuffle点的顺序
+        np.random.shuffle(self.permutation)
+        pc = pc[self.permutation[:num]]
+        return pc
+    
+    def __len__(self):
+        # CHECK: 按照obj_transform的长度
+        return self.rotmats.shape[0]
+    
+    def __getitem__(self, idx):
+        sample = {}
+        # TODO: 根据num_rand_each计算当前idx对应的object
+        obj_idx = int(idx / self.rand_each_num)
+        obj = self.objects[obj_idx]
+        obj_pc = obj['points']
+        
+        obj_pc = self.pc_centralize(obj_pc)
+        obj_pc = self.pc_rotate(obj_pc, idx)
+        obj_pc = self.shuffle_points(obj_pc, self.npoints)
+        sample['input_points'] = torch.from_numpy(obj_pc).to(torch.float32)
+        sample['ids'] = idx
+        
+        return sample
+        
         
         
 class ObManDataset(ObManThumb):

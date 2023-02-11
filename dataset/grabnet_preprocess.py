@@ -24,7 +24,6 @@ class GrabNetResample(GrabNetDataset_orig):
         makepath(self.resample_root)
         self.resample_dir = os.path.join(self.resample_root, f'N_{resample_num}')
         makepath(self.resample_dir)
-        self.resample_num = 8192
         self.resampled_objs = self.resample_obj_mesh(N=resample_num)
         
         

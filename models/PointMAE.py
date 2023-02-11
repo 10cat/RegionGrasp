@@ -307,7 +307,7 @@ class MaskTransformer(nn.Module):
 
 class PointMAE(nn.Module):
     def __init__(self, config):
-        super().__init__()
+        super(PointMAE, self).__init__()
         trans_cfg = config.transformer
         self.trans_dim = trans_cfg.trans_dim
         self.MAE_encoder = MaskTransformer(trans_cfg)
