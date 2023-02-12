@@ -117,17 +117,27 @@ def cgrasp_mae(cfg=None):
         
         # TODO: cnet/vae其他参数设置不同学习率
         optimizer, scheduler = build_optim_sche_grasp(model, part_model={'cnet_mae': model.cnet.MAE_encoder}, cfg=cfg)
-        
+                
         # TODO: loss改写
         device = 'cuda' if cfg.use_cuda else 'cpu'
         model = model.to(device)
         cgrasp_loss = cGraspvaeLoss(device, cfg)
         cgrasp_loss.to(device)
         
+        if cfg.resume:
+            if isinstance(optimizer, list):
+                for i, optim_state in enumerate(checkpoint['optimizer']):
+                    optimizer[i].load_state_dict(optim_state)
+                    # optimizer[i].to(device)
+            scheduler = checkpoint['scheduler']
+            start_epoch = checkpoint['epoch']
+        else:
+            start_epoch = 0
+        
         trainepoch = EpochVAE_mae(cgrasp_loss, trainset, optimizer, scheduler, output_dir=cfg.output_dir, mode='train', cfg=cfg)
         valepoch = ValEpochVAE_mae(cgrasp_loss, valset, optimizer, scheduler, output_dir=cfg.output_dir, mode='val', cfg=cfg)
         
-        for epoch in range(cfg.num_epoch):
+        for epoch in range(start_epoch, cfg.num_epoch):
             model, _ = trainepoch(trainloader, epoch, model)
             _, stop_flag = valepoch(valloader, epoch, model)
             if stop_flag:
@@ -160,6 +170,11 @@ if __name__ == "__main__":
     from omegaconf import OmegaConf
     from easydict import EasyDict
     import utils.cfgs as cfgsu
+    
+    # import psutil
+    # p = psutil.Process()
+    # p.cpu_affinity(range(16))
+    # print(p.cpu_affinity())
     
     # import pdb; pdb.set_trace()
     parser = argparse.ArgumentParser()
