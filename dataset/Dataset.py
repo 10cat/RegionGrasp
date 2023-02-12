@@ -38,10 +38,13 @@ def select_ids_dataset(ds_names, seeds=[]):
         set_seed(seeds[i])
         select_ids_norm = np.random.random(len)
         np.save(os.path.join(dataset.ds_path, f'{name}_ids_norm.npy'), select_ids_norm)
+   
+   
         
 class PretrainDataset(data.Dataset):
     def __init__(self, obman_root, shapenet_root, mano_root, grabnet_root, split,  resample_num=2048, rand_each_num=100, use_cache=True):
         
+        self.split = split
         # CHECK: get ObMan oject in training set
         self.obman = ObManResample(ds_root=obman_root,
                                   shapenet_root=shapenet_root,
@@ -50,6 +53,7 @@ class PretrainDataset(data.Dataset):
                                   resample_num=resample_num,
                                   use_cache=True)
         self.obman_objects = self.obman.obj_resampled
+        
         
         
         # CHECK: get GrabNet object in training set
@@ -73,6 +77,12 @@ class PretrainDataset(data.Dataset):
         rotmats = self.rand_rot(total_num)
         self.rotmats = rotmats
         
+        if self.split == 'val':
+            set_seed(1024 + 2)
+            self.trans = self.rand_trans(total_num)
+        else:
+            self.trans = None
+        
         # TODO: permutation
         self.npoints = resample_num
         self.permutation = np.arange(self.npoints)
@@ -92,6 +102,10 @@ class PretrainDataset(data.Dataset):
         return obj_list
     
     def rand_rot(self, N):
+        if self.split == 'train':
+            set_seed(1024)
+        elif self.split == 'val':
+            set_seed(2048)
         rot_angles = np.random.random([3, N]) * np.pi * 2
         theta_xs, theta_ys, theta_zs = rot_angles[0], rot_angles[1], rot_angles[2]
         RXs = np.stack([np.array([[1, 0, 0], [0, np.cos(x), -np.sin(x)], [0, np.sin(x), np.cos(x)]]) for x in theta_xs])
@@ -102,16 +116,23 @@ class PretrainDataset(data.Dataset):
         
         return Rs
     
+    def rand_trans(self, N):
+        trans = np.array([-0.2, -0.2, -0.2]) + np.random.random([N, 3]) * 0.4
+        return trans
+    
     def pc_centralize(self, pc):
         # TODO: centralize the object_pc by its mean
         centroid = np.mean(pc, axis=0)
         pc = pc - centroid
         return pc
     
-    def pc_rotate(self, pc, idx):
+    def pc_transform(self, pc, idx):
         # TODO: rotate the object_pc with pre-defined rotmat
         rotmat = self.rotmats[idx]
         pc = np.matmul(pc, rotmat.T) # [N, 3][3, 3] -> N, 3
+        if self.split == 'val':
+            tran = self.trans[idx]
+            pc = pc + tran
         return pc
     
     def shuffle_points(self, pc, num):
@@ -132,7 +153,7 @@ class PretrainDataset(data.Dataset):
         obj_pc = obj['points']
         
         obj_pc = self.pc_centralize(obj_pc)
-        obj_pc = self.pc_rotate(obj_pc, idx)
+        obj_pc = self.pc_transform(obj_pc, idx)
         obj_pc = self.shuffle_points(obj_pc, self.npoints)
         sample['input_points'] = torch.from_numpy(obj_pc).to(torch.float32)
         sample['ids'] = idx
