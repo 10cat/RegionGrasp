@@ -6,6 +6,8 @@ sys.path.append('..')
 # from option import MyOptions as cfg
 import numpy as np
 import torch
+from torchvision import transforms
+from dataset import data_transforms
 
 from tqdm import tqdm
 import wandb
@@ -19,12 +21,19 @@ from utils.utils import decode_hand_params_batch, func_timer, makepath
 from utils.meters import AverageMeter, AverageMeters
 from utils.visualization import colors_like, visual_hand, visual_obj
 
+train_transforms = transforms.Compose(
+    [
+        data_transforms.PointcloudScaleAndTranslate()
+    ]
+)
+
+
 def model_update(optimizer, total_loss, scheduler, epoch=None):
     if isinstance(optimizer, list):
         for optim in optimizer:
             optim.zero_grad()
     else:
-        optim.zero_grad()
+        optimizer.zero_grad()
         
     total_loss.backward()
     
@@ -32,7 +41,7 @@ def model_update(optimizer, total_loss, scheduler, epoch=None):
         for optim in optimizer:
             optim.step()
     else:
-        optim.step()
+        optimizer.step()
         
     if scheduler is not None:
         if isinstance(scheduler, list):
@@ -84,9 +93,9 @@ class CheckpointsManage(object):
             optimizer_states = [optim.state_dict() for optim in optimizer]
         else:
             optimizer_states = optimizer.state_dict()
+            
         if self.best_metrics is None:
             self.best_metrics = metric_value
-        
         elif metric_value < self.best_metrics:
             best_model_path = os.path.join(self.root, f'best_model.pth')
             torch.save({'epoch':epoch,
@@ -178,6 +187,7 @@ class PretrainEpoch():
         makepath(self.output_dir)
         self.model_dir = os.path.join(self.output_dir, 'models')
         makepath(self.model_dir)
+        self.cfg = cfg
         if self.cfg.run_mode == 'train':
             self.visual_dir = os.path.join(self.output_dir, 'visual', mode)
         else:
@@ -189,7 +199,7 @@ class PretrainEpoch():
         self.Visual = VisualPC(root=self.visual_dir)
         self.batch_interval = cfg.visual_interval[mode].batch
         self.sample_interval = cfg.visual_interval[mode].sample
-        self.cfg = cfg
+        
         return
     
     def loss_update(self, dict_loss, coarse_pc, fine_pc,  gt_points):
@@ -302,6 +312,8 @@ class PretrainMAEEpoch(PretrainEpoch):
             if self.mode != 'train':
                 with torch.no_grad(): full_pred, full_vis, full_center, rebuild_pc, gt_pc, dict_loss = self.model_forward(model, input, vis=True)
             else:
+                input = input.to('cuda')
+                input = train_transforms(input)
                 _, _, _, rebuild_pc, gt_pc, dict_loss = self.model_forward(model, input)
             
             total_loss = sum(dict_loss.values())
@@ -321,11 +333,11 @@ class PretrainMAEEpoch(PretrainEpoch):
             # break
             
         if self.mode == 'val':
-            no_improve_epochs = self.Checkpt.save_checkpoints(epoch, model, metric_value=losses[f'{self.mode}_total_loss'])
+            no_improve_epochs = self.Checkpt.save_checkpoints(epoch, model, metric_value=losses[f'{self.mode}_total_loss'], optimizer=self.optimizer, scheduler=self.scheduler)
             if no_improve_epochs > self.cfg.early_stopping:
                 stop_flag = True
             
-        self.log(self.Losses)
+        self.log(self.Losses, epoch=epoch)
         return model, stop_flag    
             
     

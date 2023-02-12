@@ -83,7 +83,7 @@ def build_lambda_bnsche(model, cfg=None):
 
 def build_optim_sche(model, cfg=None):
     opt_cfg = cfg.optimizer
-    optimizer = build_optim(opt_cfg, model.named_paramters())
+    optimizer = build_optim(opt_cfg, model.named_parameters())
         
     scheduler = build_scheduler(optimizer, cfg, model=model)
     return optimizer, scheduler
@@ -125,7 +125,7 @@ def build_scheduler(optimizer, cfg, model=None):
         if bnsche_config.type == 'Lambda':
             bnscheduler = build_lambda_bnsche(model, bnsche_config.kwargs)
         scheduler = [scheduler, bnscheduler]
-    return optimizer, scheduler
+    return scheduler
         
 def build_optim_sche_grasp(full_model, part_model = None, cfg=None):
     optimizer, scheduler = [], []

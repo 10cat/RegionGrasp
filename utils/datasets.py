@@ -4,7 +4,7 @@ sys.path.append('.')
 sys.path.append('..')
 
 from dataset.obman_preprocess import ObManObj, ObManObj_MAE
-from dataset.Dataset import GrabNetDataset, ObManDataset, ObManDataset_obj_comp
+from dataset.Dataset import GrabNetDataset, ObManDataset, ObManDataset_obj_comp, PretrainDataset
 
 
 def get_dataset(cfg, mode='train'):
@@ -29,6 +29,20 @@ def get_dataset(cfg, mode='train'):
                             **configs)
         else:
             raise NotImplementedError
+        
+    elif ds_name == 'pretrain':
+        obman_root = cfg.obman_root
+        shapenet_root = cfg.shapenet_root
+        grabnet_root = cfg.grabnet_root
+        mano_root = cfg.mano_root
+        configs = cfg.dataset[mode]._base_.kwargs
+        dataset = PretrainDataset(obman_root=obman_root,
+                                  shapenet_root=shapenet_root,
+                                  mano_root=mano_root, 
+                                  grabnet_root=grabnet_root,
+                                  split=mode,
+                                  **configs
+                                  )
         
     elif ds_name == 'obman':
         ds_root = cfg.obman_root

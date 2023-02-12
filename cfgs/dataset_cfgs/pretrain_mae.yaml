@@ -1,0 +1,6 @@
+type: mae
+kwargs:  {
+  use_cache: True,
+  resample_num: 2048,
+  rand_each_num: 100
+}

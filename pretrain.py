@@ -25,7 +25,7 @@ from models.cGrasp_vae import cGraspvae
 from traineval_utils.loss import ChamferDistanceL2Loss, PointCloudCompletionLoss, cGraspvaeLoss, MPMLoss
 from utils.optim import *
 from utils.datasets import get_dataset
-from utils.epoch_utils import MetersMonitor, model_update, PretrainEpoch, PretrainMAEEpoch, EpochVAE, ValEpochVAE
+from utils.epoch_utils import MetersMonitor, model_update, PretrainEpoch, PretrainMAEEpoch
     
     
 def obj_comp(cfg=None):
@@ -67,6 +67,7 @@ def mae(cfg=None):
     bs = cfg.batch_size
     
     net = PointMAE(cfg.model)
+    # import pdb; pdb.set_trace()
     
     if mode == 'train':
         trainset = get_dataset(cfg, mode='train')
@@ -75,7 +76,8 @@ def mae(cfg=None):
         trainloader = data.DataLoader(trainset, batch_size=bs, shuffle=True)
         valloader = data.DataLoader(valset, batch_size=bs, shuffle=False)
         
-        optimizer, scheduler = build_optim_sche( net, cfg=cfg)
+        optimizer, scheduler = build_optim_sche(net, cfg=cfg)
+        # import pdb; pdb.set_trace()
         
         loss = MPMLoss()
         

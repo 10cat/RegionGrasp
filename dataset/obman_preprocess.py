@@ -83,7 +83,7 @@ class ObManResample(obman):
         if obj_centric:
             trans_points -= obj_trans
         
-        return np.array(trans_points).astype(np.float32), obj_trans, np.array(face_ids)
+        return np.array(trans_points).astype(np.float32), obj_trans, np.array(face_ids).astype(np.int32)
 
 class ObManObj(ObManResample):
     def __init__(self, ds_root, shapenet_root, mano_root, split='train', joint_nb=21, mini_factor=None, use_cache=False, root_palm=False, mode='all', segment=False, use_external_points=True, apply_obj_transform=True, expand_times=1, resample_num=8192, object_centric=False, ratio_lower=None, ratio_upper=None, num_mask_points=None):
