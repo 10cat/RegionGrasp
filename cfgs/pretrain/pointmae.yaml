@@ -49,7 +49,7 @@ model: {
 
 
 # checkpoint / visual / 
-check_interval: 1
+check_interval: 5
 visual_interval: {
   train:{
     batch: 500,

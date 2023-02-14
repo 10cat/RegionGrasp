@@ -208,6 +208,13 @@ class HOILoss(nn.Module):
         # import pdb; pdb.set_trace()
         weight = w_dist_o.clone()
         weight[w_region.squeeze(1)] = self.hparams['weight_region']
+        # p_dist = self.hparams['th_penet']
+        # c_dist = self.hparams['th_contact']
+        # w_dist_con = (dists < c_dist) * (dists > p_dist) # inside as negative; outside as positive
+        # w_dist_pen = dists < p_dist
+        # weight = w_dist_o.clone()
+        # weight[w_dist_con] = self.hparams['weight_contact'] # less weights for contact verts
+        # weight[w_dist_pen] = self.hparams['weight_penet'] # more weights for penetration verts
         return weight
     
     def forward(self, h2o_signed, h2o_signed_pred, o2h_signed, o2h_signed_pred, region):
@@ -218,8 +225,10 @@ class HOILoss(nn.Module):
         weight_h2o = self.h2o_weight(h2o_signed)
         # import pdb; pdb.set_trace()
         
-
         loss_dist_h = self.coefs['lambda_dist_h'] * (1 - self.coefs['kl_coef']) * torch.mean(torch.einsum('ij,ij->ij', torch.abs(h2o_signed_pred.abs() - h2o_signed.abs()), weight_h2o))
+        # loss_dist_h = self.coefs['lambda_dist_h'] * (1 - self.coefs['kl_coef']) * torch.mean(torch.einsum('ij,ij->ij', torch.abs(h2o_signed_pred - h2o_signed), weight_h2o))
+        # loss_dist_h = self.coefs['lambda_dist_h'] * (1 - self.coefs['kl_coef']) * torch.mean(torch.einsum('ij,j->ij', torch.abs(h2o_signed_pred.abs() - h2o_signed.abs()), self.v_weights2))
+        
         loss_dist_o = self.coefs['lambda_dist_o'] * (1 - self.coefs['kl_coef']) * torch.mean(torch.einsum('ij,ij->ij', torch.abs(o2h_signed_pred - o2h_signed), weight_o2h))
         return loss_dist_h, loss_dist_o
     

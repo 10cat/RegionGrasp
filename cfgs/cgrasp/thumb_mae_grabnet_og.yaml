@@ -1,28 +1,37 @@
 project_name: "ConditionHOI_cgrasp"
 # dataset settings
 dataset: {
-  name: obman,
+  name: grabnet,
 
-  train: {_base_: ./cfgs/dataset_cfgs/obman_comp.yaml,
+  train: {_base_: ./cfgs/dataset_cfgs/grabnet_mae.yaml,
           others: {subset: 'train'}},
-  val: {_base_: ./cfgs/dataset_cfgs/obman_comp.yaml,
+  val: {_base_: ./cfgs/dataset_cfgs/grabnet_mae.yaml,
         others: {subset: 'val'}},
-  test: {_base_: ./cfgs/dataset_cfgs/obman_comp.yaml,
+  test: {_base_: ./cfgs/dataset_cfgs/grabnet_mae.yaml,
         others: {subset: 'test'}}}
 
 # training settings
+use_mano: False
 batch_size: 32
-num_epoch: 60
+num_epoch: 100
 early_stopping: 100
 use_cuda: True
 optim: {
-  cnet: {
+  cnet_mae: {
     optimizer:  {
-      type: Adam,
+      type: AdamW,
       kwargs:{
-        lr: 1e-4
+        lr: 5e-4,
+        weight_decay: 0.05
       }
     },
+    scheduler: {
+      type: CosLR,
+      kwargs: {
+        epochs: 100,
+        initial_epochs: 10
+      }
+    }
   },
 
   others: { 
@@ -38,23 +47,23 @@ optim: {
 # model settings
 
 model: {
-    cnet_type: obj_comp,
+    cnet_type: mae,
     cnet: {
-      chkpt_path: '/ssd_data/yilin/Outputs/ConditionHOI/pretrain_comp_d3_2loss/models/checkpoint_50.pth',
-      type: 'trans',
+      chkpt_path: 'pointmae_og/models/checkpoint_68.pth',
       kwargs: {
-        embed_dim: 384,
-        num_heads: 6,
-        mlp_ratio: 2.,
-        glob_feat_dim: 1024,
-        depth: {
-          encoder: 3, 
-          decoder: 4},
-        knn_k: 8,
-        knn_layer_num: 1,
-        num_query: 96,
-        num_pred: 6144,
-        fps: True
+        group_size: 32,
+        num_group: 128,
+        region_size: 16,
+        condition_dim: 1024, # make sure that it's the same with vae.kwargs.condition_size
+        transformer: {
+          mask_ratio: 0.6,
+          mask_type: 'rand',
+          trans_dim: 384,
+          encoder_dims: 384,
+          depth: 12,
+          num_heads: 6,
+          drop_path_rate: 0.1,
+        }
       }
     },
     vae: {
@@ -70,13 +79,33 @@ std_type: 'softplus'
 
 # loss settings
 
-coef: {
-  kl_coef: 0.005,
-  lambda_edge: 30.,
-  lambda_mesh_rec_w:  30.,
-  lambda_dist_h:  35.,
-  lambda_dist_o:  35.,
+loss: {
+  train: {
+    loss_edge: True,
+    loss_mesh_rec: True,
+    loss_dist_h: True,
+    loss_dist_o: True,
+    loss_mano: False
+  },
+  val: {
+    loss_edge: True,
+    loss_mesh_rec: True,
+    loss_dist_h: True,
+    loss_dist_o: True,
+    loss_mano: False
+  },
+  coef: {
+    kl_coef: 0.005,
+    lambda_edge: 30.,
+    lambda_mesh_rec:  30.,
+    lambda_dist_h:  35.,
+    lambda_dist_o:  35.,
+    lambda_mano: 0.01
+  }
+  
 }
+
+
 
 hoi_hparams: {
   th_penet: -0.005,

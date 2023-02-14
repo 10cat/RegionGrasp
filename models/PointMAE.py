@@ -68,8 +68,8 @@ class Encoder(nn.Module):   ## Embedding module
         feature = self.first_conv(point_groups.transpose(2,1))  # BG 256 n
         feature_global = torch.max(feature,dim=2,keepdim=True)[0]  # BG 256 1
         feature = torch.cat([feature_global.expand(-1,-1,n), feature], dim=1)# BG 512 n
-        feature = self.second_conv(feature) # BG 1024 n
-        feature_global = torch.max(feature, dim=2, keepdim=False)[0] # BG 1024
+        feature = self.second_conv(feature) # BG 384 n
+        feature_global = torch.max(feature, dim=2, keepdim=False)[0] # BG 384
         return feature_global.reshape(bs, g, self.encoder_channel)
     
     

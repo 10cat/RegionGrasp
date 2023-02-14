@@ -122,7 +122,7 @@ c_weights_path: "./cfgs/rhand_weight.npy"
 
 
 # checkpoint / visual / 
-check_interval: 1
+check_interval: 2
 visual_interval: {
   train:{
     batch: 500,
