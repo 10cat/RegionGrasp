@@ -1,7 +1,6 @@
 from asyncio import FastChildWatcher
 import os
 from re import T
-from cv2 import fastNlMeansDenoisingColored
 import torch 
 from torch import optim
 from dataclasses import dataclass

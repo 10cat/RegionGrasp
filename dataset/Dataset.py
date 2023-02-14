@@ -408,20 +408,25 @@ class GrabNetDataset(GrabNetThumb):
         
     
     def __getitem__(self, idx):
-        sample = {k: self.ds[k][idx] for k in self.ds.keys()}
+        sample = {}
+        data_out = {k: self.ds[k][idx] for k in self.ds.keys()}
         if not self.only_params:
             data = self.get_frames_data(idx, self.frame_names)
             # import pdb; pdb.set_trace()
-            sample.update(data)
+            data_out.update(data)
         # import pdb; pdb.set_trace() 
         obj_resp_points_trans, obj_point_normal_trans = self.get_obj_trans(idx)
+        
+        # global_orient, pose, transl = sample['global_orient_rhand_rotmat_f'], sample['fpose_rhand_rotmat_f'], sample['trans_rhand_f']
+        # import pdb; pdb.set_trace()
         
         sample['sample_id'] = torch.Tensor([idx]).to(torch.int32)
         sample['input_pc'] = torch.from_numpy(obj_resp_points_trans).to(self.dtype)
         # import pdb; pdb.set_trace()
-        sample['contact_center'] = sample['contact_center'].to(self.dtype)
+        sample['contact_center'] = data_out['contact_center'].to(self.dtype)
         sample['obj_point_normals'] = torch.from_numpy(obj_point_normal_trans).to(self.dtype)
-        sample['hand_verts'] = sample['verts_rhand'].to(self.dtype)
+        sample['hand_verts'] = data_out['verts_rhand'].to(self.dtype)
+        
         # NOTE: 手的顶点对应的键名从verts_rhand变为hand_verts, 并删除掉原来的键名verts_rhand
         # del sample['verts_rhand']
         # self.obj_verts_trans.append(obj_verts_trans)

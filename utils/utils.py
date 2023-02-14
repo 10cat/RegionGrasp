@@ -7,8 +7,8 @@ from functools import wraps
 import inspect
 import random
 import torch.nn.functional as F
-# import chamfer_distance as chd
-from chamfer_distance import ChamferDistance as ch_dist
+import chamfer_distance as chd
+# from chamfer_distance import ChamferDistance as ch_dist
 from pytorch3d.structures import Meshes
 import sys
 sys.path.append('.')
@@ -323,7 +323,7 @@ def point2point_signed(x, y, x_normals=None, y_normals=None):
     if y.shape[0] != N or y.shape[2] != D:
         raise ValueError("y does not have the correct shape")
 
-    # ch_dist = chd.ChamferDistance()
+    ch_dist = chd.ChamferDistance()
 
     x_near, y_near, xidx_near, yidx_near = ch_dist(x, y)
 

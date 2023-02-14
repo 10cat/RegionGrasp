@@ -46,7 +46,7 @@ ratio_upper = 0.30
 """
 Filepath settings
 """
-machine = '97'
+machine = '195'
 
 if machine == '97':
 
@@ -67,8 +67,28 @@ if machine == '97':
     obman_visual_dir = "/ssd_data/yilin/Outputs/ObMan_visual"
     
     OUTPUT_ROOT = "/home/datassd/yilin/Outputs/ConditionHOI"
+    
+elif machine == '195':
 
-if machine == '41':
+    DATASET_ROOT = "/home/jupyter-yiling/GrabNet"
+    GrabNet_ROOT = "/home/jupyter-yiling/GrabNet"
+    
+    OBMAN_ROOT = "/home/jupyter-yiling/obman"
+    
+    SHAPENET_ROOT = "/home/jupyter-yiling/ShapeNetCore.v2"
+    
+    mano_root = "/home/jupyter-yiling/Codes/_toolbox/mano"
+
+    mano_dir = "/home/jupyter-yiling/Codes/_toolbox/mano/models/MANO_RIGHT.pkl" # MANO right hand model path
+
+    visual_root = "/home/jupyter-yiling/Outputs"
+    
+    dataset_visual_dir = "/home/jupyter-yiling/Outputs/GrabNet_visual"
+    obman_visual_dir = "/home/jupyter-yiling/Outputs/ObMan_visual"
+    
+    OUTPUT_ROOT = "/home/jupyter-yiling/Outputs/ConditionHOI"
+
+elif machine == '41':
     DATASET_ROOT = "/ssd_data/yilin/GrabNet"
     
     OBMAN_ROOT = "/ssd_data/yilin/obman"

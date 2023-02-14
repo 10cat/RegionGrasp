@@ -85,6 +85,7 @@ class CheckpointsManage(object):
         self.root = root
         self.interval = interval
         self.best_metrics = None
+        self.check_interval = check_interval
         self.no_improve = 0
         return
     
@@ -110,14 +111,15 @@ class CheckpointsManage(object):
         else:
             self.no_improve += 1
         
-        checkpoint_path = os.path.join(self.root, f'checkpoint_{epoch}.pth')
-        torch.save({'epoch':epoch,
-                    'metrics':metric_value,
-                    'state_dict':model.state_dict(),
-                    'optimizer': optimizer_states,
-                    'scheduler': scheduler
-                    },
-                checkpoint_path)
+        if epoch % self.check_interval == 0 and epoch != 0:
+            checkpoint_path = os.path.join(self.root, f'checkpoint_{epoch}.pth')
+            torch.save({'epoch':epoch,
+                        'metrics':metric_value,
+                        'state_dict':model.state_dict(),
+                        'optimizer': optimizer_states,
+                        'scheduler': scheduler
+                        },
+                    checkpoint_path)
         
         return self.no_improve
     
@@ -326,7 +328,7 @@ class PretrainMAEEpoch(PretrainEpoch):
             pbar.set_postfix_str(msg)
             
             # TODO: validation的可视化部分
-            if self.mode == 'val':
+            if self.mode == 'val' and epoch % self.cfg.check_interval and epoch != 0:
                 self.visual(batch_idx, full_vis, full_pred, input, sample_ids, epoch, 
                             batch_interval=self.batch_interval, 
                             sample_interval=self.sample_interval)
@@ -609,7 +611,7 @@ class ValEpochVAE_mae(EpochVAE_mae):
                     
                     for key, val in dict_loss.items():
                         Loss_iters.add_value(key, val)
-                    if batch_idx % self.batch_interval == 0:
+                    if epoch % self.cfg.check_interval == 0 and epoch != 0 and batch_idx % self.batch_interval == 0:
                         rhand_vs_pred_0 = rhand_vs_pred[0].detach().to('cpu').numpy()
                         rhand_faces_0 = rhand_faces[0].detach().to('cpu').numpy()
                         sample_id = int(sample_ids.detach().to('cpu').numpy()[0])
@@ -640,16 +642,18 @@ class ValEpochVAE_mae(EpochVAE_mae):
                     obj_trans = None
                 else:
                     raise NotImplementedError
-                self.visual_gt(rhand_vs = gt_rhand_vs.transpose(2, 1).detach().to('cpu').numpy(),
-                            rhand_faces = rhand_faces.detach().to('cpu').numpy(),
-                            obj_pc=obj_points.detach().to('cpu').numpy(),
-                            region_mask=region_mask.detach().to('cpu').numpy(),
-                            obj_trans=obj_trans,
-                            sample_ids=sample_ids.detach().to('cpu').numpy(),
-                            epoch=epoch,
-                            batch_idx=batch_idx,
-                            batch_interval=self.batch_interval,
-                            sample_interval=self.sample_interval)
+                
+                if epoch % self.cfg.check_interval == 0 and epoch != 0:
+                    self.visual_gt(rhand_vs = gt_rhand_vs.transpose(2, 1).detach().to('cpu').numpy(),
+                                rhand_faces = rhand_faces.detach().to('cpu').numpy(),
+                                obj_pc=obj_points.detach().to('cpu').numpy(),
+                                region_mask=region_mask.detach().to('cpu').numpy(),
+                                obj_trans=obj_trans,
+                                sample_ids=sample_ids.detach().to('cpu').numpy(),
+                                epoch=epoch,
+                                batch_idx=batch_idx,
+                                batch_interval=self.batch_interval,
+                                sample_interval=self.sample_interval)
                     
                 if save_pred:
                     keys = hand_params_list[0].keys()
