@@ -363,6 +363,10 @@ class GrabNetDataset(GrabNetThumb):
         super().__init__(dataset_root, ds_name, frame_names_file, grabnet_thumb, obj_meshes_folder, output_root, dtype, only_params, load_on_ram, resample_num)
         self.obj_rotmat = self.ds['root_orient_obj_rotmat']
         self.obj_trans = self.ds['trans_obj']
+        
+        # test
+        # self.ds = {k: v[:32] for k,v in self.ds.items()}
+        
         # frame_data_name = ['verts_rhand']
         # for i, frame_name in enumerate(tqdm(self.frame_names, desc='Loading frames data')):
         #     data = self.get_npz_data(frame_name, to_torch=True)
@@ -408,6 +412,7 @@ class GrabNetDataset(GrabNetThumb):
         
     
     def __getitem__(self, idx):
+        # idx = idx % 32
         sample = {}
         data_out = {k: self.ds[k][idx] for k in self.ds.keys()}
         if not self.only_params:

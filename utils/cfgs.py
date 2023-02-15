@@ -62,6 +62,14 @@ def config_paths(machine, exp_name):
         output_dir = "/home/datassd/yilin/Outputs/ConditionHOI/"+exp_name
         mano_root = "/home/datassd/yilin/Codes/_toolbox/mano"
         mano_rh_path = f"/home/datassd/yilin/Codes/_toolbox/mano/models/MANO_RIGHT.pkl"
+    if machine == '208':
+        grabnet_root = "/home/shihao/yilin/GrabNet"
+        obman_root = "/home/shihao/yilin/obman"
+        shapenet_root = "/home/shihao/yilin/ShapeNetCore.v2"
+        output_root = "/home/shihao/yilin/Outputs/ConditionHOI/"
+        output_dir = "/home/shihao/yilin/Outputs/ConditionHOI/"+exp_name
+        mano_root = "/home/shihao/yilin/Codes/_toolbox/mano"
+        mano_rh_path = f"/home/shihao/yilin/Codes/_toolbox/mano/models/MANO_RIGHT.pkl"
     if machine == '195':
         grabnet_root = "/home/jupyter-yiling/GrabNet"
         obman_root = "/home/jupyter-yiling/obman"

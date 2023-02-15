@@ -509,9 +509,11 @@ class EpochVAE_mae(EpochVAE_comp):
     def __init__(self, loss, dataset, optimizer, scheduler, output_dir, mode='train', cfg=None):
         super().__init__(loss, dataset, optimizer, scheduler, output_dir, mode, cfg)
         
+        
     def model_forward(self, model, obj_input, hand_input=None, mask_center=None):
         device = 'cuda' if self.cfg.use_cuda else 'cpu'
         if self.mode == 'train':
+            # hand_params, sample_stats, mask = model(obj_input, hand_input, mask_center=mask_center)
             hand_params, sample_stats, mask = model(obj_input.to(device), hand_input.to(device), mask_center=mask_center.to(device))
             return hand_params, sample_stats, mask
         else:
@@ -519,6 +521,7 @@ class EpochVAE_mae(EpochVAE_comp):
                 hand_params_list = []
                 for iter in range(self.cfg.eval_iter):
                     B = obj_input.shape[0]
+                    # hand_params, mask =  model.inference(obj_input.to(device), mask_center=mask_center.to(device))
                     hand_params, mask =  model.inference(obj_input.to(device), mask_center=mask_center.to(device))
                     hand_params_list.append(hand_params)
                     torch.cuda.empty_cache()
@@ -537,45 +540,53 @@ class EpochVAE_mae(EpochVAE_comp):
             # import pdb; pdb.set_trace()
             sample_ids = sample['sample_id']
             
-            hand_params, sample_stats, region_mask = self.model_forward(model, obj_input_pc, gt_rhand_vs, mask_centers)
+            # test
+            # obj_input_pc = sample['input_pc'].to('cuda')
+            # gt_rhand_vs = sample['hand_verts'].transpose(2, 1).to('cuda')
+            # mask_centers = sample['contact_center'].to('cuda')
+            # # import pdb; pdb.set_trace()
+            # sample_ids = sample['sample_id'].to('cuda')
             
-            obj_points = obj_input_pc
             
-            if self.cfg.use_mano:
-                _, dict_loss, _, rhand_vs_pred, rhand_faces = self.loss_compute(hand_params, sample_stats, obj_points, gt_rhand_vs, region_mask, trans=sample['obj_trans'], cam_extr=sample['cam_extr'], gt_hand_params=sample['hand_params'], obj_normals=sample['obj_point_normals'])
-            else:
-                _, dict_loss, _, rhand_vs_pred, rhand_faces = self.loss_compute(hand_params, sample_stats, obj_points, gt_rhand_vs, region_mask, obj_normals=sample['obj_point_normals'])
+        #     hand_params, sample_stats, region_mask = self.model_forward(model, obj_input_pc, gt_rhand_vs, mask_centers)
             
-            total_loss = sum(dict_loss.values())
+        #     obj_points = obj_input_pc
             
-            model_update(self.optimizer, total_loss, self.scheduler)
+        #     if self.cfg.use_mano:
+        #         _, dict_loss, _, rhand_vs_pred, rhand_faces = self.loss_compute(hand_params, sample_stats, obj_points, gt_rhand_vs, region_mask, trans=sample['obj_trans'], cam_extr=sample['cam_extr'], gt_hand_params=sample['hand_params'], obj_normals=sample['obj_point_normals'])
+        #     else:
+        #         _, dict_loss, _, rhand_vs_pred, rhand_faces = self.loss_compute(hand_params, sample_stats, obj_points, gt_rhand_vs, region_mask, obj_normals=sample['obj_point_normals'])
             
-            torch.cuda.empty_cache()
-            msg_loss, losses = self.Losses.report(dict_loss, total_loss, mode=self.mode)
-            msg = msg_loss
-            pbar.set_postfix_str(msg)
+        #     total_loss = sum(dict_loss.values())
             
-            # if batch_idx % self.batch_interval == 0:
-            #     rhand_vs_pred_0 = rhand_vs_pred[0].detach().to('cpu').numpy()
-            #     rhand_faces_0 = rhand_faces[0].detach().to('cpu').numpy()
-            #     sample_id = int(sample_ids.detach().to('cpu').numpy()[0])
-            #     self.VisualMesh.visual(vertices=rhand_vs_pred_0, faces=rhand_faces_0, mesh_color='skin', sample_id=sample_id, epoch=epoch, name=f'pred_hand')
+        #     model_update(self.optimizer, total_loss, self.scheduler)
+            
+        #     torch.cuda.empty_cache()
+        #     msg_loss, losses = self.Losses.report(dict_loss, total_loss, mode=self.mode)
+        #     msg = msg_loss
+        #     pbar.set_postfix_str(msg)
+            
+        #     # if batch_idx % self.batch_interval == 0:
+        #     #     rhand_vs_pred_0 = rhand_vs_pred[0].detach().to('cpu').numpy()
+        #     #     rhand_faces_0 = rhand_faces[0].detach().to('cpu').numpy()
+        #     #     sample_id = int(sample_ids.detach().to('cpu').numpy()[0])
+        #     #     self.VisualMesh.visual(vertices=rhand_vs_pred_0, faces=rhand_faces_0, mesh_color='skin', sample_id=sample_id, epoch=epoch, name=f'pred_hand')
                 
-            #     self.visual_gt(rhand_vs = gt_rhand_vs.transpose(2, 1).detach().to('cpu').numpy(),
-            #                         rhand_faces = rhand_faces.detach().to('cpu').numpy(),
-            #                         obj_pc=obj_points.detach().to('cpu').numpy(),
-            #-                         region_mask=region_mask.detach().to('cpu').numpy(),
-            #                         obj_trans=sample['obj_trans'].detach().to('cpu').numpy(),
-            #                         sample_ids=sample_ids.detach().to('cpu').numpy(),
-            #                         epoch=epoch,
-            #                         batch_idx=batch_idx,
-            #                         batch_interval=self.batch_interval,
-            #                         sample_interval=self.sample_interval)
+        #     #     self.visual_gt(rhand_vs = gt_rhand_vs.transpose(2, 1).detach().to('cpu').numpy(),
+        #     #                         rhand_faces = rhand_faces.detach().to('cpu').numpy(),
+        #     #                         obj_pc=obj_points.detach().to('cpu').numpy(),
+        #     #-                         region_mask=region_mask.detach().to('cpu').numpy(),
+        #     #                         obj_trans=sample['obj_trans'].detach().to('cpu').numpy(),
+        #     #                         sample_ids=sample_ids.detach().to('cpu').numpy(),
+        #     #                         epoch=epoch,
+        #     #                         batch_idx=batch_idx,
+        #     #                         batch_interval=self.batch_interval,
+        #     #                         sample_interval=self.sample_interval)
             
-            # if batch_idx > 5:
-            #     break
+        #     # if batch_idx > 5:
+        #     #     break
         
-        self.log(self.Losses, epoch=epoch)
+        # self.log(self.Losses, epoch=epoch)
         return model, stop_flag
         
 class ValEpochVAE_mae(EpochVAE_mae):

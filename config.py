@@ -46,7 +46,7 @@ ratio_upper = 0.30
 """
 Filepath settings
 """
-machine = '195'
+machine = '208'
 
 if machine == '97':
 
@@ -67,6 +67,26 @@ if machine == '97':
     obman_visual_dir = "/ssd_data/yilin/Outputs/ObMan_visual"
     
     OUTPUT_ROOT = "/home/datassd/yilin/Outputs/ConditionHOI"
+    
+elif machine == '208':
+
+    DATASET_ROOT = "/home/shihao/yilin/GrabNet"
+    GrabNet_ROOT = "/home/shihao/yilin/GrabNet"
+    
+    OBMAN_ROOT = "/home/shihao/yilin/obman"
+    
+    SHAPENET_ROOT = "/home/shihao/yilin/ShapeNetCore.v2"
+    
+    mano_root = "/home/shihao/yilin/Codes/_toolbox/mano"
+
+    mano_dir = "/home/shihao/yilin/Codes/_toolbox/mano/models/MANO_RIGHT.pkl" # MANO right hand model path
+
+    visual_root = "/home/shihao/yilin/Outputs"
+    
+    dataset_visual_dir = "/home/shihao/yilin/Outputs/GrabNet_visual"
+    obman_visual_dir = "/home/shihao/yilin/Outputs/ObMan_visual"
+    
+    OUTPUT_ROOT = "/home/shihao/yilin/Outputs/ConditionHOI"
     
 elif machine == '195':
 
