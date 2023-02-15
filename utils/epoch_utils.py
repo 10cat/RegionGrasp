@@ -111,7 +111,7 @@ class CheckpointsManage(object):
         else:
             self.no_improve += 1
         
-        if epoch % self.check_interval == 0 and epoch != 0:
+        if epoch % self.interval == 0 and epoch != 0:
             checkpoint_path = os.path.join(self.root, f'checkpoint_{epoch}.pth')
             torch.save({'epoch':epoch,
                         'metrics':metric_value,
