@@ -36,8 +36,10 @@ class cGraspvae(nn.Module):
         # self.obj_encoder = PointNetEncoder(global_feat=False, feature_transform=False, channel=self.in_channel_obj)
         if cfg.model.get('handenc'):
             self.hand_encoder = HandEncoder_group(cfg.model.handenc.kwargs)
+            self.handenc_type = 'trans'
         else:    
             self.hand_encoder = PointNetEncoder(global_feat=True, feature_transform=False, channel=self.in_channel_hand)
+            self.handenc_type = 'pointnet'
         # if cfg.fit_Condition is not True:
         #     self.obj_rc_encoder = ObjRegionConditionEncoder()
         self.cnet = ConditionNet
@@ -73,7 +75,10 @@ class cGraspvae(nn.Module):
         else:
             raise NotImplementedError
         
-        hand_glb_feature, _, _ = self.hand_encoder(hand_xyz, feat_o, center_o) # [B, 1024]
+        if self.handenc_type == 'trans':
+            hand_glb_feature, _, _ = self.hand_encoder(hand_xyz, feat_o, center_o) # [B, 1024]
+        else:
+            hand_glb_feature, _, _ = self.hand_encoder(hand_xyz)
         
         recon, means, log_var, z = self.cvae(x=hand_glb_feature, c=condition_vec)
         # import pdb; pdb.set_trace()

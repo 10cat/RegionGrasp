@@ -509,9 +509,11 @@ class EpochVAE_mae(EpochVAE_comp):
     def __init__(self, loss, dataset, optimizer, scheduler, output_dir, mode='train', cfg=None):
         super().__init__(loss, dataset, optimizer, scheduler, output_dir, mode, cfg)
         
+        
     def model_forward(self, model, obj_input, hand_input=None, mask_center=None):
         device = 'cuda' if self.cfg.use_cuda else 'cpu'
         if self.mode == 'train':
+            # hand_params, sample_stats, mask = model(obj_input, hand_input, mask_center=mask_center)
             hand_params, sample_stats, mask = model(obj_input.to(device), hand_input.to(device), mask_center=mask_center.to(device))
             return hand_params, sample_stats, mask
         else:
@@ -519,6 +521,7 @@ class EpochVAE_mae(EpochVAE_comp):
                 hand_params_list = []
                 for iter in range(self.cfg.eval_iter):
                     B = obj_input.shape[0]
+                    # hand_params, mask =  model.inference(obj_input.to(device), mask_center=mask_center.to(device))
                     hand_params, mask =  model.inference(obj_input.to(device), mask_center=mask_center.to(device))
                     hand_params_list.append(hand_params)
                     torch.cuda.empty_cache()
@@ -536,6 +539,14 @@ class EpochVAE_mae(EpochVAE_comp):
             mask_centers = sample['contact_center']
             # import pdb; pdb.set_trace()
             sample_ids = sample['sample_id']
+            
+            # test
+            # obj_input_pc = sample['input_pc'].to('cuda')
+            # gt_rhand_vs = sample['hand_verts'].transpose(2, 1).to('cuda')
+            # mask_centers = sample['contact_center'].to('cuda')
+            # # import pdb; pdb.set_trace()
+            # sample_ids = sample['sample_id'].to('cuda')
+            
             
             hand_params, sample_stats, region_mask = self.model_forward(model, obj_input_pc, gt_rhand_vs, mask_centers)
             
