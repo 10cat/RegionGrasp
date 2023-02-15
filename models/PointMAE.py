@@ -82,6 +82,7 @@ class Grouper(nn.Module):
     def forward(self, xyz, return_idx=False):
         B, N, _ = xyz.shape
         center = fps(xyz, self.num_group)
+        # import pdb; pdb.set_trace()
         idx = knn_point(self.group_size, xyz, center)
         idx_orig = idx
         

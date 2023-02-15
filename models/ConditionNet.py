@@ -258,12 +258,12 @@ class ConditionMAE(nn.Module):
             
             full_mask = self.get_region_mask(mask, p_idx, pts) # B, 2048
             
-            return condition_feat, full_mask
+            return condition_feat, full_mask, embed_feat.transpose(1, 2), center
         
         condition_feat = torch.max(feat, dim=1)[0] 
-        return condition_feat, None
-        
-
+        return condition_feat, None, None, None
+    
+    
 
 class ConditionNet(nn.Module):
     def __init__(self, input_channel_obj, input_channel_hand):

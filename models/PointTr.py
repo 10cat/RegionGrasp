@@ -37,9 +37,9 @@ def knn_point(nsample, xyz, xyz_q):
     Returns:
         tensor of indices: [B, Nq, K]
     """
-    xyz_q = xyz_q.to(torch.float64)
-    xyz = xyz.to(torch.float64)
-    
+    xyz_q = xyz_q.to(torch.float32)
+    xyz = xyz.to(torch.float32)
+    # import pdb; pdb.set_trace()
     sq_dist = square_distance(xyz_q, xyz) # [B, Nq, N]
     _, group_index = torch.topk(sq_dist, nsample, dim=-1, largest=False, sorted=False)
     return group_index # [B, Nq, k]
