@@ -46,7 +46,7 @@ ratio_upper = 0.30
 """
 Filepath settings
 """
-machine = '208'
+machine = '41'
 
 if machine == '97':
 
