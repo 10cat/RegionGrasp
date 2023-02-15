@@ -15,6 +15,7 @@ import numpy as np
 
 from models.pointnet_encoder import ObjRegionConditionEncoder, PointNetEncoder
 from models.CVAE import VAE
+from models.hand_encoder import HandEncoder_group
 from utils.utils import CRot2rotmat, region_masked_pointwise, rotmat2aa
 
 # from option import MyOptions as cfg
@@ -33,7 +34,12 @@ class cGraspvae(nn.Module):
         self.condition_size = condition_size
 
         # self.obj_encoder = PointNetEncoder(global_feat=False, feature_transform=False, channel=self.in_channel_obj)
-        self.hand_encoder = PointNetEncoder(global_feat=True, feature_transform=False, channel=self.in_channel_hand)
+        if cfg.model.get('handenc'):
+            self.hand_encoder = HandEncoder_group(cfg.model.handenc.kwargs)
+            self.handenc_type = 'trans'
+        else:    
+            self.hand_encoder = PointNetEncoder(global_feat=True, feature_transform=False, channel=self.in_channel_hand)
+            self.handenc_type = 'pointnet'
         # if cfg.fit_Condition is not True:
         #     self.obj_rc_encoder = ObjRegionConditionEncoder()
         self.cnet = ConditionNet
@@ -55,7 +61,7 @@ class cGraspvae(nn.Module):
         B = obj_pc.size(0)
         # obj_pc_masked = region_masked_pointwise(obj_pc, region_mask)
         # obj_glb_feature, _, _ = self.obj_encoder(obj_pc) # [B, 1024]
-        hand_glb_feature, _, _ = self.hand_encoder(hand_xyz) # [B, 1024]
+        # import pdb; pdb.set_trace()
         # if condition_vec is None:
         #     assert region_mask is not None
         #     obj_rc_glb_feature, _, _ = self.obj_rc_encoder(obj_pc, region_mask)
@@ -63,11 +69,17 @@ class cGraspvae(nn.Module):
         mask = None
         if self.cfg.model.cnet_type == 'mae':
             assert mask_center is not None, "Requires the center point of the masked region"
-            condition_vec, mask = self.cnet(obj_pc, mask_center=mask_center)
+            condition_vec, mask, feat_o, center_o = self.cnet(obj_pc, mask_center=mask_center)
         elif self.cfg.model.cnet_type == 'obj_comp':
             condition_vec = self.cnet(obj_pc, feat_only=True)
         else:
             raise NotImplementedError
+        
+        if self.handenc_type == 'trans':
+            hand_glb_feature, _, _ = self.hand_encoder(hand_xyz, feat_o, center_o) # [B, 1024]
+        else:
+            hand_glb_feature, _, _ = self.hand_encoder(hand_xyz)
+        
         recon, means, log_var, z = self.cvae(x=hand_glb_feature, c=condition_vec)
         # import pdb; pdb.set_trace()
         pose, trans = recon
@@ -85,7 +97,7 @@ class cGraspvae(nn.Module):
         mask = None
         if self.cfg.model.cnet_type == 'mae':
             assert mask_center is not None, "Requires the center point of the masked region"
-            condition_vec, mask = self.cnet(obj_pc, mask_center=mask_center)
+            condition_vec, mask, _, _ = self.cnet(obj_pc, mask_center=mask_center)
         elif self.cfg.model.cnet_type == 'obj_comp':
             condition_vec = self.cnet(obj_pc, feat_only=True)
         else:
