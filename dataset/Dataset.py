@@ -24,7 +24,7 @@ set_seed = lambda val: np.random.seed(val)
 
 def select_ids_dataset(ds_names, seeds=[]):
     for i, name in enumerate(ds_names):
-        dataset = GrabNetDataset_orig(dataset_root=config.DATASET_ROOT, 
+        dataset = GrabNetDataset_orig(dataset_root=None, 
                                     ds_name=name, 
                                     frame_names_file='frame_names_thumb.npz', 
                                     grabnet_thumb=True, 
