@@ -70,6 +70,7 @@ def get_dataset(cfg, mode='train'):
         configs = cfg.dataset[mode]._base_.kwargs
         dataset = GrabNetDataset(dataset_root=ds_root, 
                                  ds_name=mode,
+                                 mano_path=cfg.mano_rh_path,
                                  **configs)
         
         

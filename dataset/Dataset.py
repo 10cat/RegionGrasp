@@ -359,8 +359,8 @@ class ObManDataset_obj_comp(ObManThumb):
         return sample
     
 class GrabNetDataset(GrabNetThumb):
-    def __init__(self, dataset_root, ds_name='train', frame_names_file='frame_names.npz', grabnet_thumb=False, obj_meshes_folder='contact_meshes', output_root=None, dtype=torch.float32, only_params=False, load_on_ram=False, resample_num=8192):
-        super().__init__(dataset_root, ds_name, frame_names_file, grabnet_thumb, obj_meshes_folder, output_root, dtype, only_params, load_on_ram, resample_num)
+    def __init__(self, dataset_root, ds_name='train', mano_path=None, frame_names_file='frame_names.npz', grabnet_thumb=False, obj_meshes_folder='contact_meshes', output_root=None, dtype=torch.float32, only_params=False, load_on_ram=False, resample_num=8192):
+        super().__init__(dataset_root, ds_name, mano_path, frame_names_file, grabnet_thumb, obj_meshes_folder, output_root, dtype, only_params, load_on_ram, resample_num)
         self.obj_rotmat = self.ds['root_orient_obj_rotmat']
         self.obj_trans = self.ds['trans_obj']
         

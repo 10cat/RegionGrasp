@@ -33,6 +33,8 @@ RUN /opt/conda/bin/pip install pybullet
 
 RUN /opt/conda/bin/pip install imageio
 
+RUN /opt/conda/bin/pip install easydict
+
 RUN /opt/conda/bin/pip install numpy==1.23.4
 
 
