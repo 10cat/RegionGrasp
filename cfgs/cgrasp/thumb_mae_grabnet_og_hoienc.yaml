@@ -16,6 +16,7 @@ batch_size: 32
 num_epoch: 100
 early_stopping: 100
 use_cuda: True
+
 optim: {
   cnet_mae: {
     optimizer:  {
@@ -39,6 +40,13 @@ optim: {
       type: Adam,
       kwargs : {
         lr: 1e-4
+      }
+    },
+    scheduler: {
+      type: StepLR,
+      kwargs: {
+        milestones: [30, 60, 80, 90], 
+        gamma: 0.5
       }
     }
   }
@@ -66,6 +74,7 @@ model: {
         }
       }
     },
+
     handenc: {
       chkpt_path: 'pointmae_og/models/checkpoint_68.pth',
       kwargs: {
@@ -88,7 +97,7 @@ model: {
           num_heads: 6,
           drop_path_rate: 0.,
           knn_k: 8,
-          knn_layer_num: 1
+          knn_layer_num: -1
         }
       }
     },
@@ -110,28 +119,30 @@ loss: {
   train: {
     loss_edge: True,
     loss_mesh_rec: True,
-    loss_dist_h: True,
-    loss_dist_o: True,
+    loss_dist_h: False,
+    loss_dist_o: False,
+    loss_penetr: True,
     loss_mano: False
   },
   val: {
     loss_edge: True,
     loss_mesh_rec: True,
-    loss_dist_h: True,
-    loss_dist_o: True,
+    loss_dist_h: False,
+    loss_dist_o: False,
+    loss_penetr: True,
     loss_mano: False
   },
   coef: {
     kl_coef: 0.005,
     lambda_edge: 30.,
-    lambda_mesh_rec:  30.,
+    lambda_mesh_rec:  35.,
     lambda_dist_h:  35.,
-    lambda_dist_o:  35.,
-    lambda_mano: 0.01
+    lambda_dist_o:  30.,
+    lambda_penetr: 0.01,
+    lambda_mano: 0.
   }
   
 }
-
 
 
 hoi_hparams: {

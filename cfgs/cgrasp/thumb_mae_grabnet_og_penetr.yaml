@@ -40,6 +40,13 @@ optim: {
       kwargs : {
         lr: 1e-4
       }
+    },
+    scheduler: {
+      type: StepLR,
+      kwargs: {
+        milestones: [30, 60, 80, 90], 
+        gamma: 0.5
+      }
     }
   }
 }
@@ -83,16 +90,16 @@ loss: {
   train: {
     loss_edge: True,
     loss_mesh_rec: True,
-    loss_dist_h: True,
-    loss_dist_o: True,
+    loss_dist_h: False,
+    loss_dist_o: False,
     loss_penetr: True,
     loss_mano: False
   },
   val: {
     loss_edge: True,
     loss_mesh_rec: True,
-    loss_dist_h: True,
-    loss_dist_o: True,
+    loss_dist_h: False,
+    loss_dist_o: False,
     loss_penetr: True,
     loss_mano: False
   },
@@ -102,7 +109,7 @@ loss: {
     lambda_mesh_rec:  35.,
     lambda_dist_h:  35.,
     lambda_dist_o:  30.,
-    lambda_penetr: 1.,
+    lambda_penetr: 0.01,
     lambda_mano: 0.
   }
   

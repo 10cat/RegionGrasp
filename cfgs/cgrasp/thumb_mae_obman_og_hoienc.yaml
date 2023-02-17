@@ -126,29 +126,30 @@ loss: {
   train: {
     loss_edge: True,
     loss_mesh_rec: True,
-    loss_dist_h: True,
-    loss_dist_o: True,
+    loss_dist_h: False,
+    loss_dist_o: False,
+    loss_penetr: True,
     loss_mano: False
   },
   val: {
     loss_edge: True,
     loss_mesh_rec: True,
-    loss_dist_h: True,
-    loss_dist_o: True,
+    loss_dist_h: False,
+    loss_dist_o: False,
+    loss_penetr: True,
     loss_mano: False
   },
   coef: {
     kl_coef: 0.005,
     lambda_edge: 30.,
-    lambda_mesh_rec:  30.,
+    lambda_mesh_rec:  35.,
     lambda_dist_h:  35.,
-    lambda_dist_o:  35.,
-    lambda_mano: 0.01
+    lambda_dist_o:  30.,
+    lambda_penetr: 0.01,
+    lambda_mano: 0.
   }
   
 }
-
-
 
 hoi_hparams: {
   th_penet: -0.005,
@@ -157,6 +158,7 @@ hoi_hparams: {
   weight_penet: 1.5,
   weight_region: 1.5,
 }
+
 vpe_path: "./cfgs/verts_per_edge.npy"
 c_weights_path: "./cfgs/rhand_weight.npy"
 

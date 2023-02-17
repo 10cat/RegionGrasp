@@ -46,11 +46,7 @@ ratio_upper = 0.30
 """
 Filepath settings
 """
-<<<<<<< HEAD
-machine = '97'
-=======
 # machine = '97'
->>>>>>> 806bf2c8e6092d8959fae4a84dc490755cc7fbcc
 
 # if machine == '97':
 

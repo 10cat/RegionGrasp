@@ -115,7 +115,7 @@ def build_scheduler(optimizer, cfg, model=None):
                 warmup_t=sche_cfg.kwargs.initial_epochs,
                 t_in_epochs=True)
     elif sche_cfg.type == 'StepLR':
-        scheduler = torch.optim.lr_scheduler.StepLR(optimizer, **sche_cfg.kwargs)
+        scheduler = torch.optim.lr_scheduler.MultiStepLR(optimizer, **sche_cfg.kwargs)
     elif sche_cfg.type == 'function':
         scheduler = None
     else:

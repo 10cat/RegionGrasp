@@ -3,7 +3,7 @@ import sys
 
 from tqdm import tqdm
 
-from dataloader import Batchsampler_testv100
+# from dataloader import Batchsampler_testv100
 sys.path.append('.')
 sys.path.append('..')
 import numpy as np
@@ -15,15 +15,23 @@ import argparse
 import config
 # from option import MyOptions
 from dataset.Dataset import GrabNetDataset
-        
-    
-    
 
+# from epochbase import TrainEpoch, ValEpoch
+import random
+from utils.utils import set_random_seed
+
+# from dataset.obman_preprocess import ObManObj
+# from models.ConditionNet import ConditionMAE, ConditionTrans, ConditionBERT
+# from models.cGrasp_vae import cGraspvae
+# from traineval_utils.loss import ChamferDistanceL2Loss, PointCloudCompletionLoss, cGraspvaeLoss
+# from utils.optim import *
+# from utils.datasets import get_dataset
+# from utils.epoch_utils import EpochVAE_comp, ValEpochVAE_comp, EpochVAE_mae, ValEpochVAE_mae,  MetersMonitor, model_update, PretrainEpoch
 
 if __name__ == "__main__":
-    import wandb
+    # import wandb
     import argparse
-    from omegaconf import OmegaConf
+    # from omegaconf import OmegaConf
     from easydict import EasyDict
     import utils.cfgs as cfgsu
     
@@ -34,38 +42,21 @@ if __name__ == "__main__":
     
     # import pdb; pdb.set_trace()
     parser = argparse.ArgumentParser()
-    parser.add_argument('--cfgs', type=str)
+    parser.add_argument('--cfgs', type=str, default='thumb_mae_grabnet_og')
     parser.add_argument('--cfgs_fodler', type=str, default='cgrasp')
-    parser.add_argument('--exp_name', type=str, default=None)
+    parser.add_argument('--exp_name', type=str, default='thumb_mae_grabnet_og')
     parser.add_argument('--cuda_id', type=str, default="0")
-    parser.add_argument('--machine', type=str, default='41')
-    parser.add_argument('--wandb', action='store_true')
-    
-    
+    parser.add_argument('--machine', type=str, default='208')
     parser.add_argument('--resume', action='store_true')
-    parser.add_argument('--mae', action='store_true')
-    parser.add_argument('--comp', action='store_true')
-    parser.add_argument('--grasp', action='store_true')
-
-    parser.add_argument('--chkpt', type=str, default=None)
-    
-    parser.add_argument('--start_epoch', type=int, default=None)
-    parser.add_argument('--eval_ds', type=str, default='test')
-    parser.add_argument('--batch_intv', type=str, default=1)
-    parser.add_argument('--sample_intv', type=str, default=None)
-    parser.add_argument('--run_mode', type=str, default='train')
-    parser.add_argument('--pt_model', type=str, default='trans')
+    parser.add_argument('--same', action='store_true') # add this to set same 32 data samples to every batch
+    parser.add_argument('--batch_size', type=int, default=32)
 
     args = parser.parse_args()
 
-    set_random_seed(1024)
-    
-    # cfg = MyOptions()
-    # DONE: 读取配置文件并转化成字典，同时加入args的配置
     conf = cfgsu.get_config(args, args.cfgs_fodler)
     conf.update(cfgsu.config_exp_name(args))
     conf.update(cfgsu.config_paths(args.machine, conf['exp_name']))
-    conf.update(args.__dict__) # args的配置也记录下来
+    conf.update(args.__dict__)
     
     cfg = EasyDict()
     # DONE: transform the dict config to easydict
@@ -78,26 +69,35 @@ if __name__ == "__main__":
     
     cfgsu.save_experiment_config(cfg)
     
-
-    if cfg.wandb:
-        wandb.login()
-        wandb.init(project=cfg.project_name,
-                name=cfg.exp_name,
-                config=conf,
-                dir=os.path.join(cfg.output_root, 'wandb')) # omegaconf: resolve=True即可填写自动变量
-                # dir: set the absolute path for storing the metadata of each runs
-                
-    print(f"================ {cfg.run_type} experiment running! ================") # NOTE: Checkpoint! 提醒一下当前实验的属性
+    
+    ds_root = cfg.grabnet_root
+    configs = cfg.dataset['train']._base_.kwargs
+    dataset = GrabNetDataset(dataset_root=ds_root, 
+                            ds_name='train',
+                            mano_path=cfg.mano_rh_path,
+                            sample_same=cfg.same,
+                            batch_size=cfg.batch_size,
+                            **configs)
+    # trainset = get_dataset(cfg, mode='train')
+    dataloader = data.DataLoader(dataset, batch_size=cfg.batch_size, shuffle=False)       
+    
+    for idx, sample in enumerate(tqdm(dataloader)):
+        obj_input_pc = sample['input_pc']
+        gt_rhand_vs = sample['hand_verts'].transpose(2, 1)
+        mask_centers = sample['contact_center']
+        # import pdb; pdb.set_trace()
+        sample_ids = sample['sample_id']
         
-    if cfg.run_type == 'cgrasp':
-        if cfg.comp:
-            cgrasp_comp(cfg=cfg)
-        elif cfg.mae:
-            cgrasp_mae(cfg=cfg)
-        else:
-            raise NotImplementedError
-    else:
-        raise NotImplementedError
+        # test cuda
+        # obj_input_pc = sample['input_pc'].to('cuda')
+        # gt_rhand_vs = sample['hand_verts'].transpose(2, 1).to('cuda')
+        # mask_centers = sample['contact_center'].to('cuda')
+        # # import pdb; pdb.set_trace()
+        # sample_ids = sample['sample_id'].to('cuda')
+        
+        
+    
+    
 
     
 
