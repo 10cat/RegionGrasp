@@ -101,7 +101,11 @@ def cgrasp_mae(cfg=None):
     
     if mode == 'train':
         # TODO: cnet/vae其他参数设置不同学习率
-        optimizer, scheduler = build_optim_sche_grasp(model, part_model={'cnet_mae': model.cnet.MAE_encoder}, cfg=cfg)
+        if 'hand_encoder' in cfg.optim.keys():
+            part_model_dict = {'cnet_mae': model.cnet.MAE_encoder, 'hand_encoder':model.hand_encoder}
+        else:
+            part_model_dict = {'cnet_mae': model.cnet.MAE_encoder}
+        optimizer, scheduler = build_optim_sche_grasp(model, part_model=part_model_dict, cfg=cfg)
         
         # TODO: loss改写
         device = 'cuda' if cfg.use_cuda else 'cpu'
@@ -198,6 +202,8 @@ if __name__ == "__main__":
     parser.add_argument('--sample_intv', type=str, default=None)
     parser.add_argument('--run_mode', type=str, default='train')
     parser.add_argument('--pt_model', type=str, default='trans')
+    
+    parser.add_argument('--run_check', action='store_true')
 
     args = parser.parse_args()
 

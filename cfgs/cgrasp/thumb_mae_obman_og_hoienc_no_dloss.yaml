@@ -58,6 +58,8 @@ optim: {
       }
     }
   },
+
+  
 }
 
 # model settings
@@ -126,8 +128,8 @@ loss: {
   train: {
     loss_edge: True,
     loss_mesh_rec: True,
-    loss_dist_h: True,
-    loss_dist_o: True,
+    loss_dist_h: False,
+    loss_dist_o: False,
     loss_mano: False
   },
   val: {
