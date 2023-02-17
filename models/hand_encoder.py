@@ -87,11 +87,13 @@ class HOITransformerEncoder(nn.Module):
             nn.init.constant_(m.bias, 0)
             nn.init.constant_(m.weight, 1.0)
         
-    def forward(self, q, v, center_q=None, center_v=None):
-        knn_index = get_knn_index(center_q) if center_q is not None else None
-        
-        cross_knn_index = get_knn_index(center_q, coor_k=center_v) if center_v is not None else None
-        
+    def forward(self, q, v, center_q=None, center_v=None, cfg=None):
+        # import pdb;pdb.set_trace()
+        if cfg.knn_layer_num > 0:
+            knn_index = get_knn_index(center_q) if center_q is not None else None
+            cross_knn_index = get_knn_index(center_q, coor_k=center_v) if center_v is not None else None
+        else:
+            knn_index, cross_knn_index = None, None
         for i, block in enumerate(self.blocks):
             if i < self.knn_layer:
                 q = block(q, v, knn_index, cross_knn_index)
@@ -130,7 +132,7 @@ class HandEncoder_group(nn.Module):
         )
         
         
-    def forward(self, verts, feat_o=None, center_o=None):
+    def forward(self, verts, feat_o=None, center_o=None, cfg=None):
         verts = verts.transpose(2, 1)
         B, _, _ = verts.shape
         neighborhood, center_h, p_idx = self.group_divider(verts, return_idx=True)
@@ -138,7 +140,7 @@ class HandEncoder_group(nn.Module):
         
         if self.HOIencoder is not None:
             assert feat_o is not None, "Please input object local feature to the HOIenocder"
-            embed_feat = self.HOIencoder(embed_feat, feat_o, center_q=center_h, center_v=center_o)
+            embed_feat = self.HOIencoder(embed_feat, feat_o, center_q=center_h, center_v=center_o, cfg=cfg)
         
         embed_feat = embed_feat.transpose(1, 2)
         feat = self.increase_dim(embed_feat)

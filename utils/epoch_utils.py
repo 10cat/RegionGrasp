@@ -252,7 +252,7 @@ class PretrainEpoch():
             total_loss = sum(dict_loss.values())
             
             if self.mode == 'train':
-                model_update(self.optimizer, total_loss, self.scheduler)
+                model_update(self.optimizer, total_loss, self.scheduler, epoch=epoch)
             
             msg_loss, losses = self.Losses.report(dict_loss, total_loss, mode=self.mode)
             msg = msg_loss
@@ -559,7 +559,7 @@ class EpochVAE_mae(EpochVAE_comp):
             
             total_loss = sum(dict_loss.values())
             
-            model_update(self.optimizer, total_loss, self.scheduler)
+            model_update(self.optimizer, total_loss, self.scheduler, epoch=epoch)
             
             torch.cuda.empty_cache()
             msg_loss, losses = self.Losses.report(dict_loss, total_loss, mode=self.mode)
@@ -583,8 +583,9 @@ class EpochVAE_mae(EpochVAE_comp):
             #                         batch_interval=self.batch_interval,
             #                         sample_interval=self.sample_interval)
             
-            # if batch_idx > 5:
-            #     break
+            if self.cfg.run_check:
+                if batch_idx > 5:
+                    break
         
         self.log(self.Losses, epoch=epoch)
         return model, stop_flag
@@ -679,8 +680,9 @@ class ValEpochVAE_mae(EpochVAE_mae):
                     hand_params_all = hand_params_all.reshape(self.cfg.eval_iter, B, -1).transpose(0, 1) # B, iter_nums, D
                     hand_params_all = hand_params_all.cpu()
                     recon_rhand_params.append(hand_params_all)
-            # if batch_idx > 5:
-            #     break
+            if self.cfg.run_check:
+                if batch_idx > 5:
+                    break
             
         if self.cfg.run_mode != 'test':
             no_improve_epochs = self.Checkpt.save_checkpoints(epoch, model, metric_value=losses[f'{self.mode}_total_loss'], optimizer=self.optimizer, scheduler=self.scheduler)

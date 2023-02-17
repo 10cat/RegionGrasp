@@ -76,7 +76,7 @@ class cGraspvae(nn.Module):
             raise NotImplementedError
         
         if self.handenc_type == 'trans':
-            hand_glb_feature, _, _ = self.hand_encoder(hand_xyz, feat_o, center_o) # [B, 1024]
+            hand_glb_feature, _, _ = self.hand_encoder(hand_xyz, feat_o, center_o, self.cfg.model.handenc.kwargs.hoienc) # [B, 1024]
         else:
             hand_glb_feature, _, _ = self.hand_encoder(hand_xyz)
         

@@ -115,7 +115,7 @@ def build_scheduler(optimizer, cfg, model=None):
                 warmup_t=sche_cfg.kwargs.initial_epochs,
                 t_in_epochs=True)
     elif sche_cfg.type == 'StepLR':
-        scheduler = torch.optim.lr_scheduler.StepLR(optimizer, **sche_cfg.kwargs)
+        scheduler = torch.optim.lr_scheduler.MultiStepLR(optimizer, **sche_cfg.kwargs)
     elif sche_cfg.type == 'function':
         scheduler = None
     else:
@@ -131,12 +131,15 @@ def build_optim_sche_grasp(full_model, part_model = None, cfg=None):
     optimizer, scheduler = [], []
     if part_model is not None:
         part_params_all = []
+        part_params_named_all = []
         for name, part in part_model.items():
             part_cfg = cfg.optim[name]
             part_model_params = part.parameters()
+            part_model_params_named = part.named_parameters()
             part_params_all += part_model_params
+            part_params_named_all += part_model_params_named
     
-            optimizer_part = build_optim(part_cfg.optimizer, named_parameters=part.named_parameters(), param_groups=part.parameters())
+            optimizer_part = build_optim(part_cfg.optimizer, named_parameters=part_model_params_named, param_groups=part_model_params)
             
             optimizer.append(optimizer_part)
             
@@ -145,13 +148,16 @@ def build_optim_sche_grasp(full_model, part_model = None, cfg=None):
                 scheduler.append(scheduler_part)
         part_model_params_id = list(map(id, part_params_all))
         base_params = filter(lambda p: id(p) not in part_model_params_id, full_model.parameters())
+        part_model_named_params_id = list(map(id, part_params_named_all))
+        base_named_params = filter(lambda p: id(p) not in part_model_named_params_id, full_model.named_parameters())
         print("Multiple optimizers / schedulers loaded")
         
     else:
         assert cfg.optim.get('others')
         base_params = full_model.parameters()
+        base_named_params = full_model.named_parameters()
     
-    optimizer_other = build_optim(cfg.optim.others.optimizer, named_parameters=None, param_groups=base_params)
+    optimizer_other = build_optim(cfg.optim.others.optimizer, named_parameters=base_named_params, param_groups=base_params)
     
     if cfg.optim.others.get('scheduler'):
         scheduler_others = build_scheduler(optimizer_other, cfg.optim.others)

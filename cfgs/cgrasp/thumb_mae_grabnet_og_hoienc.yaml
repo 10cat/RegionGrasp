@@ -16,6 +16,7 @@ batch_size: 32
 num_epoch: 100
 early_stopping: 100
 use_cuda: True
+
 optim: {
   cnet_mae: {
     optimizer:  {
@@ -39,6 +40,13 @@ optim: {
       type: Adam,
       kwargs : {
         lr: 1e-4
+      }
+    },
+    scheduler: {
+      type: StepLR,
+      kwargs: {
+        milestones: [30, 60, 80, 90], 
+        gamma: 0.5
       }
     }
   }
@@ -66,6 +74,7 @@ model: {
         }
       }
     },
+
     handenc: {
       chkpt_path: 'pointmae_og/models/checkpoint_68.pth',
       kwargs: {
@@ -88,7 +97,7 @@ model: {
           num_heads: 6,
           drop_path_rate: 0.,
           knn_k: 8,
-          knn_layer_num: 1
+          knn_layer_num: -1
         }
       }
     },
@@ -110,16 +119,26 @@ loss: {
   train: {
     loss_edge: True,
     loss_mesh_rec: True,
+<<<<<<< HEAD
     loss_dist_h: True,
     loss_dist_o: True,
+=======
+    loss_dist_h: False,
+    loss_dist_o: False,
+>>>>>>> 49a417909b49e166781f2437ff3a14ea2607afaf
     loss_penetr: True,
     loss_mano: False
   },
   val: {
     loss_edge: True,
     loss_mesh_rec: True,
+<<<<<<< HEAD
     loss_dist_h: True,
     loss_dist_o: True,
+=======
+    loss_dist_h: False,
+    loss_dist_o: False,
+>>>>>>> 49a417909b49e166781f2437ff3a14ea2607afaf
     loss_penetr: True,
     loss_mano: False
   },
@@ -129,15 +148,22 @@ loss: {
     lambda_mesh_rec:  35.,
     lambda_dist_h:  35.,
     lambda_dist_o:  30.,
+<<<<<<< HEAD
     lambda_penetr: 1.,
+=======
+    lambda_penetr: 0.01,
+>>>>>>> 49a417909b49e166781f2437ff3a14ea2607afaf
     lambda_mano: 0.
   }
   
 }
 
 
+<<<<<<< HEAD
 
 
+=======
+>>>>>>> 49a417909b49e166781f2437ff3a14ea2607afaf
 hoi_hparams: {
   th_penet: -0.005,
   th_contact: 0.005,
