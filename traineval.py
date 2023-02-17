@@ -163,6 +163,42 @@ def cgrasp_mae(cfg=None):
         
         _, _ = testepoch(testloader, 0, model, save_pred=True)
         
+    elif mode == 'val_only':
+        valset = get_dataset(cfg, mode='val')
+        valloader = data.DataLoader(valset, batch_size=bs, shuffle=False)
+        
+        
+        optimizer, scheduler = build_optim_sche_grasp(model, part_model={'cnet_mae': model.cnet.MAE_encoder}, cfg=cfg)
+        
+        
+        device = 'cuda' if cfg.use_cuda else 'cpu'
+        
+        cgrasp_loss = cGraspvaeLoss(device, cfg)
+        cgrasp_loss.to(device)
+        
+        valepoch = ValEpochVAE_mae(cgrasp_loss, valset, optimizer, scheduler, output_dir=cfg.output_dir, mode='val', cfg=cfg)
+        
+        
+        interval = cfg.check_interval
+        epoch = interval
+        ckpt_path = os.path.join(cfg.model_root, f'checkpoint_{epoch}.pth')
+        
+        while os.path.exists(ckpt_path):
+            ckpt = torch.load(ckpt_path)
+            model.load_state_dict(ckpt['state_dict'])
+            
+            model = model.to(device)
+            
+            _, _ = valepoch(valloader, epoch, model)
+            
+            epoch += interval
+            ckpt_path = os.path.join(cfg.model_root, f'checkpoint_{epoch}.pth')
+            
+            
+            
+            
+            
+        
     
     
 

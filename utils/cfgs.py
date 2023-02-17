@@ -98,7 +98,7 @@ def config_paths(machine, exp_name):
         mano_root = "/home/yilin/smpl_models/mano"
         mano_rh_path = f"/home/yilin/smpl_models/mano/MANO_RIGHT.pkl"
     
-    model_root = os.path.join(output_dir, 'model')
+    model_root = os.path.join(output_dir, 'models')
     
     paths['grabnet_root'] = grabnet_root
     paths['obman_root'] = obman_root
