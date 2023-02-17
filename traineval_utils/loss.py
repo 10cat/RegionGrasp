@@ -8,41 +8,9 @@ import torch.nn.functional as F
 # from option import MyOptions as cfg
 from utils.utils import get_std, point2point_signed
 from pytorch3d.structures import Meshes
+
 from chamfer_distance import ChamferDistance as ch_dist
-from utils.utils import edges_for, decode_hand_params_batch
-
-
-
-# class ConditionNetLoss(nn.Module):
-#     def __init__(self):
-#         super(ConditionNetLoss, self).__init__()
-#         self.maploss_hand = nn.L1Loss()
-#         self.maploss_om = nn.L1Loss()
-#         self.featloss = nn.MSELoss()
-
-#     def forward(self, feats, maps, M_target):
-#         map_h, map_om, feat_oh, feat_oom = None, None, None, None
-#         dict_loss = {}
-#         if len(maps) > 1:
-#             map_h, map_om = maps
-#         else:
-#             map_om = maps[0]
-#         if len(feats) > 1:
-#             feat_oh, feat_oom = feats
-#         else:
-#             feat_oom = feats[0]
-#         target = M_target # directly use annotated sdmap -- no sigmoid
-#         # target = torch.sigmoid(M_target) # original target map 
-#         loss_hand = self.maploss_hand(map_h, target) if map_h is not None else 0.0
-#         loss_om = self.maploss_om(map_om, target)
-#         loss_feat = self.featloss(feat_oom, feat_oh) if feat_oh is not None else 0.0
-
-#         loss = loss_hand + cfg.lambda_om * loss_om + cfg.lambda_feat * loss_feat
-#         dict_loss['loss_map_hand'] = loss_hand
-#         dict_loss['loss_map_om'] = loss_om
-#         dict_loss['loss_feat'] = loss_feat
-
-#         return loss, dict_loss
+from utils.utils import edges_for, decode_hand_params_batch, get_NN
 
 
 class cGraspvaeLoss(nn.Module):
@@ -50,7 +18,12 @@ class cGraspvaeLoss(nn.Module):
         super(cGraspvaeLoss, self).__init__()
         self.device = device
         self.LossL1 = torch.nn.L1Loss(reduction='mean')
-        self.HOILoss = HOILoss(cfg, device)
+        if cfg.dloss_type == 'w_o2honly':
+            self.HOILoss = HOILoss_o2honly(cfg, device)
+        else:
+            self.HOILoss = HOILoss(cfg, device)
+            
+        self.PenetrLoss = inter_penetr_loss()
         self.v_weights = torch.from_numpy(np.load(cfg.c_weights_path)).to(torch.float32).to(self.device) # 这个到底是啥呀？ 能不能用在其他数据集上？
         self.v_weights2 = torch.pow(self.v_weights, 1.0/2.5) # 这个到底是啥呀？ 能不能用在其他数据集上？
         self.vpe = torch.from_numpy(np.load(cfg.vpe_path)).to(self.device).to(torch.long) # 这个到底是啥呀？ 能不能用在其他数据集上？
@@ -117,7 +90,7 @@ class cGraspvaeLoss(nn.Module):
         
         
         dict_loss = {}
-        loss_cfg = self.cfg.loss[mode]
+        loss_cfg = self.cfg.loss['train']
         #### dist Loss ####
         if loss_cfg.loss_dist_h or loss_cfg.loss_dist_o:
             rh_normals = Meshes(verts=rhand_vs, faces=rhand_faces).to(self.device).verts_normals_packed().view(-1, 778, 3)
@@ -132,7 +105,7 @@ class cGraspvaeLoss(nn.Module):
             elif obj_normals is None:
                 obj_normals = None
             # import pdb; pdb.set_trace()
-            obj_normals = obj_normals.to(torch.float32).to(self.device)
+            obj_normals = obj_normals.to(torch.float32).to(self.device) if obj_normals is not None else None
             o2h_signed, h2o_signed, _, _ = point2point_signed(rhand_vs, obj_vs, rh_normals, obj_normals)
             o2h_signed_pred, h2o_signed_pred, _, _ = point2point_signed(rhand_vs_pred, obj_vs, rh_normals_pred, obj_normals)
             loss_dist_h, loss_dist_o = self.dist_loss(h2o_signed, h2o_signed_pred, o2h_signed, o2h_signed_pred, region)
@@ -143,6 +116,13 @@ class cGraspvaeLoss(nn.Module):
                 dict_loss.update({'loss_dist_o': loss_dist_o})
         else:
             o2h_signed_pred, o2h_signed, h2o_signed, h2o_signed_pred = None, None, None, None
+            
+        #### penetration loss ####
+        if loss_cfg.get('loss_penetr') and loss_cfg.loss_penetr:
+            obj_nn_dist_recon, obj_nn_idx_recon = get_NN(obj_vs, rhand_vs_pred)
+            loss_penetr = self.coefs['lambda_penetr'] *self.PenetrLoss(rhand_vs_pred, rhand_faces, obj_vs,
+                                        obj_nn_dist_recon, obj_nn_idx_recon)
+            dict_loss.update({'loss_penetr': loss_penetr})
             
 
         #### KL Loss ####
@@ -197,7 +177,7 @@ class HOILoss(nn.Module):
         w_dist_con = (dists < c_dist) * (dists > p_dist) # inside as negative; outside as positive
         w_dist_pen = dists < p_dist
         weight = w_dist_h.clone()
-        weight[w_dist_con] = self.hparams['weight_contact'] # less weights for contact verts
+        weight[~w_dist_con] = self.hparams['weight_contact'] # less weights for contact verts
         weight[w_dist_pen] = self.hparams['weight_penet'] # more weights for penetration verts
         return weight
     
@@ -231,6 +211,102 @@ class HOILoss(nn.Module):
         
         loss_dist_o = self.coefs['lambda_dist_o'] * (1 - self.coefs['kl_coef']) * torch.mean(torch.einsum('ij,ij->ij', torch.abs(o2h_signed_pred - o2h_signed), weight_o2h))
         return loss_dist_h, loss_dist_o
+    
+    
+class HOILoss_o2honly(nn.Module):
+    def __init__(self, cfg, device):
+        super().__init__()
+        self.device = device
+        self.v_weights = torch.from_numpy(np.load(cfg.c_weights_path)).to(torch.float32).to(self.device) # 这个到底是啥呀？ 能不能用在其他数据集上？
+        self.v_weights2 = torch.pow(self.v_weights, 1.0/2.5) # 这个到底是啥呀？ 能不能用在其他数据集上？
+        self.vpe = torch.from_numpy(np.load(cfg.vpe_path)).to(self.device).to(torch.long) # 这个到底是啥呀？ 能不能用在其他数据集上？
+        self.hparams = cfg.hoi_hparams
+        self.coefs = cfg.loss.coef
+    
+    def o2h_weight(self, dists, region):
+        # NOTE: o2h -- conditioned region weights
+        w_dist_o = torch.ones([dists.shape[0], dists.shape[1]]).to(self.device)
+        # w_region = region > 0.
+        # import pdb; pdb.set_trace()
+        # weight = w_dist_o.clone()
+        # weight[w_region.squeeze(1)] = self.hparams['weight_region']
+        p_dist = self.hparams['th_penet']
+        c_dist = self.hparams['th_contact']
+        w_dist_con = (dists < c_dist) * (dists > p_dist) # inside as negative; outside as positive
+        w_dist_pen = dists < 0.
+        weight = w_dist_o.clone()
+        weight[~w_dist_con] = self.hparams['weight_contact'] # less weights for contact verts
+        weight[w_dist_pen] = self.hparams['weight_penet'] # more weights for penetration verts
+        return weight
+    
+    def forward(self, h2o_signed, h2o_signed_pred, o2h_signed, o2h_signed_pred, region):
+        ## adaptive weight for penetration and contact verts
+        
+        # weight_o2h = self.dist_loss_weight(o2h_signed)
+        weight_o2h = self.o2h_weight(o2h_signed, region)
+        # weight_h2o = self.h2o_weight(h2o_signed)
+        # import pdb; pdb.set_trace()
+        
+        loss_dist_h = self.coefs['lambda_dist_h'] * (1 - self.coefs['kl_coef']) * torch.mean(torch.einsum('ij,j->ij', torch.abs(h2o_signed_pred.abs() - h2o_signed.abs()), self.v_weights2))
+        
+        loss_dist_o = self.coefs['lambda_dist_o'] * (1 - self.coefs['kl_coef']) * torch.mean(torch.einsum('ij,ij->ij', torch.abs(o2h_signed_pred - o2h_signed), weight_o2h))
+        return loss_dist_h, loss_dist_o
+    
+
+class batched_index_select():
+    def __init__(self):
+        return
+    
+    def __call__(self, input, index, dim=1):
+        views = [input.size(0)] + [1 if i != dim else -1 for i in range(1, len(input.shape))]
+        expanse = list(input.shape)
+        expanse[0] = -1
+        expanse[dim] = -1
+        index = index.view(views).expand(expanse)
+        return index
+
+class get_interior():
+    def __init__(self):
+        self.batched_index_select = batched_index_select()
+        return
+    
+    def __call__(self, src_face_normal, src_xyz, trg_xyz, trg_NN_idx):
+        N1, N2 = src_xyz.size(1), trg_xyz.size(1)
+
+        # get vector from trg xyz to NN in src, should be a [B, 3000, 3] vector
+        NN_src_xyz = self.batched_index_select(src_xyz, trg_NN_idx)  # [B, 3000, 3]
+        NN_vector = NN_src_xyz - trg_xyz  # [B, 3000, 3]
+
+        # get surface normal of NN src xyz for every trg xyz, should be a [B, 3000, 3] vector
+        NN_src_normal = self.batched_index_select(src_face_normal, trg_NN_idx)
+
+        interior = (NN_vector * NN_src_normal).sum(dim=-1) > 0  # interior as true, exterior as false
+        return interior
+
+
+class inter_penetr_loss(nn.Module):
+    def __init__(self):
+        super().__init__()
+        self.get_interior = get_interior()
+    
+    def forward(self, hand_xyz, hand_face, obj_xyz, nn_dist, nn_idx):
+        '''
+        get penetrate object xyz and the distance to its NN
+        :param hand_xyz: [B, 778, 3]
+        :param hand_face: [B, 1538, 3], hand faces vertex index in [0:778]
+        :param obj_xyz: [B, 3000, 3]
+        :return: inter penetration loss
+        '''
+        B = hand_xyz.size(0)
+        mesh = Meshes(verts=hand_xyz, faces=hand_face)
+        hand_normal = mesh.verts_normals_packed().view(-1, 778, 3)
+
+        # if not nn_dist:
+        #     nn_dist, nn_idx = utils_loss.get_NN(obj_xyz, hand_xyz)
+        interior = self.get_interior(hand_normal, hand_xyz, obj_xyz, nn_idx).type(torch.bool)  # True for interior
+        penetr_dist = nn_dist[interior].sum() / B  # batch reduction
+        return 100.0 * penetr_dist
+    
     
 class PointCloudCompletionLoss(nn.Module):
     def __init__(self):

@@ -187,8 +187,6 @@ if __name__ == "__main__":
     parser.add_argument('--cuda_id', type=str, default="0")
     parser.add_argument('--machine', type=str, default='41')
     parser.add_argument('--wandb', action='store_true')
-    
-    
     parser.add_argument('--resume', action='store_true')
     parser.add_argument('--mae', action='store_true')
     parser.add_argument('--comp', action='store_true')
@@ -203,7 +201,17 @@ if __name__ == "__main__":
     parser.add_argument('--run_mode', type=str, default='train')
     parser.add_argument('--pt_model', type=str, default='trans')
     
+<<<<<<< HEAD
     parser.add_argument('--run_check', action='store_true')
+=======
+    # parser.add_argument('--no_loss_edge', action='store_true')
+    # parser.add_argument('--no_loss_mesh_rec', action='store_true')
+    # parser.add_argument('--no_loss_dist_h', action='store_true')
+    # parser.add_argument('--no_loss_dist_o', action='store_true')
+    # parser.add_argument('--loss_penetr', action='store_false')
+    # parser.add_argument('--loss_mano', action='store_false')
+    parser.add_argument('--dloss_type', type=str, default=None)
+>>>>>>> 806bf2c8e6092d8959fae4a84dc490755cc7fbcc
 
     args = parser.parse_args()
 
@@ -219,6 +227,8 @@ if __name__ == "__main__":
     cfg = EasyDict()
     # DONE: transform the dict config to easydict
     cfg = cfgsu.merge_new_config(cfg, conf)
+    
+    # cfg = cfgsu.adjust_config(cfg, args)
     # conf = OmegaConf.structured(cfg)
     # import pdb; pdb.set_trace()
     os.environ['CUDA_VISIBLE_DEVICES'] = cfg.cuda_id

@@ -46,91 +46,95 @@ ratio_upper = 0.30
 """
 Filepath settings
 """
+<<<<<<< HEAD
 machine = '97'
+=======
+# machine = '97'
+>>>>>>> 806bf2c8e6092d8959fae4a84dc490755cc7fbcc
 
-if machine == '97':
+# if machine == '97':
 
-    DATASET_ROOT = "/home/datassd/yilin/GrabNet"
-    GrabNet_ROOT = "/home/datassd/yilin/GrabNet"
+#     DATASET_ROOT = "/home/datassd/yilin/GrabNet"
+#     GrabNet_ROOT = "/home/datassd/yilin/GrabNet"
     
-    OBMAN_ROOT = "/home/datassd/yilin/obman"
+#     OBMAN_ROOT = "/home/datassd/yilin/obman"
     
-    SHAPENET_ROOT = "/home/datassd/yilin/ShapeNetCore.v2"
+#     SHAPENET_ROOT = "/home/datassd/yilin/ShapeNetCore.v2"
     
-    mano_root = "/home/datassd/yilin/Codes/_toolbox/mano"
+#     mano_root = "/home/datassd/yilin/Codes/_toolbox/mano"
 
-    mano_dir = "/home/datassd/yilin/Codes/_toolbox/mano/models/MANO_RIGHT.pkl" # MANO right hand model path
+#     mano_dir = "/home/datassd/yilin/Codes/_toolbox/mano/models/MANO_RIGHT.pkl" # MANO right hand model path
 
-    visual_root = "/home/datassd/yilin/Outputs"
+#     visual_root = "/home/datassd/yilin/Outputs"
     
-    dataset_visual_dir = "/home/datassd/yilin/Outputs/GrabNet_visual"
-    obman_visual_dir = "/ssd_data/yilin/Outputs/ObMan_visual"
+#     dataset_visual_dir = "/home/datassd/yilin/Outputs/GrabNet_visual"
+#     obman_visual_dir = "/ssd_data/yilin/Outputs/ObMan_visual"
     
-    OUTPUT_ROOT = "/home/datassd/yilin/Outputs/ConditionHOI"
+#     OUTPUT_ROOT = "/home/datassd/yilin/Outputs/ConditionHOI"
     
-elif machine == '208':
+# elif machine == '208':
 
-    DATASET_ROOT = "/home/shihao/yilin/GrabNet"
-    GrabNet_ROOT = "/home/shihao/yilin/GrabNet"
+#     DATASET_ROOT = "/home/shihao/yilin/GrabNet"
+#     GrabNet_ROOT = "/home/shihao/yilin/GrabNet"
     
-    OBMAN_ROOT = "/home/shihao/yilin/obman"
+#     OBMAN_ROOT = "/home/shihao/yilin/obman"
     
-    SHAPENET_ROOT = "/home/shihao/yilin/ShapeNetCore.v2"
+#     SHAPENET_ROOT = "/home/shihao/yilin/ShapeNetCore.v2"
     
-    mano_root = "/home/shihao/yilin/Codes/_toolbox/mano"
+#     mano_root = "/home/shihao/yilin/Codes/_toolbox/mano"
 
-    mano_dir = "/home/shihao/yilin/Codes/_toolbox/mano/models/MANO_RIGHT.pkl" # MANO right hand model path
+#     mano_dir = "/home/shihao/yilin/Codes/_toolbox/mano/models/MANO_RIGHT.pkl" # MANO right hand model path
 
-    visual_root = "/home/shihao/yilin/Outputs"
+#     visual_root = "/home/shihao/yilin/Outputs"
     
-    dataset_visual_dir = "/home/shihao/yilin/Outputs/GrabNet_visual"
-    obman_visual_dir = "/home/shihao/yilin/Outputs/ObMan_visual"
+#     dataset_visual_dir = "/home/shihao/yilin/Outputs/GrabNet_visual"
+#     obman_visual_dir = "/home/shihao/yilin/Outputs/ObMan_visual"
     
-    OUTPUT_ROOT = "/home/shihao/yilin/Outputs/ConditionHOI"
+#     OUTPUT_ROOT = "/home/shihao/yilin/Outputs/ConditionHOI"
     
-elif machine == '195':
+# elif machine == '195':
 
-    DATASET_ROOT = "/home/jupyter-yiling/GrabNet"
-    GrabNet_ROOT = "/home/jupyter-yiling/GrabNet"
+#     DATASET_ROOT = "/home/jupyter-yiling/GrabNet"
+#     GrabNet_ROOT = "/home/jupyter-yiling/GrabNet"
     
-    OBMAN_ROOT = "/home/jupyter-yiling/obman"
+#     OBMAN_ROOT = "/home/jupyter-yiling/obman"
     
-    SHAPENET_ROOT = "/home/jupyter-yiling/ShapeNetCore.v2"
+#     SHAPENET_ROOT = "/home/jupyter-yiling/ShapeNetCore.v2"
     
-    mano_root = "/home/jupyter-yiling/Codes/_toolbox/mano"
+#     mano_root = "/home/jupyter-yiling/Codes/_toolbox/mano"
 
-    mano_dir = "/home/jupyter-yiling/Codes/_toolbox/mano/models/MANO_RIGHT.pkl" # MANO right hand model path
+#     mano_dir = "/home/jupyter-yiling/Codes/_toolbox/mano/models/MANO_RIGHT.pkl" # MANO right hand model path
 
-    visual_root = "/home/jupyter-yiling/Outputs"
+#     visual_root = "/home/jupyter-yiling/Outputs"
     
-    dataset_visual_dir = "/home/jupyter-yiling/Outputs/GrabNet_visual"
-    obman_visual_dir = "/home/jupyter-yiling/Outputs/ObMan_visual"
+#     dataset_visual_dir = "/home/jupyter-yiling/Outputs/GrabNet_visual"
+#     obman_visual_dir = "/home/jupyter-yiling/Outputs/ObMan_visual"
     
-    OUTPUT_ROOT = "/home/jupyter-yiling/Outputs/ConditionHOI"
+#     OUTPUT_ROOT = "/home/jupyter-yiling/Outputs/ConditionHOI"
 
-elif machine == '41':
-    DATASET_ROOT = "/ssd_data/yilin/GrabNet"
+# elif machine == '41':
+#     DATASET_ROOT = "/ssd_data/yilin/GrabNet"
     
-    OBMAN_ROOT = "/ssd_data/yilin/obman"
+#     OBMAN_ROOT = "/ssd_data/yilin/obman"
     
-    SHAPENET_ROOT = "/ssd_data/yilin/ShapeNetCore.v2"
+#     SHAPENET_ROOT = "/ssd_data/yilin/ShapeNetCore.v2"
     
-    mano_root = "/home/yilin/smpl_models/mano"
+#     mano_root = "/home/yilin/smpl_models/mano"
 
-    mano_dir = "/home/yilin/smpl_models/mano/MANO_RIGHT.pkl" # MANO right hand model path
+#     mano_dir = "/home/yilin/smpl_models/mano/MANO_RIGHT.pkl" # MANO right hand model path
     
-    visual_root = "/ssd_data/yilin/Outputs"
+#     visual_root = "/ssd_data/yilin/Outputs"
     
-    dataset_visual_dir = "/ssd_data/yilin/Outputs/GrabNet_visual"
-    obman_visual_dir = "/ssd_data/yilin/Outputs/ObMan_visual"
+#     dataset_visual_dir = "/ssd_data/yilin/Outputs/GrabNet_visual"
+#     obman_visual_dir = "/ssd_data/yilin/Outputs/ObMan_visual"
 
-    OUTPUT_ROOT = "/ssd_data/yilin/Outputs/ConditionHOI"
+#     OUTPUT_ROOT = "/ssd_data/yilin/Outputs/ConditionHOI"
 
 
 
-dataset_dir = os.path.join(DATASET_ROOT, 'data')
+# dataset_dir = os.path.join(DATASET_ROOT, 'data')
 
-obj_mesh_dir = os.path.join(DATASET_ROOT, 'tools/object_meshes/decimate_meshes')
+# obj_mesh_dir = os.path.join(DATASET_ROOT, 'tools/object_meshes/decimate_meshes')
 
 """
 Dataset Generation configuration

@@ -20,6 +20,15 @@ def get_config(args, folder=None):
     config.update({'cfg_path': cfg_path, 'run_type':folder})
     return config
 
+# def adjust_config(config, args):
+#     config.loss.train.loss_edge = False if args.no_loss_edge else True
+#     config.loss.train.loss_mesh_rec = False if args.no_loss_mesh_rec else True
+#     config.loss.train.loss_dist_h = False if args.no_loss_dist_h else True
+#     config.loss.train.loss_dist_o = False if args.no_loss_dist_o else True
+#     config.loss.train.loss_penetr = True if args.loss_penetr else False
+#     config.loss.train.loss_mano = True if args.loss_mano else False
+    
+
 def merge_new_config(config, new_config):
     for key, val in new_config.items():
         if not isinstance(val, dict):
@@ -62,7 +71,8 @@ def config_paths(machine, exp_name):
         output_dir = "/home/datassd/yilin/Outputs/ConditionHOI/"+exp_name
         mano_root = "/home/datassd/yilin/Codes/_toolbox/mano"
         mano_rh_path = f"/home/datassd/yilin/Codes/_toolbox/mano/models/MANO_RIGHT.pkl"
-    if machine == '208':
+        
+    if machine == '208' or machine == '50':
         grabnet_root = "/home/shihao/yilin/GrabNet"
         obman_root = "/home/shihao/yilin/obman"
         shapenet_root = "/home/shihao/yilin/ShapeNetCore.v2"
@@ -70,6 +80,7 @@ def config_paths(machine, exp_name):
         output_dir = "/home/shihao/yilin/Outputs/ConditionHOI/"+exp_name
         mano_root = "/home/shihao/yilin/Codes/_toolbox/mano"
         mano_rh_path = f"/home/shihao/yilin/Codes/_toolbox/mano/models/MANO_RIGHT.pkl"
+        
     if machine == '195':
         grabnet_root = "/home/jupyter-yiling/GrabNet"
         obman_root = "/home/jupyter-yiling/obman"

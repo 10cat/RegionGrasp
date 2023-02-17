@@ -10,6 +10,7 @@ import torch.nn.functional as F
 import chamfer_distance as chd
 # from chamfer_distance import ChamferDistance as ch_dist
 from pytorch3d.structures import Meshes
+from pytorch3d.ops import knn_gather, knn_points
 import sys
 sys.path.append('.')
 sys.path.append('..')
@@ -365,6 +366,24 @@ def signed_distance_batch(device, rhand_vs, rh_f, obj_vs, cfg, object_faces=None
     o2h_signed, h2o_signed, o_nearest_ids, h_nearest_ids = point2point_signed(rhand_vs, obj_vs, rh_normals, obj_normals)
     
     return o2h_signed, h2o_signed, o_nearest_ids, h_nearest_ids
+
+def get_NN(src_xyz, trg_xyz, k=1):
+    '''
+    :param src_xyz: [B, N1, 3]
+    :param trg_xyz: [B, N2, 3]
+    :return: nn_dists, nn_dix: all [B, 3000] tensor for NN distance and index in N2
+    '''
+    B = src_xyz.size(0)
+    src_lengths = torch.full(
+        (src_xyz.shape[0],), src_xyz.shape[1], dtype=torch.int64, device=src_xyz.device
+    )  # [B], N for each num
+    trg_lengths = torch.full(
+        (trg_xyz.shape[0],), trg_xyz.shape[1], dtype=torch.int64, device=trg_xyz.device
+    )
+    src_nn = knn_points(src_xyz, trg_xyz, lengths1=src_lengths, lengths2=trg_lengths, K=k)  # [dists, idx]
+    nn_dists = src_nn.dists[..., 0]
+    nn_idx = src_nn.idx[..., 0]
+    return nn_dists, nn_idx
 
 def decode_hand_params_batch(hand_params, batch_size, cfg, device):
     """decode the mano hand model(vertices, faces) from given mano hand parameters
