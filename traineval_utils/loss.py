@@ -90,7 +90,7 @@ class cGraspvaeLoss(nn.Module):
         
         
         dict_loss = {}
-        loss_cfg = self.cfg.loss['train']
+        loss_cfg = self.cfg.loss[mode]
         #### dist Loss ####
         if loss_cfg.loss_dist_h or loss_cfg.loss_dist_o:
             rh_normals = Meshes(verts=rhand_vs, faces=rhand_faces).to(self.device).verts_normals_packed().view(-1, 778, 3)
