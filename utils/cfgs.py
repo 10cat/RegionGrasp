@@ -7,11 +7,12 @@ sys.path.append('..')
 from easydict import EasyDict
 from omegaconf import OmegaConf
 
-def get_config(args, folder=None):
-    cfg_path = os.path.join(args.exp_name, 'config.yaml')
+def get_config(args, paths, folder=None):
+    cfg_path = os.path.join(paths['output_dir'], 'config.yaml')
     if args.resume and os.path.exists(cfg_path):
         print(f'Resume yaml from {cfg_path}')
-    else:
+        
+    elif args.cfgs != 'config':
         cfg_root = './cfgs'
         cfg_path = os.path.join(cfg_root, folder, args.cfgs+'.yaml')
         
@@ -19,6 +20,15 @@ def get_config(args, folder=None):
     config = OmegaConf.to_container(config, resolve=True)
     config.update({'cfg_path': cfg_path, 'run_type':folder})
     return config
+
+# def adjust_config(config, args):
+#     config.loss.train.loss_edge = False if args.no_loss_edge else True
+#     config.loss.train.loss_mesh_rec = False if args.no_loss_mesh_rec else True
+#     config.loss.train.loss_dist_h = False if args.no_loss_dist_h else True
+#     config.loss.train.loss_dist_o = False if args.no_loss_dist_o else True
+#     config.loss.train.loss_penetr = True if args.loss_penetr else False
+#     config.loss.train.loss_mano = True if args.loss_mano else False
+    
 
 def merge_new_config(config, new_config):
     for key, val in new_config.items():
@@ -62,6 +72,16 @@ def config_paths(machine, exp_name):
         output_dir = "/home/datassd/yilin/Outputs/ConditionHOI/"+exp_name
         mano_root = "/home/datassd/yilin/Codes/_toolbox/mano"
         mano_rh_path = f"/home/datassd/yilin/Codes/_toolbox/mano/models/MANO_RIGHT.pkl"
+        
+    if machine == '208' or machine == '50':
+        grabnet_root = "/home/shihao/yilin/GrabNet"
+        obman_root = "/home/shihao/yilin/obman"
+        shapenet_root = "/home/shihao/yilin/ShapeNetCore.v2"
+        output_root = "/home/shihao/yilin/Outputs/ConditionHOI/"
+        output_dir = "/home/shihao/yilin/Outputs/ConditionHOI/"+exp_name
+        mano_root = "/home/shihao/yilin/Codes/_toolbox/mano"
+        mano_rh_path = f"/home/shihao/yilin/Codes/_toolbox/mano/models/MANO_RIGHT.pkl"
+        
     if machine == '195':
         grabnet_root = "/home/jupyter-yiling/GrabNet"
         obman_root = "/home/jupyter-yiling/obman"
@@ -79,7 +99,7 @@ def config_paths(machine, exp_name):
         mano_root = "/home/yilin/smpl_models/mano"
         mano_rh_path = f"/home/yilin/smpl_models/mano/MANO_RIGHT.pkl"
     
-    model_root = os.path.join(output_dir, 'model')
+    model_root = os.path.join(output_dir, 'models')
     
     paths['grabnet_root'] = grabnet_root
     paths['obman_root'] = obman_root

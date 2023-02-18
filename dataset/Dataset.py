@@ -225,15 +225,15 @@ class ObManDataset(ObManThumb):
         # mask_center = np.mean(contact_points, axis=0)
         
         sample['sample_id'] = torch.Tensor([index])
-        sample['input_pc'] = torch.from_numpy(obj_points)
-        sample['contact_center'] = torch.from_numpy(contact_point)
-        sample['obj_point_normals'] = torch.from_numpy(obj_point_normals)
+        sample['input_pc'] = torch.from_numpy(obj_points).to(torch.float32)
+        sample['contact_center'] = torch.from_numpy(contact_point).to(torch.float32)
+        sample['obj_point_normals'] = torch.from_numpy(obj_point_normals).to(torch.float32)
         # sample['region_mask'] = torch.from_numpy(region_mask)
-        sample['obj_trans'] = torch.from_numpy(obj_trans)
-        sample['cam_extr'] = torch.from_numpy(self.cam_extr[:3, :3])
-        sample['hand_verts'] = torch.from_numpy(hand_verts)
+        sample['obj_trans'] = torch.from_numpy(obj_trans).to(torch.float32)
+        sample['cam_extr'] = torch.from_numpy(self.cam_extr[:3, :3]).to(torch.float32)
+        sample['hand_verts'] = torch.from_numpy(hand_verts).to(torch.float32)
         if self.use_mano:
-            sample['hand_params'] = hand_params_torch
+            sample['hand_params'] = hand_params_torch.to(torch.float32)
         
         return sample
     

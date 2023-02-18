@@ -62,6 +62,12 @@ def get_dataset(cfg, mode='train'):
                                     mano_root = cfg.mano_root,
                                     split = mode,
                                     **configs)
+        elif cfg.base:
+            dataset = ObManDataset(ds_root = ds_root,
+                                    shapenet_root = shapenet_root,
+                                    mano_root = cfg.mano_root,
+                                    split = mode,
+                                    **configs)
         else:
             raise NotImplementedError
         
@@ -70,6 +76,7 @@ def get_dataset(cfg, mode='train'):
         configs = cfg.dataset[mode]._base_.kwargs
         dataset = GrabNetDataset(dataset_root=ds_root, 
                                  ds_name=mode,
+                                 mano_path=cfg.mano_rh_path,
                                  **configs)
         
         

@@ -107,7 +107,7 @@ class obman(data.Dataset):
     
     def load_dataset(self):
         # NOTE:MANO right hand model path -- use config
-        pkl_path = config.mano_dir 
+        pkl_path = os.path.join(self.mano_root, 'models/MANO_RIGHT.pkl')
         if not os.path.exists(pkl_path):
             pkl_path = '../' + pkl_path
         cache_path = os.path.join(

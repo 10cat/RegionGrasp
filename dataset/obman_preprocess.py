@@ -215,7 +215,7 @@ class ObManThumb(ObManResample):
         import json
         self.mano_trans = json.load(open(mano_trans_path, 'r'))
         self.mano_rot = json.load(open(mano_rot_path, 'r'))
-        self.rh_mano = mano.load(model_path=config.mano_dir,
+        self.rh_mano = mano.load(model_path=os.path.join(self.mano_root, 'models/MANO_RIGHT.pkl'),
                                  model_type='mano',
                                  use_pca=True,
                                  num_pca_comps=45,

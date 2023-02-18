@@ -7,11 +7,12 @@ import torch.nn as nn
 import torch.nn.functional as F
 # from option import MyOptions as cfg
 from models.pointnet_encoder import PointNetEncoder
-from utils.utils import func_timer, region_masked_pointwise
+from utils.utils import func_timer, region_masked_pointwise, mask_region_patch, get_region_mask
 from timm.models.layers import trunc_normal_
 from models.PointTr import get_knn_index, PoseEmbedding, Attention, CrossAttention, EncoderBlock, DecoderBlock, QueryGenerator, FinePointGenerator, knn_point
 from models.PointMAE import MaskTransformer, TransformerDecoder, Grouper
 from models.DGCNN import DGCNN_grouper
+from pytorch3d.ops import knn_gather, knn_points
 
 class ConditionTrans(nn.Module):
     def __init__(self, in_chans=3, embed_dim=768, num_heads=6, mlp_ratio=2., qkv_bias=False, qk_scale=None, drop_rate=0., attn_drop_rate=0., glob_feat_dim=1024, depth={'encoder':6, 'decoder':6}, num_query=224, knn_layer_num=-1, fps=False, num_pred=6144, knn_k=8):
@@ -173,57 +174,10 @@ class ConditionMAE(nn.Module):
         )
         
     def mask_region_patch(self, center, mask_center):
-        B, G, _ = center.shape
-        batch_mask = np.zeros([B, G])
-        mask_center = mask_center.reshape(B, 1, 3)
-        k_idx = knn_point(self.region_size, center, mask_center).reshape(B, -1)
-        
-        assert k_idx.shape[-1] == self.region_size, "knn_point dimension error"
-        
-        k_idx = k_idx.detach().to('cpu').numpy()
-        
-        for i in range(B):
-            mask = np.zeros(G)
-            mask[k_idx[i]] = 1
-            batch_mask[i, :] = mask
-            
-        batch_mask = torch.from_numpy(batch_mask).to(torch.bool)
-        return batch_mask
+        return mask_region_patch(center, mask_center, self.region_size)
     
     def get_region_mask(self, mask, p_idx, obj_points):
-        """_summary_
-
-        Args:
-            mask (_type_): _description_
-            p_idx (_type_): _description_
-            obj_points (_type_): _description_
-
-        Returns:
-            _type_: _description_
-        """        
-        B, G, S = p_idx.shape
-        B, N, _ = obj_points.shape
-        
-        # import pdb; pdb.set_trace()
-        p_idx = p_idx[mask].reshape(B, -1, S)
-        
-        _, R, _ = p_idx.shape
-        assert R == self.region_size
-        
-        p_idx = p_idx.detach().to('cpu').numpy()
-        
-        full_mask = np.zeros([B, N])
-        for batch in range(B):
-            mask = np.zeros(N)
-            indices = p_idx[batch]
-            index = []
-            for i in range(R):
-                index += indices[i].tolist()
-            index = list(set(index))
-            mask[index] = 1
-            full_mask[batch, :] = mask
-        full_mask = torch.from_numpy(full_mask)
-        return full_mask
+        return get_region_mask(mask, p_idx, obj_points, self.region_size)
         
     def forward(self, pts, mask_center=None):
         B, _, _ = pts.shape

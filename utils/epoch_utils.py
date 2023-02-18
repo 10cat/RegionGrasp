@@ -60,10 +60,11 @@ class MetersMonitor(object):
     
     def update(self, dict, dtype='torch'):
         for key in dict.keys():
-            if dtype == 'torch':
-                self.Meters.add_value(key, float(dict[key].detach().to('cpu')))
-            else:
-                self.Meters.add_value(key, float(dict[key]))
+            # if dtype == 'torch':
+            #     self.Meters.add_value(key, float(dict[key].detach().to('cpu')))
+            # else:
+            #     self.Meters.add_value(key, float(dict[key]))
+            self.Meters.add_value(key, dict[key].item())
     
     def get_avg(self, mode=None):
         return self.Meters.avg(mode)
@@ -252,7 +253,7 @@ class PretrainEpoch():
             total_loss = sum(dict_loss.values())
             
             if self.mode == 'train':
-                model_update(self.optimizer, total_loss, self.scheduler)
+                model_update(self.optimizer, total_loss, self.scheduler, epoch=epoch)
             
             msg_loss, losses = self.Losses.report(dict_loss, total_loss, mode=self.mode)
             msg = msg_loss
@@ -509,9 +510,11 @@ class EpochVAE_mae(EpochVAE_comp):
     def __init__(self, loss, dataset, optimizer, scheduler, output_dir, mode='train', cfg=None):
         super().__init__(loss, dataset, optimizer, scheduler, output_dir, mode, cfg)
         
+        
     def model_forward(self, model, obj_input, hand_input=None, mask_center=None):
         device = 'cuda' if self.cfg.use_cuda else 'cpu'
         if self.mode == 'train':
+            # hand_params, sample_stats, mask = model(obj_input, hand_input, mask_center=mask_center)
             hand_params, sample_stats, mask = model(obj_input.to(device), hand_input.to(device), mask_center=mask_center.to(device))
             return hand_params, sample_stats, mask
         else:
@@ -519,6 +522,7 @@ class EpochVAE_mae(EpochVAE_comp):
                 hand_params_list = []
                 for iter in range(self.cfg.eval_iter):
                     B = obj_input.shape[0]
+                    # hand_params, mask =  model.inference(obj_input.to(device), mask_center=mask_center.to(device))
                     hand_params, mask =  model.inference(obj_input.to(device), mask_center=mask_center.to(device))
                     hand_params_list.append(hand_params)
                     torch.cuda.empty_cache()
@@ -537,6 +541,14 @@ class EpochVAE_mae(EpochVAE_comp):
             # import pdb; pdb.set_trace()
             sample_ids = sample['sample_id']
             
+            # test
+            # obj_input_pc = sample['input_pc'].to('cuda')
+            # gt_rhand_vs = sample['hand_verts'].transpose(2, 1).to('cuda')
+            # mask_centers = sample['contact_center'].to('cuda')
+            # # import pdb; pdb.set_trace()
+            # sample_ids = sample['sample_id'].to('cuda')
+            
+            
             hand_params, sample_stats, region_mask = self.model_forward(model, obj_input_pc, gt_rhand_vs, mask_centers)
             
             obj_points = obj_input_pc
@@ -548,7 +560,7 @@ class EpochVAE_mae(EpochVAE_comp):
             
             total_loss = sum(dict_loss.values())
             
-            model_update(self.optimizer, total_loss, self.scheduler)
+            model_update(self.optimizer, total_loss, self.scheduler, epoch=epoch)
             
             torch.cuda.empty_cache()
             msg_loss, losses = self.Losses.report(dict_loss, total_loss, mode=self.mode)
@@ -572,8 +584,9 @@ class EpochVAE_mae(EpochVAE_comp):
             #                         batch_interval=self.batch_interval,
             #                         sample_interval=self.sample_interval)
             
-            # if batch_idx > 5:
-            #     break
+            if self.cfg.run_check:
+                if batch_idx > 5:
+                    break
         
         self.log(self.Losses, epoch=epoch)
         return model, stop_flag
@@ -611,6 +624,7 @@ class ValEpochVAE_mae(EpochVAE_mae):
                     
                     for key, val in dict_loss.items():
                         Loss_iters.add_value(key, val)
+                        # import pdb; pdb.set_trace()
                     if epoch % self.cfg.check_interval == 0 and epoch != 0 and batch_idx % self.batch_interval == 0:
                         rhand_vs_pred_0 = rhand_vs_pred[0].detach().to('cpu').numpy()
                         rhand_faces_0 = rhand_faces[0].detach().to('cpu').numpy()
@@ -668,10 +682,11 @@ class ValEpochVAE_mae(EpochVAE_mae):
                     hand_params_all = hand_params_all.reshape(self.cfg.eval_iter, B, -1).transpose(0, 1) # B, iter_nums, D
                     hand_params_all = hand_params_all.cpu()
                     recon_rhand_params.append(hand_params_all)
-            # if batch_idx > 5:
-            #     break
+            if self.cfg.run_check:
+                if batch_idx > 5:
+                    break
             
-        if self.cfg.run_mode != 'test':
+        if self.cfg.run_mode == 'train':
             no_improve_epochs = self.Checkpt.save_checkpoints(epoch, model, metric_value=losses[f'{self.mode}_total_loss'], optimizer=self.optimizer, scheduler=self.scheduler)
             if no_improve_epochs > self.cfg.early_stopping:
                 stop_flag = True
