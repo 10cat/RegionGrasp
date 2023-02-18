@@ -62,6 +62,12 @@ def get_dataset(cfg, mode='train'):
                                     mano_root = cfg.mano_root,
                                     split = mode,
                                     **configs)
+        elif cfg.base:
+            dataset = ObManDataset(ds_root = ds_root,
+                                    shapenet_root = shapenet_root,
+                                    mano_root = cfg.mano_root,
+                                    split = mode,
+                                    **configs)
         else:
             raise NotImplementedError
         

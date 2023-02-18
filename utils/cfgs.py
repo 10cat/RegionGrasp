@@ -7,11 +7,12 @@ sys.path.append('..')
 from easydict import EasyDict
 from omegaconf import OmegaConf
 
-def get_config(args, folder=None):
-    cfg_path = os.path.join(args.exp_name, 'config.yaml')
+def get_config(args, paths, folder=None):
+    cfg_path = os.path.join(paths['output_dir'], 'config.yaml')
     if args.resume and os.path.exists(cfg_path):
         print(f'Resume yaml from {cfg_path}')
-    else:
+        
+    elif args.cfgs != 'config':
         cfg_root = './cfgs'
         cfg_path = os.path.join(cfg_root, folder, args.cfgs+'.yaml')
         

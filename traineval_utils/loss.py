@@ -120,7 +120,7 @@ class cGraspvaeLoss(nn.Module):
         #### penetration loss ####
         if loss_cfg.get('loss_penetr') and loss_cfg.loss_penetr:
             obj_nn_dist_recon, obj_nn_idx_recon = get_NN(obj_vs, rhand_vs_pred)
-            loss_penetr = self.coefs['lambda_penetr'] *self.PenetrLoss(rhand_vs_pred, rhand_faces, obj_vs,
+            loss_penetr = self.coefs['lambda_penetr'] * self.PenetrLoss(rhand_vs_pred, rhand_faces, obj_vs,
                                         obj_nn_dist_recon, obj_nn_idx_recon)
             dict_loss.update({'loss_penetr': loss_penetr})
             

@@ -16,8 +16,9 @@ from torch.autograd import Variable
 
 import numpy as np
 import torch.nn.functional as F
-from utils.utils import region_masked_pointwise, size_splits, func_timer
-from option import MyOptions as cfg
+from utils.utils import region_masked_pointwise, size_splits, func_timer, mask_region_patch, get_region_mask
+from models.PointMAE import Grouper
+# from option import MyOptions as cfg
 
 class STN3d(nn.Module):
     def __init__(self, channel):
@@ -164,15 +165,17 @@ class PointNetEncoder(nn.Module):
         
 
 class ObjRegionConditionEncoder(PointNetEncoder):
-    def __init__(self, global_feat=True, feature_transform=False, channel=3):
+    def __init__(self, global_feat=True, feature_transform=False, channel=3, config=None):
         super().__init__(global_feat, feature_transform, channel)
-        output_dim = cfg.VAE_condition_size
+        output_dim = config.condition_size
         self.conv2_m = nn.Conv1d(64, 128, 1)
         self.conv3_m = nn.Conv1d(128, 1024, 1)
         self.bn2_m = nn.BatchNorm1d(128)
         self.bn3_m = nn.BatchNorm1d(1024)
         self.convfuse = nn.Conv1d(in_channels=2048, out_channels=output_dim, kernel_size=1)
         self.bnfuse = nn.BatchNorm1d(output_dim)
+        self.group_divider = Grouper(config.num_group, config.group_size)
+        self.region_size = config.region_size
 
     def pointfeat_masked_forward(self, pointfeat_masked):
         x = pointfeat_masked
@@ -183,23 +186,29 @@ class ObjRegionConditionEncoder(PointNetEncoder):
         return x
 
 
-    def forward(self, obj_pc, region_mask):
+    def forward(self, obj_pc, mask_center=None):
 
         B = obj_pc.shape[0]
-        x, trans, trans_feat, N = self.pre_pointfeat_forward(obj_pc)
+        # import pdb; pdb.set_trace()
+        
+        neighborhood, center, p_idx = self.group_divider(obj_pc, return_idx=True)
+        batch_mask = mask_region_patch(center, mask_center, self.region_size)
+        region_mask = get_region_mask(batch_mask, p_idx, obj_pc, self.region_size)
+        
+        x, trans, trans_feat, N = self.pre_pointfeat_forward(obj_pc.transpose(1, 2))
 
         #  NOTE: obj pointfeat -> local feature: (B, 64, N)
         pointfeat = x
         # import pdb; pdb.set_trace()
         # NOTE: obj masked pointfeat -> mask方式是region_mask(B, 1, N)直接与obj pointfeat点乘(B, 64, N)
         # FIXME: 由于选取出来的点一般相对于N来说较少，二值化的region_mask(B, 1, N)直接与obj pointfeat点乘(B, 64, N)的特征向量(B, 64, N)会特别稀疏
-        pointfeat_masked = region_masked_pointwise(pointfeat, region_mask) 
+        # import pdb; pdb.set_trace()
+        pointfeat_masked = region_masked_pointwise(pointfeat, region_mask.unsqueeze(1).to(pointfeat.device)) 
         
         x1 = self.pointfeat_forward(pointfeat)
         x2 = self.pointfeat_masked_forward(pointfeat_masked)
 
         x = self.bnfuse(self.convfuse(torch.cat((x1, x2), dim=-1).unsqueeze(2))) # use global fuse feature
-
         x = x.view(B, -1)
         
-        return x, trans, trans_feat
+        return x, trans, trans_feat, region_mask
