@@ -60,10 +60,11 @@ class MetersMonitor(object):
     
     def update(self, dict, dtype='torch'):
         for key in dict.keys():
-            if dtype == 'torch':
-                self.Meters.add_value(key, float(dict[key].detach().to('cpu')))
-            else:
-                self.Meters.add_value(key, float(dict[key]))
+            # if dtype == 'torch':
+            #     self.Meters.add_value(key, float(dict[key].detach().to('cpu')))
+            # else:
+            #     self.Meters.add_value(key, float(dict[key]))
+            self.Meters.add_value(key, dict[key].item())
     
     def get_avg(self, mode=None):
         return self.Meters.avg(mode)
@@ -623,6 +624,7 @@ class ValEpochVAE_mae(EpochVAE_mae):
                     
                     for key, val in dict_loss.items():
                         Loss_iters.add_value(key, val)
+                        # import pdb; pdb.set_trace()
                     if epoch % self.cfg.check_interval == 0 and epoch != 0 and batch_idx % self.batch_interval == 0:
                         rhand_vs_pred_0 = rhand_vs_pred[0].detach().to('cpu').numpy()
                         rhand_faces_0 = rhand_faces[0].detach().to('cpu').numpy()
@@ -684,7 +686,7 @@ class ValEpochVAE_mae(EpochVAE_mae):
                 if batch_idx > 5:
                     break
             
-        if self.cfg.run_mode != 'test':
+        if self.cfg.run_mode == 'train':
             no_improve_epochs = self.Checkpt.save_checkpoints(epoch, model, metric_value=losses[f'{self.mode}_total_loss'], optimizer=self.optimizer, scheduler=self.scheduler)
             if no_improve_epochs > self.cfg.early_stopping:
                 stop_flag = True

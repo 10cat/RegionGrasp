@@ -137,15 +137,16 @@ def size_splits(tensor, split_sizes, dim=0):
     return tuple(tensor.narrow(int(dim), int(start), int(length)) 
                  for start, length in zip(splits, split_sizes))
 
-def region_masked_pointwise(obj_pc, mask, cfg):
-    # DONE: 不改变点乘，但是改成dense加权形式,即没有选中的点权重设小但不为0，选中为condition的点权重设大 (e.g. 0.1 / 3.0)
-    if cfg.mask_dense_weight:
-        weight = torch.ones_like(mask, dtype=torch.float32) * 0.1
-        cond = (mask > 0)
-        weight[cond] = cfg.mask_cond_weight
-    else:
-        weight = mask
-    obj_pc_masked = obj_pc * (weight)
+def region_masked_pointwise(obj_pc, mask, cfg=None):
+    # # DONE: 不改变点乘，但是改成dense加权形式,即没有选中的点权重设小但不为0，选中为condition的点权重设大 (e.g. 0.1 / 3.0)
+    # if cfg.mask_dense_weight:
+    #     weight = torch.ones_like(mask, dtype=torch.float32) * 0.1
+    #     cond = (mask > 0)
+    #     weight[cond] = cfg.mask_cond_weight
+    # else:
+    #     weight = mask
+    # obj_pc_masked = obj_pc * (weight)
+    obj_pc_masked = obj_pc * mask
     return obj_pc_masked
 
 def edges_for(x, vpe):
@@ -384,6 +385,71 @@ def get_NN(src_xyz, trg_xyz, k=1):
     nn_dists = src_nn.dists[..., 0]
     nn_idx = src_nn.idx[..., 0]
     return nn_dists, nn_idx
+
+def mask_region_patch(center, mask_center, region_size):
+    """_summary_
+
+    Args:
+        center (_type_): _description_
+        mask_center (_type_): _description_
+        region_size (_type_): number of patches to mask
+
+    Returns:
+        _type_: _description_
+    """
+    B, G, _ = center.shape
+    batch_mask = np.zeros([B, G])
+    mask_center = mask_center.reshape(B, 1, 3)
+    knn = knn_points(mask_center, center, K=region_size)
+    k_idx = knn.idx.reshape(B, -1)
+    # import pdb; pdb.set_trace()
+    assert k_idx.shape[-1] == region_size, "knn_point dimension error"
+        
+    k_idx = k_idx.detach().to('cpu').numpy()
+    
+    for i in range(B):
+        mask = np.zeros(G)
+        mask[k_idx[i]] = 1
+        batch_mask[i, :] = mask
+        
+    batch_mask = torch.from_numpy(batch_mask).to(torch.bool)
+    
+    return batch_mask
+
+def get_region_mask(mask, p_idx, obj_points, region_size):
+    """_summary_
+
+    Args:
+        mask (_type_): _description_
+        p_idx (_type_): _description_
+        obj_points (_type_): _description_
+
+    Returns:
+        _type_: _description_
+    """        
+    B, G, S = p_idx.shape
+    B, N, _ = obj_points.shape
+    
+    # import pdb; pdb.set_trace()
+    p_idx = p_idx[mask].reshape(B, -1, S)
+    
+    _, R, _ = p_idx.shape
+    assert R == region_size
+    
+    p_idx = p_idx.detach().to('cpu').numpy()
+    
+    full_mask = np.zeros([B, N])
+    for batch in range(B):
+        mask = np.zeros(N)
+        indices = p_idx[batch]
+        index = []
+        for i in range(R):
+            index += indices[i].tolist()
+        index = list(set(index))
+        mask[index] = 1
+        full_mask[batch, :] = mask
+    full_mask = torch.from_numpy(full_mask).to(torch.float32)
+    return full_mask
 
 def decode_hand_params_batch(hand_params, batch_size, cfg, device):
     """decode the mano hand model(vertices, faces) from given mano hand parameters

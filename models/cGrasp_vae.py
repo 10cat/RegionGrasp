@@ -72,6 +72,8 @@ class cGraspvae(nn.Module):
             condition_vec, mask, feat_o, center_o = self.cnet(obj_pc, mask_center=mask_center)
         elif self.cfg.model.cnet_type == 'obj_comp':
             condition_vec = self.cnet(obj_pc, feat_only=True)
+        elif self.cfg.model.cnet_type == 'base':
+            condition_vec, _, _, mask = self.cnet(obj_pc, mask_center=mask_center)
         else:
             raise NotImplementedError
         
@@ -100,6 +102,9 @@ class cGraspvae(nn.Module):
             condition_vec, mask, _, _ = self.cnet(obj_pc, mask_center=mask_center)
         elif self.cfg.model.cnet_type == 'obj_comp':
             condition_vec = self.cnet(obj_pc, feat_only=True)
+            
+        elif self.cfg.model.cnet_type == 'base':
+            condition_vec, _, _, mask = self.cnet(obj_pc, mask_center=mask_center)
         else:
             raise NotImplementedError
         
