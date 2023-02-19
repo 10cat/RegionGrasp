@@ -62,20 +62,18 @@ class PretrainDataset(data.Dataset):
                                        resample_num=resample_num)
         self.grabnet_objects = self.grabnet.resampled_objs
         
+        
         # CHECK: 合并两个数据集的object
-        objects_dict = {}
-        objects_dict.update(self.obman_objects)
-        objects_dict.update(self.grabnet_objects)
-        objects = self.combine(objects_dict)
+        
+        objects = self.combine()
         self.objects = objects  
         # import pdb; pdb.set_trace() 
         
         # CHECK: 随机生成obj_transform矩阵
         self.rand_each_num = rand_each_num
-        objs_num = len(objects)
-        total_num = objs_num * rand_each_num
-        rotmats = self.rand_rot(total_num)
-        self.rotmats = rotmats
+        
+        self.rotmats = self.rand_rot()
+        total_num = self.rotmats.shape[0]
         
         if self.split == 'val':
             set_seed(1024 + 2)
@@ -87,9 +85,12 @@ class PretrainDataset(data.Dataset):
         self.npoints = resample_num
         self.permutation = np.arange(self.npoints)
         
-    def combine(self, obj_dict):
+    def combine(self):
+        objects_dict = {}
+        objects_dict.update(self.obman_objects)
+        objects_dict.update(self.grabnet_objects)
         obj_list = []
-        for key, val in obj_dict.items():
+        for key, val in objects_dict.items():
             if len(val.keys()) > 2:
                 for k, v in val.items():
                     obj_list.append(v)
@@ -101,12 +102,14 @@ class PretrainDataset(data.Dataset):
                 
         return obj_list
     
-    def rand_rot(self, N):
+    def rand_rot(self):
+        objs_num = len(self.objects)
+        total_num = objs_num * self.rand_each_num
         if self.split == 'train':
             set_seed(1024)
         elif self.split == 'val':
             set_seed(2048)
-        rot_angles = np.random.random([3, N]) * np.pi * 2
+        rot_angles = np.random.random([3, total_num]) * np.pi * 2
         theta_xs, theta_ys, theta_zs = rot_angles[0], rot_angles[1], rot_angles[2]
         RXs = np.stack([np.array([[1, 0, 0], [0, np.cos(x), -np.sin(x)], [0, np.sin(x), np.cos(x)]]) for x in theta_xs])
         RYs = np.stack([np.array([[np.cos(y), 0, -np.sin(y)], [0, 1, 0], [np.sin(y), 0, np.cos(y)]]) for y in theta_ys])
@@ -159,6 +162,11 @@ class PretrainDataset(data.Dataset):
         sample['ids'] = idx
         
         return sample
+    
+class PretrainDataset_balanced(PretrainDataset):
+    def __init__(self, obman_root, shapenet_root, mano_root, grabnet_root, split, resample_num=2048, rand_each_num=100, use_cache=True):
+        super().__init__(obman_root, shapenet_root, mano_root, grabnet_root, split, resample_num, rand_each_num, use_cache)
+        
         
         
         
