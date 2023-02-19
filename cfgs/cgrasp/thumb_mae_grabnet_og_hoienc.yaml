@@ -119,51 +119,34 @@ loss: {
   train: {
     loss_edge: True,
     loss_mesh_rec: True,
-<<<<<<< HEAD
-    loss_dist_h: True,
-    loss_dist_o: True,
-=======
     loss_dist_h: False,
     loss_dist_o: False,
->>>>>>> 49a417909b49e166781f2437ff3a14ea2607afaf
     loss_penetr: True,
     loss_mano: False
   },
+
   val: {
     loss_edge: True,
     loss_mesh_rec: True,
-<<<<<<< HEAD
-    loss_dist_h: True,
-    loss_dist_o: True,
-=======
     loss_dist_h: False,
     loss_dist_o: False,
->>>>>>> 49a417909b49e166781f2437ff3a14ea2607afaf
     loss_penetr: True,
     loss_mano: False
   },
+  
   coef: {
     kl_coef: 0.005,
     lambda_edge: 30.,
     lambda_mesh_rec:  35.,
     lambda_dist_h:  35.,
     lambda_dist_o:  30.,
-<<<<<<< HEAD
-    lambda_penetr: 1.,
-=======
     lambda_penetr: 0.01,
->>>>>>> 49a417909b49e166781f2437ff3a14ea2607afaf
     lambda_mano: 0.
   }
   
 }
 
 
-<<<<<<< HEAD
-
-
-=======
->>>>>>> 49a417909b49e166781f2437ff3a14ea2607afaf
 hoi_hparams: {
   th_penet: -0.005,
   th_contact: 0.005,
