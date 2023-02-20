@@ -56,6 +56,13 @@ optim: {
       kwargs : {
         lr: 1e-4
       }
+    },
+    scheduler: {
+      type: StepLR,
+      kwargs: {
+        milestones: [30, 60, 80, 90], 
+        gamma: 0.5
+      }
     }
   },
 }
@@ -179,7 +186,7 @@ visual_interval: {
 
 
 # eval_inference_iteration
-eval_iter: 5
+eval_iter: 8
 
 # test settings 
 test_part: False

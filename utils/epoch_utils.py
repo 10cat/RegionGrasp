@@ -27,6 +27,11 @@ train_transforms = transforms.Compose(
     ]
 )
 
+def fix_bn(m):
+    classname = m.__class__.__name__
+    if classname.find('BatchNorm') != -1:
+        m.eval()
+
 
 def model_update(optimizer, total_loss, scheduler, epoch=None):
     if isinstance(optimizer, list):
@@ -52,6 +57,8 @@ def model_update(optimizer, total_loss, scheduler, epoch=None):
                 scheduler.step(epoch)
             else:
                 scheduler.step()
+                
+    return optimizer, scheduler
 
 class MetersMonitor(object):
     def __init__(self):
@@ -96,6 +103,11 @@ class CheckpointsManage(object):
         else:
             optimizer_states = optimizer.state_dict()
             
+        if isinstance(scheduler, list):
+            scheduler_states = [sche.state_dict() for sche in scheduler]
+        else:
+            scheduler_states = scheduler.state_dict()
+            
         if self.best_metrics is None:
             self.best_metrics = metric_value
         elif metric_value < self.best_metrics:
@@ -104,11 +116,11 @@ class CheckpointsManage(object):
                         'metrics':metric_value,
                         'state_dict':model.state_dict(),
                         'optimizer': optimizer_states,
-                        'scheduler': scheduler
+                        'scheduler': scheduler_states
                         },
                     best_model_path)
             self.best_metrics = metric_value
-            
+            print('best_model saved!')
         else:
             self.no_improve += 1
         
@@ -118,10 +130,10 @@ class CheckpointsManage(object):
                         'metrics':metric_value,
                         'state_dict':model.state_dict(),
                         'optimizer': optimizer_states,
-                        'scheduler': scheduler
+                        'scheduler': scheduler_states
                         },
                     checkpoint_path)
-        
+            print('checkpoint saved!')
         return self.no_improve
     
     def load_checkpoints(self, model, chkpt_epoch, stdict):
@@ -253,7 +265,7 @@ class PretrainEpoch():
             total_loss = sum(dict_loss.values())
             
             if self.mode == 'train':
-                model_update(self.optimizer, total_loss, self.scheduler, epoch=epoch)
+                self.optimizer, self.scheduler = model_update(self.optimizer, total_loss, self.scheduler, epoch=epoch)
             
             msg_loss, losses = self.Losses.report(dict_loss, total_loss, mode=self.mode)
             msg = msg_loss
@@ -520,21 +532,27 @@ class EpochVAE_mae(EpochVAE_comp):
         else:
             with torch.no_grad():
                 hand_params_list = []
+                # torch.cuda.manual_seed(3407)
                 for iter in range(self.cfg.eval_iter):
                     B = obj_input.shape[0]
                     # hand_params, mask =  model.inference(obj_input.to(device), mask_center=mask_center.to(device))
                     hand_params, mask =  model.inference(obj_input.to(device), mask_center=mask_center.to(device))
                     hand_params_list.append(hand_params)
-                    torch.cuda.empty_cache()
+                    # torch.cuda.empty_cache()
             return hand_params_list, mask
         
     def loss_compute(self, hand_params, sample_stats, obj_points, gt_rhand_vs, region_mask, trans=None, cam_extr=None, gt_hand_params=None, obj_normals=None):
         return self.loss(hand_params, sample_stats, obj_points, gt_rhand_vs, region_mask, trans=trans, cam_extr=cam_extr, gt_hand_params=gt_hand_params, obj_normals=obj_normals, mode=self.mode)
         
     def __call__(self, dataloader, epoch, model):
+        self.Losses = MetersMonitor()
         stop_flag = False
         pbar = tqdm(dataloader, desc=f"{self.mode} epoch {epoch}:")
+        model.train()
+        model.apply(fix_bn)
         for batch_idx, sample in enumerate(pbar):
+            # if batch_idx == 0:
+                # import pdb; pdb.set_trace()
             obj_input_pc = sample['input_pc']
             gt_rhand_vs = sample['hand_verts'].transpose(2, 1)
             mask_centers = sample['contact_center']
@@ -547,7 +565,7 @@ class EpochVAE_mae(EpochVAE_comp):
             # mask_centers = sample['contact_center'].to('cuda')
             # # import pdb; pdb.set_trace()
             # sample_ids = sample['sample_id'].to('cuda')
-            
+            # import pdb; pdb.set_trace()
             
             hand_params, sample_stats, region_mask = self.model_forward(model, obj_input_pc, gt_rhand_vs, mask_centers)
             
@@ -562,7 +580,7 @@ class EpochVAE_mae(EpochVAE_comp):
             
             model_update(self.optimizer, total_loss, self.scheduler, epoch=epoch)
             
-            torch.cuda.empty_cache()
+            # torch.cuda.empty_cache()
             msg_loss, losses = self.Losses.report(dict_loss, total_loss, mode=self.mode)
             msg = msg_loss
             pbar.set_postfix_str(msg)
@@ -589,34 +607,40 @@ class EpochVAE_mae(EpochVAE_comp):
                     break
         
         self.log(self.Losses, epoch=epoch)
-        return model, stop_flag
+        return model, self.optimizer, self.scheduler, stop_flag
         
 class ValEpochVAE_mae(EpochVAE_mae):
     def __init__(self, loss, dataset, optimizer, scheduler, output_dir, mode='train', cfg=None):
         super().__init__(loss, dataset, optimizer, scheduler, output_dir, mode, cfg)
         
-    def __call__(self, dataloader, epoch, model, save_pred=False):
+    def __call__(self, dataloader, epoch, model, optimizer, scheduler, save_pred=False):
+        self.Losses = MetersMonitor()
         stop_flag = False
         if save_pred:
             recon_rhand_params = []
         pbar = tqdm(dataloader, desc=f"{self.mode} epoch {epoch}:")
-        for batch_idx, sample in enumerate(pbar):
-            with torch.no_grad():
+        model.eval()
+        with torch.no_grad():
+            for batch_idx, sample in enumerate(pbar):
+                # model.apply(fix_bn)
                 obj_input_pc = sample['input_pc']
                 gt_rhand_vs = sample['hand_verts'].transpose(2, 1) # gt for the masked points
                 mask_centers = sample['contact_center']
                 # import pdb; pdb.set_trace()
                 sample_ids = sample['sample_id']
                 
+                # import pdb; pdb.set_trace()
+                
                 hand_params_list, region_mask = self.model_forward(model, obj_input_pc, gt_rhand_vs, mask_centers)
                 
                 obj_points = obj_input_pc
+                
+                
                 
                 # NOTE: validation generation in several iters
                 Loss_iters = AverageMeters() # loss/metrics计算方式：取5个iter的平均
                 for iter in range(self.cfg.eval_iter):
                     hand_params = hand_params_list[iter] # 输出每个iter的生成效果
-                    
                     if self.cfg.use_mano:
                         _, dict_loss, _, rhand_vs_pred, rhand_faces = self.loss_compute(hand_params, None, obj_points, gt_rhand_vs, region_mask, trans=sample['obj_trans'], cam_extr=sample['cam_extr'], gt_hand_params=sample['hand_params'], obj_normals=sample['obj_point_normals'])
                     else:
@@ -637,13 +661,13 @@ class ValEpochVAE_mae(EpochVAE_mae):
                 
                 total_loss = sum(dict_loss.values())
                 
-                valid_keys = self.cfg.loss.train.keys()
-                valid_loss_dict = {}
-                for key in valid_keys:
-                    if self.cfg.loss.train[key]:
-                        if bug_mode is not None: key_name = bug_mode + '_' + key
-                        valid_loss_dict.update({key: dict_loss[key_name]})
-                total_loss = sum(valid_loss_dict.values())   
+                # valid_keys = self.cfg.loss.train.keys()
+                # valid_loss_dict = {}
+                # for key in valid_keys:
+                #     if self.cfg.loss.train[key]:
+                #         if bug_mode is not None: key_name = bug_mode + '_' + key
+                #         valid_loss_dict.update({key: dict_loss[key_name]})
+                # total_loss = sum(valid_loss_dict.values())   
                 
                 # 还是记录loss_dist_h, loss_dist_o但是不计入total_loss
                 msg_loss, losses = self.Losses.report(dict_loss, total_loss, mode=self.mode)
@@ -682,12 +706,12 @@ class ValEpochVAE_mae(EpochVAE_mae):
                     hand_params_all = hand_params_all.reshape(self.cfg.eval_iter, B, -1).transpose(0, 1) # B, iter_nums, D
                     hand_params_all = hand_params_all.cpu()
                     recon_rhand_params.append(hand_params_all)
-            if self.cfg.run_check:
-                if batch_idx > 5:
-                    break
+                if self.cfg.run_check:
+                    if batch_idx > 5:
+                        break
             
-        if self.cfg.run_mode == 'train':
-            no_improve_epochs = self.Checkpt.save_checkpoints(epoch, model, metric_value=losses[f'{self.mode}_total_loss'], optimizer=self.optimizer, scheduler=self.scheduler)
+        if self.cfg.run_mode == 'train' and not self.cfg.no_save:
+            no_improve_epochs = self.Checkpt.save_checkpoints(epoch, model, metric_value=losses[f'{self.mode}_total_loss'], optimizer=optimizer, scheduler=scheduler)
             if no_improve_epochs > self.cfg.early_stopping:
                 stop_flag = True
                 

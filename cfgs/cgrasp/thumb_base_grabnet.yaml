@@ -1,13 +1,13 @@
 project_name: "ConditionHOI_cgrasp"
 # dataset settings
 dataset: {
-  name: obman,
+  name: grabnet,
 
-  train: {_base_: ./cfgs/dataset_cfgs/obman_mae.yaml,
+  train: {_base_: ./cfgs/dataset_cfgs/grabnet_mae.yaml,
           others: {subset: 'train'}},
-  val: {_base_: ./cfgs/dataset_cfgs/obman_mae.yaml,
+  val: {_base_: ./cfgs/dataset_cfgs/grabnet_mae.yaml,
         others: {subset: 'val'}},
-  test: {_base_: ./cfgs/dataset_cfgs/obman_mae.yaml,
+  test: {_base_: ./cfgs/dataset_cfgs/grabnet_mae.yaml,
         others: {subset: 'test'}}}
 
 # training settings
@@ -17,44 +17,51 @@ num_epoch: 100
 early_stopping: 100
 use_cuda: True
 optim: {
-  cnet_mae: {
-    optimizer:  {
-      type: AdamW,
-      kwargs: {
-        lr: 5e-4,
-        weight_decay: 0.05
-      }
-    },
-    scheduler: {
-      type: CosLR,
-      kwargs: {
-        epochs: 100,
-        initial_epochs: 10
-      }
-    }
-  },
+  # cnet_mae: {
+  #   optimizer:  {
+  #     type: AdamW,
+  #     kwargs: {
+  #       lr: 5e-4,
+  #       weight_decay: 0.05
+  #     }
+  #   },
+  #   scheduler: {
+  #     type: CosLR,
+  #     kwargs: {
+  #       epochs: 100,
+  #       initial_epochs: 10
+  #     }
+  #   }
+  # },
 
-  hand_encoder: { 
-    optimizer: {
-      type: AdamW,
-      kwargs: {
-        lr: 1e-3,
-        weight_decay : 0.05
-      }
-    },
-    scheduler: {
-      type: CosLR,
-      kwargs: {
-        epochs: 100,
-        initial_epochs : 10
-    }}
-  },
+  # hand_encoder: { 
+  #   optimizer: {
+  #     type: AdamW,
+  #     kwargs: {
+  #       lr: 1e-3,
+  #       weight_decay : 0.05
+  #     }
+  #   },
+  #   scheduler: {
+  #     type: CosLR,
+  #     kwargs: {
+  #       epochs: 100,
+  #       initial_epochs : 10
+  #   }}
+  # },
 
   others: { 
     optimizer: {
       type: Adam,
       kwargs : {
         lr: 1e-4
+      }
+    },
+    scheduler: {
+      type: StepLR,
+      kwargs: {
+        milestones: [30, 60, 80, 90], 
+        gamma: 0.5
       }
     }
   },
