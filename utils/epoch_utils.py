@@ -108,7 +108,7 @@ class CheckpointsManage(object):
                         },
                     best_model_path)
             self.best_metrics = metric_value
-            
+            print('best_model saved!')
         else:
             self.no_improve += 1
         
@@ -121,6 +121,7 @@ class CheckpointsManage(object):
                         'scheduler': scheduler
                         },
                     checkpoint_path)
+            print('checkpoint saved!')
         
         return self.no_improve
     
@@ -263,8 +264,10 @@ class PretrainEpoch():
                 self.visual(batch_idx, coarse_pc, fine_pc, gt_points, sample_ids, epoch, 
                             batch_interval=self.batch_interval, 
                             sample_interval=self.sample_interval)
-                
-            # break
+            
+            if self.cfg.run_check:
+                if batch_idx > 5:
+                    break 
             
         if self.mode == 'val':
             no_improve_epochs = self.Checkpt.save_checkpoints(epoch, model, metric_value=losses[f'{self.mode}_total_loss'])
@@ -329,13 +332,15 @@ class PretrainMAEEpoch(PretrainEpoch):
             pbar.set_postfix_str(msg)
             
             # TODO: validation的可视化部分
-            if self.mode == 'val' and epoch % self.cfg.check_interval and epoch != 0:
+            if self.mode == 'val' and epoch % self.cfg.check_interval == 0 and epoch != 0:
                 self.visual(batch_idx, full_vis, full_pred, input, sample_ids, epoch, 
                             batch_interval=self.batch_interval, 
                             sample_interval=self.sample_interval)
-            # break
+            if self.cfg.run_check:
+                if batch_idx > 5:
+                    break 
             
-        if self.mode == 'val':
+        if self.mode == 'val' and epoch % self.cfg.check_interval == 0 and epoch != 0:
             no_improve_epochs = self.Checkpt.save_checkpoints(epoch, model, metric_value=losses[f'{self.mode}_total_loss'], optimizer=self.optimizer, scheduler=self.scheduler)
             if no_improve_epochs > self.cfg.early_stopping:
                 stop_flag = True

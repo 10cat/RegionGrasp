@@ -90,8 +90,8 @@ def mae(cfg=None):
         stopflag = False
         for epoch in range(cfg.num_epoch):
             net, _ = trainepoch(trainloader, epoch, net)
-            if epoch % cfg.check_interval == 0:
-                _, stop_flag = valepoch(valloader, epoch, net)
+            # if epoch % cfg.check_interval == 0:
+            _, stop_flag = valepoch(valloader, epoch, net)
             if stop_flag:
                 print("Early stopping occur!")
                 break
@@ -125,6 +125,7 @@ if __name__ == "__main__":
     parser.add_argument('--start_epoch', type=int, default=None)
     parser.add_argument('--eval_ds', type=str, default=None)
     parser.add_argument('--run_mode', type=str, default='train')
+    parser.add_argument('--run_check', action='store_true')
 
     args = parser.parse_args()
 
@@ -132,17 +133,29 @@ if __name__ == "__main__":
     
     # cfg = MyOptions()
     # DONE: 读取配置文件并转化成字典，同时加入args的配置
-    conf = cfgsu.get_config(args, args.cfgs_fodler)
-    conf.update(cfgsu.config_exp_name(args))
-    conf.update(cfgsu.config_paths(args.machine, conf['exp_name']))
+    
+    exp_name = cfgsu.config_exp_name(args)
+    paths = cfgsu.config_paths(args.machine, exp_name['exp_name'])
+    
+    # import pdb; pdb.set_trace()
+    
+    conf = cfgsu.get_config(args, paths, args.cfgs_fodler)
+    conf.update(exp_name)
+    conf.update(paths)
     conf.update(args.__dict__) # args的配置也记录下来
     
     cfg = EasyDict()
     # DONE: transform the dict config to easydict
     cfg = cfgsu.merge_new_config(cfg, conf)
+    
+    # cfg = cfgsu.adjust_config(cfg, args)
     # conf = OmegaConf.structured(cfg)
     # import pdb; pdb.set_trace()
     os.environ['CUDA_VISIBLE_DEVICES'] = cfg.cuda_id
+    os.environ['OMP_NUM_THREAD'] = '1'
+    torch.set_num_threads(1)
+    
+    cfgsu.save_experiment_config(cfg)
     
     
 

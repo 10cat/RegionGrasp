@@ -318,6 +318,8 @@ if __name__ == "__main__":
     exp_name = cfgsu.config_exp_name(args)
     paths = cfgsu.config_paths(args.machine, exp_name['exp_name'])
     
+    # import pdb; pdb.set_trace()
+    
     conf = cfgsu.get_config(args, paths, args.cfgs_fodler)
     conf.update(exp_name)
     conf.update(paths)
