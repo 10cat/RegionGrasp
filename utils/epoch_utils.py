@@ -601,7 +601,7 @@ class EpochVAE_mae():
             msg = msg_loss
             pbar.set_postfix_str(msg)
             
-            if epoch % self.cfg.check_interval == 0 and epoch != 0:
+            if epoch % self.cfg.check_interval == 0 and batch_idx % self.batch_interval and epoch != 0:
                 if self.cfg.dataset.name == 'obman':
                     obj_trans = sample['obj_trans'].detach().to('cpu').numpy()
                 elif self.cfg.dataset.name == 'grabnet':
@@ -625,7 +625,7 @@ class EpochVAE_mae():
             if self.cfg.run_check:
                 if batch_idx > 5:
                     break
-        if self.cfg.run_mode == 'train' and not self.cfg.no_save:
+        if self.mode == 'val' and not self.cfg.no_save:
             no_improve_epochs = self.Checkpt.save_checkpoints(epoch, model, metric_value=losses[f'{self.mode}_total_loss'], optimizer=optimizer, scheduler=scheduler)
             if no_improve_epochs > self.cfg.early_stopping:
                 stop_flag = True
