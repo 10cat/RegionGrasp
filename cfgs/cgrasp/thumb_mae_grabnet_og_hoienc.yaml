@@ -121,9 +121,10 @@ loss: {
     loss_mesh_rec: True,
     loss_dist_h: False,
     loss_dist_o: False,
-    loss_penetr: True,
+    loss_penetr: False,
     loss_mano: False
   },
+
   val: {
     loss_edge: True,
     loss_mesh_rec: True,
@@ -132,6 +133,7 @@ loss: {
     loss_penetr: True,
     loss_mano: False
   },
+  
   coef: {
     kl_coef: 0.005,
     lambda_edge: 30.,

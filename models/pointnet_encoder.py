@@ -36,6 +36,8 @@ class STN3d(nn.Module):
         self.bn3 = nn.BatchNorm1d(1024)
         self.bn4 = nn.BatchNorm1d(512)
         self.bn5 = nn.BatchNorm1d(256)
+        
+        self.iden = torch.from_numpy(np.array([1, 0, 0, 0, 1, 0, 0, 0, 1]).astype(np.float32)).view(1, 9)
 
     def forward(self, x):
         batchsize = x.shape[0]
@@ -50,9 +52,10 @@ class STN3d(nn.Module):
         x = self.fc3(x)
 
         #TODO why do we need the 'iden' additive component？
-        iden = torch.from_numpy(np.array([1, 0, 0, 0, 1, 0, 0, 0, 1]).astype(np.float32)).view(1, 9).repeat(batchsize, 1)
-        if x.is_cuda:
-            iden = iden.cuda()
+        # iden = torch.from_numpy(np.array([1, 0, 0, 0, 1, 0, 0, 0, 1]).astype(np.float32)).view(1, 9).repeat(batchsize, 1)
+        iden = self.iden.repeat(batchsize, 1).cuda()
+        # if x.is_cuda:
+        #     iden = iden.cuda()
         x = x + iden
         x = x.view(-1, 3, 3)
 
@@ -76,6 +79,8 @@ class STNkd(nn.Module):
         self.bn5 = nn.BatchNorm1d(256)
 
         self.k = k
+        
+        self.iden = torch.from_numpy(np.eye(self.k).flatten().astype(np.float32)).view(1, self.k * self.k)
 
     def forward(self, x):
         batchsize = x.size()[0]
@@ -89,9 +94,10 @@ class STNkd(nn.Module):
         x = F.relu(self.bn5(self.fc2(x)))
         x = self.fc3(x)
 
-        iden = torch.from_numpy(np.eye(self.k).flatten().astype(np.float32)).view(1, self.k * self.k).repeat(batchsize, 1)
-        if x.is_cuda:
-            iden = iden.cuda()
+        # iden = torch.from_numpy(np.eye(self.k).flatten().astype(np.float32)).view(1, self.k * self.k).repeat(batchsize, 1)
+        iden = self.iden.repeat(batch_size, 1)
+        # if x.is_cuda:
+        #     iden = iden.cuda()
 
         x = x + iden
         x = x.view(-1, self.k, self.k)

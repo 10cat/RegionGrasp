@@ -21,7 +21,7 @@ optim: {
     optimizer:  {
       type: AdamW,
       kwargs:{
-        lr: 5e-4,
+        lr: 1e-3,
         weight_decay: 0.05
       }
     },
@@ -56,7 +56,7 @@ optim: {
 model: {
     cnet_type: mae,
     cnet: {
-      chkpt_path: 'pointmae_og/models/checkpoint_68.pth',
+      chkpt_path: ,
       kwargs: {
         group_size: 32,
         num_group: 128,
@@ -92,17 +92,19 @@ loss: {
     loss_mesh_rec: True,
     loss_dist_h: False,
     loss_dist_o: False,
-    loss_penetr: True,
+    loss_penetr: False,
     loss_mano: False
   },
+
   val: {
     loss_edge: True,
     loss_mesh_rec: True,
-    loss_dist_h: True,
-    loss_dist_o: True,
+    loss_dist_h: False,
+    loss_dist_o: False,
     loss_penetr: True,
     loss_mano: False
   },
+  
   coef: {
     kl_coef: 0.005,
     lambda_edge: 30.,
@@ -114,7 +116,6 @@ loss: {
   }
   
 }
-
 
 
 
@@ -139,6 +140,10 @@ visual_interval: {
   },
   val: {
     batch: 10,
+    sample: null
+  },
+  test: {
+    batch: 1,
     sample: null
   }
 }

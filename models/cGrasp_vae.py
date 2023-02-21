@@ -43,6 +43,8 @@ class cGraspvae(nn.Module):
         # if cfg.fit_Condition is not True:
         #     self.obj_rc_encoder = ObjRegionConditionEncoder()
         self.cnet = ConditionNet
+        # if cfg.model.cnet_type == 'base':
+        #     self.cnet = ObjRegionConditionEncoder(config = cfg.model.cnet.kwargs)
         # import pdb; pdb.set_trace()
 
         self.cvae = VAE(encoder_layer_sizes=self.encoder_sizes,
