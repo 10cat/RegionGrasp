@@ -8,7 +8,7 @@ import torch.nn as nn
 from timm.models.layers import DropPath, trunc_normal_
 from models.FoldingNet import Fold
 from traineval_utils import pointnet_util
-from pytorch3d.ops import sample_farthest_points
+from pytorch3d.ops import sample_farthest_points, knn_points
 
 import random
 from models.PointTr import fps, knn_point, Attention
@@ -82,8 +82,11 @@ class Grouper(nn.Module):
     def forward(self, xyz, return_idx=False):
         B, N, _ = xyz.shape
         center = fps(xyz, self.num_group)
+        # center, _ = sample_farthest_points(xyz, K=self.num_group)
         # import pdb; pdb.set_trace()
         idx = knn_point(self.group_size, xyz, center)
+        # knn = knn_points(center, xyz, K=self.group_size)
+        # idx = knn.idx
         idx_orig = idx
         
         assert idx.size(1) == self.num_group
