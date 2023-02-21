@@ -1,13 +1,13 @@
 project_name: "ConditionHOI_cgrasp"
 # dataset settings
 dataset: {
-  name: obman,
+  name: grabnet,
 
-  train: {_base_: ./cfgs/dataset_cfgs/obman_mae.yaml,
+  train: {_base_: ./cfgs/dataset_cfgs/grabnet_mae.yaml,
           others: {subset: 'train'}},
-  val: {_base_: ./cfgs/dataset_cfgs/obman_mae.yaml,
+  val: {_base_: ./cfgs/dataset_cfgs/grabnet_mae.yaml,
         others: {subset: 'val'}},
-  test: {_base_: ./cfgs/dataset_cfgs/obman_mae.yaml,
+  test: {_base_: ./cfgs/dataset_cfgs/grabnet_mae.yaml,
         others: {subset: 'test'}}}
 
 # training settings
@@ -21,7 +21,7 @@ optim: {
     optimizer:  {
       type: AdamW,
       kwargs:{
-        lr: 5e-4,
+        lr: 1e-3,
         weight_decay: 0.05
       }
     },
@@ -56,7 +56,7 @@ optim: {
 model: {
     cnet_type: mae,
     cnet: {
-      chkpt_path: 'pointmae_og/models/checkpoint_68.pth',
+      chkpt_path: ,
       kwargs: {
         group_size: 32,
         num_group: 128,
@@ -90,31 +90,32 @@ loss: {
   train: {
     loss_edge: True,
     loss_mesh_rec: True,
-    loss_dist_h: True,
-    loss_dist_o: True,
-    loss_penetr: True,
+    loss_dist_h: False,
+    loss_dist_o: False,
+    loss_penetr: False,
     loss_mano: False
   },
+
   val: {
     loss_edge: True,
     loss_mesh_rec: True,
-    loss_dist_h: True,
-    loss_dist_o: True,
+    loss_dist_h: False,
+    loss_dist_o: False,
     loss_penetr: True,
     loss_mano: False
   },
+  
   coef: {
     kl_coef: 0.005,
     lambda_edge: 30.,
     lambda_mesh_rec:  35.,
     lambda_dist_h:  35.,
     lambda_dist_o:  30.,
-    lambda_penetr: 1.,
+    lambda_penetr: 0.01,
     lambda_mano: 0.
   }
   
 }
-
 
 
 
@@ -139,6 +140,10 @@ visual_interval: {
   },
   val: {
     batch: 10,
+    sample: null
+  },
+  test: {
+    batch: 1,
     sample: null
   }
 }
