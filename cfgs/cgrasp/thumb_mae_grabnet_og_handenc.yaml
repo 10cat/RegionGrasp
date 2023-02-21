@@ -97,7 +97,7 @@ model: {
           num_heads: 6,
           drop_path_rate: 0.,
           knn_k: 8,
-          knn_layer_num: 3
+          knn_layer_num: -1
         }
       }
     },
