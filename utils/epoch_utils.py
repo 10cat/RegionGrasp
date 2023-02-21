@@ -633,7 +633,8 @@ class ValEpochVAE_mae(EpochVAE_mae):
     def __init__(self, loss, dataset, optimizer, scheduler, output_dir, mode='train', cfg=None):
         super().__init__(loss, dataset, optimizer, scheduler, output_dir, mode, cfg)
         
-    def model_forward(self, model, obj_input):
+    def model_forward(self, model, obj_input, hand_input=None, mask_center=None):
+        device = 'cuda' if self.cfg.use_cuda else 'cpu'
         with torch.no_grad():
             hand_params_list = []
             # torch.cuda.manual_seed(3407)
