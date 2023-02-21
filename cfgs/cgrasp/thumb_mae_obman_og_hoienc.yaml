@@ -186,7 +186,7 @@ visual_interval: {
 
 
 # eval_inference_iteration
-eval_iter: 8
+eval_iter: 5
 
 # test settings 
 test_part: False
