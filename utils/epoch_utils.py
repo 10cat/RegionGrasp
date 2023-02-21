@@ -275,8 +275,10 @@ class PretrainEpoch():
                 self.visual(batch_idx, coarse_pc, fine_pc, gt_points, sample_ids, epoch, 
                             batch_interval=self.batch_interval, 
                             sample_interval=self.sample_interval)
-                
-            # break
+            
+            if self.cfg.run_check:
+                if batch_idx > 5:
+                    break 
             
         if self.mode == 'val':
             no_improve_epochs = self.Checkpt.save_checkpoints(epoch, model, metric_value=losses[f'{self.mode}_total_loss'])
@@ -341,13 +343,15 @@ class PretrainMAEEpoch(PretrainEpoch):
             pbar.set_postfix_str(msg)
             
             # TODO: validation的可视化部分
-            if self.mode == 'val' and epoch % self.cfg.check_interval and epoch != 0:
+            if self.mode == 'val' and epoch % self.cfg.check_interval == 0 and epoch != 0:
                 self.visual(batch_idx, full_vis, full_pred, input, sample_ids, epoch, 
                             batch_interval=self.batch_interval, 
                             sample_interval=self.sample_interval)
-            # break
+            if self.cfg.run_check:
+                if batch_idx > 5:
+                    break 
             
-        if self.mode == 'val':
+        if self.mode == 'val' and epoch % self.cfg.check_interval == 0 and epoch != 0:
             no_improve_epochs = self.Checkpt.save_checkpoints(epoch, model, metric_value=losses[f'{self.mode}_total_loss'], optimizer=self.optimizer, scheduler=self.scheduler)
             if no_improve_epochs > self.cfg.early_stopping:
                 stop_flag = True
@@ -415,7 +419,11 @@ class PretrainMAEEpoch(PretrainEpoch):
             
 #             obj_points = sample['obj_points']
 #             obj_normals = sample['obj_point_normals']
+<<<<<<< HEAD
 #   dd          region_mask = sample['region_mask']
+=======
+# dd            region_mask = sample['region_mask']
+>>>>>>> b77808eb91d5162f889b4a9c607e9bc69c3ad79f
             
 #             _, dict_loss, signed_dists, rhand_vs_pred, rhand_faces = self.loss(hand_params, sample_stats, obj_points, gt_rhand_vs, region_mask, obj_normals=obj_normals)
             
@@ -451,7 +459,11 @@ class PretrainMAEEpoch(PretrainEpoch):
                 
 #                 obj_points = sample['obj_points']
 #                 obj_normals = sample['obj_point_normals']
+<<<<<<< HEAD
 #  dd               region_mask = sample['region_mask']
+=======
+# dd                region_mask = sample['region_mask']
+>>>>>>> b77808eb91d5162f889b4a9c607e9bc69c3ad79f
                 
 #                 # NOTE: validation generation in several iters
 #                 Loss_iters = AverageMeters() # loss/metrics计算方式：取5个iter的平均
@@ -478,7 +490,11 @@ class PretrainMAEEpoch(PretrainEpoch):
 #                     self.visual_gt(rhand_vs = gt_rhand_vs.transpose(2, 1).detach().to('cpu').numpy(),
 #                                 rhand_faces = rhand_faces.detach().to('cpu').numpy(),
 #                                 obj_pc=obj_points.detach().to('cpu').numpy(),
+<<<<<<< HEAD
 #  dd                               region_mask=region_mask.detach().to('cpu').numpy(),
+=======
+#   dd                              region_mask=region_mask.detach().to('cpu').numpy(),
+>>>>>>> b77808eb91d5162f889b4a9c607e9bc69c3ad79f
 #                                 obj_trans=sample['obj_trans'].detach().to('cpu').numpy(),
 #                                 sample_ids=sample_ids.detach().to('cpu').numpy(),
 #                                 epoch=epoch,
@@ -597,7 +613,7 @@ class EpochVAE_mae():
             msg = msg_loss
             pbar.set_postfix_str(msg)
             
-            if epoch % self.cfg.check_interval == 0 and epoch != 0:
+            if epoch % self.cfg.check_interval == 0 and batch_idx % self.batch_interval and epoch != 0:
                 if self.cfg.dataset.name == 'obman':
                     obj_trans = sample['obj_trans'].detach().to('cpu').numpy()
                 elif self.cfg.dataset.name == 'grabnet':
@@ -621,7 +637,7 @@ class EpochVAE_mae():
             if self.cfg.run_check:
                 if batch_idx > 5:
                     break
-        if self.cfg.run_mode == 'train' and not self.cfg.no_save:
+        if self.mode == 'val' and not self.cfg.no_save:
             no_improve_epochs = self.Checkpt.save_checkpoints(epoch, model, metric_value=losses[f'{self.mode}_total_loss'], optimizer=optimizer, scheduler=scheduler)
             if no_improve_epochs > self.cfg.early_stopping:
                 stop_flag = True
@@ -633,7 +649,8 @@ class ValEpochVAE_mae(EpochVAE_mae):
     def __init__(self, loss, dataset, optimizer, scheduler, output_dir, mode='train', cfg=None):
         super().__init__(loss, dataset, optimizer, scheduler, output_dir, mode, cfg)
         
-    def model_forward(self, model, obj_input):
+    def model_forward(self, model, obj_input, hand_input=None, mask_center=None):
+        device = 'cuda' if self.cfg.use_cuda else 'cpu'
         with torch.no_grad():
             hand_params_list = []
             # torch.cuda.manual_seed(3407)

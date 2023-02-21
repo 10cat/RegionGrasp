@@ -75,6 +75,10 @@ class HOITransformerEncoder(nn.Module):
         self.norm = norm_layer(embed_dim)
         self.head = nn.Identity()
         self.knn_layer = knn_layer_num
+        if self.knn_layer > 0:
+            print("Finally using point patches encoder for hand AND HOIENC!")
+        else:
+            print("Using point patches encoder for hand only")
         
         self.apply(self._init_weights)
         

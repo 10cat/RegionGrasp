@@ -1,13 +1,13 @@
 project_name: "ConditionHOI_cgrasp"
 # dataset settings
 dataset: {
-  name: grabnet,
+  name: obman,
 
-  train: {_base_: ./cfgs/dataset_cfgs/grabnet_mae.yaml,
+  train: {_base_: ./cfgs/dataset_cfgs/obman_mae.yaml,
           others: {subset: 'train'}},
-  val: {_base_: ./cfgs/dataset_cfgs/grabnet_mae.yaml,
+  val: {_base_: ./cfgs/dataset_cfgs/obman_mae.yaml,
         others: {subset: 'val'}},
-  test: {_base_: ./cfgs/dataset_cfgs/grabnet_mae.yaml,
+  test: {_base_: ./cfgs/dataset_cfgs/obman_mae.yaml,
         others: {subset: 'test'}}}
 
 # training settings
@@ -16,12 +16,11 @@ batch_size: 32
 num_epoch: 100
 early_stopping: 100
 use_cuda: True
-
 optim: {
   cnet_mae: {
     optimizer:  {
       type: AdamW,
-      kwargs:{
+      kwargs: {
         lr: 5e-4,
         weight_decay: 0.05
       }
@@ -33,6 +32,22 @@ optim: {
         initial_epochs: 10
       }
     }
+  },
+
+  hand_encoder: { 
+    optimizer: {
+      type: AdamW,
+      kwargs: {
+        lr: 1e-3,
+        weight_decay : 0.05
+      }
+    },
+    scheduler: {
+      type: CosLR,
+      kwargs: {
+        epochs: 100,
+        initial_epochs : 10
+    }}
   },
 
   others: { 
@@ -49,7 +64,7 @@ optim: {
         gamma: 0.5
       }
     }
-  }
+  },
 }
 
 # model settings
@@ -74,7 +89,6 @@ model: {
         }
       }
     },
-
     handenc: {
       chkpt_path: ,
       kwargs: {
@@ -97,7 +111,7 @@ model: {
           num_heads: 6,
           drop_path_rate: 0.,
           knn_k: 8,
-          knn_layer_num: 3
+          knn_layer_num: -1
         }
       }
     },
@@ -124,7 +138,6 @@ loss: {
     loss_penetr: False,
     loss_mano: False
   },
-
   val: {
     loss_edge: True,
     loss_mesh_rec: True,
@@ -133,7 +146,6 @@ loss: {
     loss_penetr: True,
     loss_mano: False
   },
-  
   coef: {
     kl_coef: 0.005,
     lambda_edge: 30.,
@@ -146,7 +158,6 @@ loss: {
   
 }
 
-
 hoi_hparams: {
   th_penet: -0.005,
   th_contact: 0.005,
@@ -154,6 +165,7 @@ hoi_hparams: {
   weight_penet: 1.5,
   weight_region: 1.5,
 }
+
 vpe_path: "./cfgs/verts_per_edge.npy"
 c_weights_path: "./cfgs/rhand_weight.npy"
 

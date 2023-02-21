@@ -336,6 +336,7 @@ class MPMLoss(nn.Module):
 class ChamferDistanceL2Loss(nn.Module):
     def __init__(self):
         super().__init__()
+        self.cham_dist = ch_dist()
     def forward(self, pc_in, pc_gt):
         """_summary_
 
@@ -345,7 +346,7 @@ class ChamferDistanceL2Loss(nn.Module):
         """
         B, N1, _ = pc_in.size()
         _, N2, _ = pc_gt.size()
-        cham_x, cham_y, _, _ = ch_dist(pc_in, pc_gt)
+        cham_x, cham_y, _, _ = self.cham_dist(pc_in, pc_gt)
         # import pdb; pdb.set_trace()
         loss = torch.mean(cham_x) + torch.mean(cham_y)
         
