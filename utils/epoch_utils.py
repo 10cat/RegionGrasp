@@ -415,7 +415,7 @@ class PretrainMAEEpoch(PretrainEpoch):
             
 #             obj_points = sample['obj_points']
 #             obj_normals = sample['obj_point_normals']
-#             region_mask = sample['region_mask']
+#   dd          region_mask = sample['region_mask']
             
 #             _, dict_loss, signed_dists, rhand_vs_pred, rhand_faces = self.loss(hand_params, sample_stats, obj_points, gt_rhand_vs, region_mask, obj_normals=obj_normals)
             
@@ -451,7 +451,7 @@ class PretrainMAEEpoch(PretrainEpoch):
                 
 #                 obj_points = sample['obj_points']
 #                 obj_normals = sample['obj_point_normals']
-#                 region_mask = sample['region_mask']
+#  dd               region_mask = sample['region_mask']
                 
 #                 # NOTE: validation generation in several iters
 #                 Loss_iters = AverageMeters() # loss/metrics计算方式：取5个iter的平均
@@ -478,7 +478,7 @@ class PretrainMAEEpoch(PretrainEpoch):
 #                     self.visual_gt(rhand_vs = gt_rhand_vs.transpose(2, 1).detach().to('cpu').numpy(),
 #                                 rhand_faces = rhand_faces.detach().to('cpu').numpy(),
 #                                 obj_pc=obj_points.detach().to('cpu').numpy(),
-#                                 region_mask=region_mask.detach().to('cpu').numpy(),
+#  dd                               region_mask=region_mask.detach().to('cpu').numpy(),
 #                                 obj_trans=sample['obj_trans'].detach().to('cpu').numpy(),
 #                                 sample_ids=sample_ids.detach().to('cpu').numpy(),
 #                                 epoch=epoch,
