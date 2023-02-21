@@ -56,7 +56,7 @@ optim: {
 model: {
     cnet_type: mae,
     cnet: {
-      chkpt_path: 'pointmae_og/models/checkpoint_68.pth',
+      chkpt_path: 'pointmae_og_balance/models/checkpoint_70.pth',
       kwargs: {
         group_size: 32,
         num_group: 128,
@@ -92,23 +92,14 @@ loss: {
     loss_mesh_rec: True,
     loss_dist_h: False,
     loss_dist_o: False,
-<<<<<<< HEAD
     loss_penetr: False,
-=======
-    loss_penetr: True,
->>>>>>> 79fbbf3a2e5f2c0035aaa7da16bc86210995cb14
     loss_mano: False
   },
   val: {
     loss_edge: True,
     loss_mesh_rec: True,
-<<<<<<< HEAD
     loss_dist_h: False,
     loss_dist_o: False,
-=======
-    loss_dist_h: True,
-    loss_dist_o: True,
->>>>>>> 79fbbf3a2e5f2c0035aaa7da16bc86210995cb14
     loss_penetr: True,
     loss_mano: False
   },
