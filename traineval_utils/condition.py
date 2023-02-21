@@ -42,7 +42,6 @@ def get_contact_region(ObjMesh, obj_face_id, radius=config.rtree_radius):
     
     return face_candidates[0] # adjacency_to_faces输出的face_candidates是[[]]形式，需要用[0]取出
     
-    
 
 def main(sample_info, signed_dists=None, h_nearest_faces=None):
     hand_verts = sample_info['hand_verts']

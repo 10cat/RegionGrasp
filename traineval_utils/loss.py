@@ -106,14 +106,17 @@ class cGraspvaeLoss(nn.Module):
                 obj_normals = None
             # import pdb; pdb.set_trace()
             obj_normals = obj_normals.to(torch.float32).to(self.device) if obj_normals is not None else None
-            o2h_signed, h2o_signed, _, _ = point2point_signed(rhand_vs, obj_vs, rh_normals, obj_normals)
-            o2h_signed_pred, h2o_signed_pred, _, _ = point2point_signed(rhand_vs_pred, obj_vs, rh_normals_pred, obj_normals)
+            o2h_signed, h2o_signed, o2h_vid, h2o_vid = point2point_signed(rhand_vs, obj_vs, rh_normals, obj_normals)
+            o2h_signed_pred, h2o_signed_pred, o2h_vid_pred, h2o_vid_pred = point2point_signed(rhand_vs_pred, obj_vs, rh_normals_pred, obj_normals)
             loss_dist_h, loss_dist_o = self.dist_loss(h2o_signed, h2o_signed_pred, o2h_signed, o2h_signed_pred, region)
             
             if loss_cfg.loss_dist_h:
                 dict_loss.update({'loss_dist_h': loss_dist_h})
             if loss_cfg.loss_dist_o:
                 dict_loss.update({'loss_dist_o': loss_dist_o})
+            if loss_cfg.get('metrics_cond') and loss_cfg.metrics_cond:
+                thumb_prox_verts = obj_vs[h2o_vid_pred]
+                
         else:
             o2h_signed_pred, o2h_signed, h2o_signed, h2o_signed_pred = None, None, None, None
             

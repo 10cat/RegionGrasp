@@ -32,54 +32,54 @@ def fix_bn(m):
     if classname.find('BatchNorm') != -1:
         m.eval()
     
-def cgrasp_comp(cfg=None):
-    mode = cfg.run_mode
-    model_type = cfg.model.cnet.type
-    bs = cfg.batch_size
+# def cgrasp_comp(cfg=None):
+#     mode = cfg.run_mode
+#     model_type = cfg.model.cnet.type
+#     bs = cfg.batch_size
     
-    # load the condition net first
-    model = ConditionBERT if model_type == 'bert' else ConditionTrans
-    cnet = model(**cfg.model.cnet.kwargs)
-    # CHECK: load the checkpoint
-    if cfg.model.cnet.chkpt_path:
-        checkpoint = torch.load(os.path.join(cfg.output_root, cfg.model.cnet.chkpt_path))
-        cnet.load_state_dict(checkpoint['state_dict'])
-        print('checkpoint for cnet loaded!')
+#     # load the condition net first
+#     model = ConditionBERT if model_type == 'bert' else ConditionTrans
+#     cnet = model(**cfg.model.cnet.kwargs)
+#     # CHECK: load the checkpoint
+#     if cfg.model.cnet.chkpt_path:
+#         checkpoint = torch.load(os.path.join(cfg.output_root, cfg.model.cnet.chkpt_path))
+#         cnet.load_state_dict(checkpoint['state_dict'])
+#         print('checkpoint for cnet loaded!')
         
-    model = cGraspvae(cnet,
-                      **cfg.model.vae.kwargs, cfg=cfg)
+#     model = cGraspvae(cnet,
+#                       **cfg.model.vae.kwargs, cfg=cfg)
     
-    # model.named_parameters()
-    # import pdb; pdb.set_trace()
+#     # model.named_parameters()
+#     # import pdb; pdb.set_trace()
     
-    if mode == 'train':
-        # DONE: dataset -- obj_points / obj_point_normals / obj_trans / input_pc / hand_verts
-        valset = get_dataset(cfg, mode='val')
-        trainset = get_dataset(cfg, mode='train')
+#     if mode == 'train':
+#         # DONE: dataset -- obj_points / obj_point_normals / obj_trans / input_pc / hand_verts
+#         valset = get_dataset(cfg, mode='val')
+#         trainset = get_dataset(cfg, mode='train')
         
         
-        trainloader = data.DataLoader(trainset, batch_size=bs, shuffle=True)
-        valloader = data.DataLoader(valset, batch_size=bs, shuffle=False)
+#         trainloader = data.DataLoader(trainset, batch_size=bs, shuffle=True)
+#         valloader = data.DataLoader(valset, batch_size=bs, shuffle=False)
         
-        # TODO: cnet/vae其他参数设置不同学习率
-        optimizer, scheduler = build_optim_sche_grasp(model, part_model={'cnet': model.cnet}, cfg=cfg)
+#         # TODO: cnet/vae其他参数设置不同学习率
+#         optimizer, scheduler = build_optim_sche_grasp(model, part_model={'cnet': model.cnet}, cfg=cfg)
         
-        # TODO: loss改写
-        device = 'cuda' if cfg.use_cuda else 'cpu'
-        model = model.to(device)
-        cgrasp_loss = cGraspvaeLoss(device, cfg)
-        cgrasp_loss.to(device)
+#         # TODO: loss改写
+#         device = 'cuda' if cfg.use_cuda else 'cpu'
+#         model = model.to(device)
+#         cgrasp_loss = cGraspvaeLoss(device, cfg)
+#         cgrasp_loss.to(device)
         
         
-        trainepoch = EpochVAE_comp(cgrasp_loss, trainset, optimizer, scheduler, output_dir=cfg.output_dir, mode='train', cfg=cfg)
-        valepoch = ValEpochVAE_comp(cgrasp_loss, valset, optimizer, scheduler, output_dir=cfg.output_dir, mode='val', cfg=cfg)
+#         trainepoch = EpochVAE_comp(cgrasp_loss, trainset, optimizer, scheduler, output_dir=cfg.output_dir, mode='train', cfg=cfg)
+#         valepoch = ValEpochVAE_comp(cgrasp_loss, valset, optimizer, scheduler, output_dir=cfg.output_dir, mode='val', cfg=cfg)
         
-        for epoch in range(cfg.num_epoch):
-            model, _ = trainepoch(trainloader, epoch, model)
-            _, stop_flag = valepoch(valloader, epoch, model)
-            if stop_flag:
-                print("Early stopping occur!")
-                break
+#         for epoch in range(cfg.num_epoch):
+#             model, _ = trainepoch(trainloader, epoch, model)
+#             _, stop_flag = valepoch(valloader, epoch, model)
+#             if stop_flag:
+#                 print("Early stopping occur!")
+#                 break
             
 def cgrasp(cfg=None):
     # import pdb; pdb.set_trace()
@@ -209,87 +209,6 @@ def cgrasp(cfg=None):
             
     else:
         raise NotImplementedError()
-            
-            
-def cgrasp_base(cfg=None):
-    # import pdb; pdb.set_trace()
-    mode = cfg.run_mode
-    # model_type = cfg.model.cnet.type
-    bs = cfg.batch_size
-    
-    cnet = ObjRegionConditionEncoder(config = cfg.model.cnet.kwargs)
-    
-    model = cGraspvae(cnet,
-                      **cfg.model.vae.kwargs, cfg=cfg)
-                    
-    # model = cGraspvae(**cfg.model.vae.kwargs, cfg=cfg)
-    
-    if mode == 'train':
-        
-        
-        # TODO: loss改写
-        device = 'cuda' if cfg.use_cuda else 'cpu'
-        model = model.to(device)
-        cgrasp_loss = cGraspvaeLoss(device, cfg)
-        cgrasp_loss.to(device)
-        
-        # TODO: cnet/vae其他参数设置不同学习率
-        if 'hand_encoder' in cfg.optim.keys():
-            part_model_dict = {'hand_encoder':model.hand_encoder}
-        else:
-            part_model_dict = None
-        optimizer, scheduler = build_optim_sche_grasp(model, part_model=part_model_dict, cfg=cfg)
-        # import pdb; pdb.set_trace()
-        
-        if cfg.resume:
-            assert cfg.chkpt is not None, "Checkpoint not configured!"
-            
-            checkpoint = torch.load(os.path.join(cfg.output_dir, 'models', cfg.chkpt+'.pth'), map_location=torch.device('cpu'))
-            model.load_state_dict(checkpoint['state_dict'], strict=True)
-            if isinstance(optimizer, list):
-                for i, optim_state in enumerate(checkpoint['optimizer']):
-                    optimizer[i].load_state_dict(optim_state)
-                    # optimizer[i].to(device)
-            else:
-                optimizer.load_state_dict(checkpoint['optimizer'])
-            if isinstance(scheduler, list):
-                for i, sche_state in enumerate(checkpoint['scheduler']):
-                    scheduler[i].load_state_dict(sche_state)
-                    # optimizer[i].to(device)
-            else:
-                scheduler.load_state_dict(checkpoint['scheduler'])
-            # scheduler = checkpoint['scheduler']
-            start_epoch = checkpoint['epoch'] + 1
-            print(f"Resumed the exp from {cfg.chkpt}, start_epoch = {start_epoch}")
-        else:
-            start_epoch = 0
-        
-        # DONE: dataset -- obj_points / obj_point_normals / obj_trans / input_pc / hand_verts
-        valset = get_dataset(cfg, mode='val')
-        trainset = get_dataset(cfg, mode='train')
-        
-        
-        trainloader = data.DataLoader(trainset, batch_size=bs, shuffle=True)
-        valloader = data.DataLoader(valset, batch_size=bs, shuffle=False)
-        
-        
-        trainepoch = EpochVAE_mae(cgrasp_loss, trainset, optimizer, scheduler, output_dir=cfg.output_dir, mode='train', cfg=cfg)
-        valepoch = EpochVAE_mae(cgrasp_loss, valset, optimizer, scheduler, output_dir=cfg.output_dir, mode='val', cfg=cfg)
-        
-        # import pdb; pdb.set_trace()
-        for epoch in range(start_epoch, cfg.num_epoch):
-            # set_random_seed(1024)
-            set_random_seed(3407 + epoch)
-            # torch.cuda.manual_seed()
-            # model.apply(fix_bn)
-            model, optimizer, scheduler, _ = trainepoch(trainloader, epoch, model)
-            # set_random_seed(3407)
-            _, stop_flag = valepoch(valloader, epoch, model, optimizer, scheduler)
-            # import pdb; pdb.set_trace()
-            if stop_flag:
-                print("Early stopping occur!")
-                break
-
 
             
             
@@ -340,6 +259,7 @@ if __name__ == "__main__":
     # parser.add_argument('--loss_penetr', action='store_false')
     # parser.add_argument('--loss_mano', action='store_false')
     parser.add_argument('--dloss_type', type=str, default=None)
+    parser.add_argument('--eval_iter', type=int, default=20)
 
     args = parser.parse_args()
 

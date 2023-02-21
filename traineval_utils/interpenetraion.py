@@ -33,8 +33,14 @@ def main(sample_info, cfg):
         volume = intersect_vox_obj(hand_mesh, obj_mesh, cfg)
     elif mode == 'voxels_hand':
         volume = intersect_vox_hand(hand_mesh, obj_mesh, cfg)
-
-    return volume
+        
+    if volume != 0:
+        inside_verts = obj_mesh.contains(hand_mesh.vertices)
+        _, distances, _ = trimesh.proximity.closest_point(obj_mesh, inside_verts)
+        depth = distances.max()
+    else:
+        depth = 0
+    return volume, depth
 
 if __name__ == "__main__":
     from dataset.Dataset import GrabNetDataset

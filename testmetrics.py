@@ -78,7 +78,7 @@ def testmetrics(cfg):
                            'obj_faces': obj_faces,
                            'index': index}
         gt_CA, gt_contact_rh_faces, gt_contact_rh_verts = contact.get_contact_area(sample_info_gt)
-        gt_IV = interpenetraion.main(sample_info_gt, cfg)
+        gt_IV, gt_ID = interpenetraion.main(sample_info_gt, cfg)
         
         
         Metrics_iters = AverageMeters()
@@ -101,9 +101,12 @@ def testmetrics(cfg):
                 
                 
             if cfg.IV:
-                IV = interpenetraion.main(sample_info, cfg)
+                IV, ID = interpenetraion.main(sample_info, cfg)
                 dict_metrics_iters['IV_pred'] = IV
+                dict_metrics_iters['ID_pred'] = ID
                 dict_metrics_iters['IV_gt'] = gt_IV
+                dict_metrics_iters['ID_gt'] = gt_ID
+                
                 
             if cfg.CA and cfg.IV and IV > 0 and gt_IV > 0:
                 CA_IV_ratio = CA / IV
@@ -111,6 +114,12 @@ def testmetrics(cfg):
                 dict_metrics_iters['CA_IV_ratio_pred'] = CA_IV_ratio
                 dict_metrics_iters['CA_IV_ratio_gt'] = gt_CA_IV_ratio
                 dict_metrics_iters['CA_IV_ratio_pred/gt'] = CA_IV_ratio / gt_CA_IV_ratio
+            
+            if cfg.cond:    
+            # TODO: calculate the condition hit metrics
+                condition_hit_rate = condition.main()
+            # TODO: compute conditioned variety metrics
+            
                 
             if cfg.sim:
                 save_gif_folder = os.path.join(cfg.output_dir, 'gt_sim', 'gif')
