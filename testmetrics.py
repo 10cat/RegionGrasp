@@ -1,3 +1,4 @@
+from math import sqrt
 import os
 from socket import CAN_ISOTP
 import sys
@@ -30,7 +31,7 @@ from models.cGrasp_vae import cGraspvae
 from traineval_utils.loss import ChamferDistanceL2Loss, PointCloudCompletionLoss, cGraspvaeLoss
 from utils.optim import *
 from utils.datasets import get_dataset
-from utils.epoch_utils import EpochVAE_comp, ValEpochVAE_comp, EpochVAE_mae, ValEpochVAE_mae,  MetersMonitor, model_update, PretrainEpoch
+from utils.epoch_utils import EpochVAE_mae, ValEpochVAE_mae,  MetersMonitor, model_update, PretrainEpoch
     
 def testmetrics(cfg):
     mode = cfg.run_mode
@@ -55,6 +56,7 @@ def testmetrics(cfg):
     
     Metrics = MetersMonitor()
     pbar = tqdm(range(dataset.__len__()), desc='Testing metrics')
+    records = []
     for idx in pbar:
         sample = dataset.__getitem__(idx)
         index = int(sample['sample_id'].numpy()[0])
@@ -108,17 +110,17 @@ def testmetrics(cfg):
                 dict_metrics_iters['ID_gt'] = gt_ID
                 
                 
-            if cfg.CA and cfg.IV and IV > 0 and gt_IV > 0:
-                CA_IV_ratio = CA / IV
-                gt_CA_IV_ratio = gt_CA / gt_IV
-                dict_metrics_iters['CA_IV_ratio_pred'] = CA_IV_ratio
-                dict_metrics_iters['CA_IV_ratio_gt'] = gt_CA_IV_ratio
-                dict_metrics_iters['CA_IV_ratio_pred/gt'] = CA_IV_ratio / gt_CA_IV_ratio
+            # if cfg.CA and cfg.IV and IV > 0 and gt_IV > 0:
+            #     CA_IV_ratio = CA / IV
+            #     gt_CA_IV_ratio = gt_CA / gt_IV
+            #     dict_metrics_iters['CA_IV_ratio_pred'] = CA_IV_ratio
+            #     dict_metrics_iters['CA_IV_ratio_gt'] = gt_CA_IV_ratio
+            #     dict_metrics_iters['CA_IV_ratio_pred/gt'] = CA_IV_ratio / gt_CA_IV_ratio
             
-            if cfg.cond:    
-            # TODO: calculate the condition hit metrics
-                condition_hit_rate = condition.main()
-            # TODO: compute conditioned variety metrics
+            # if cfg.cond:    
+            # # TODO: calculate the condition hit metrics
+            #     condition_hit_rate = condition.main()
+            # # TODO: compute conditioned variety metrics
             
                 
             if cfg.sim:
@@ -133,11 +135,32 @@ def testmetrics(cfg):
                                         save_obj_folder=save_obj_folder)
                 
                 dict_metrics_iters['sim_dist'] = sim_dist
-                
+            
+            records.append(dict_metrics_iters)
             for key, val in dict_metrics_iters.items():
                 Metrics_iters.add_value(key, val)
+                
+        # if idx > 5:
+        #     break
        
         dict_metrics = Metrics_iters.avg(mode=None) # 取5个iter的平均loss
+        
+        # sigma & 95%zhixin
+        # sigma = 0.
+        sq_sum = {}
+        for dict_metrics_iters in records:
+            for key, val in dict_metrics_iters.items():
+                mu  = dict_metrics[key]
+                if key not in sq_sum:
+                    sq_sum[key] = 0.
+                sq_sum[key] += (val - mu)**2
+        n = len(records)
+        for key, val in sq_sum.items(): 
+            sigma = sqrt(val / (n - 1))
+            dict_metrics[key+'_sigma'] = sigma
+            dict_metrics[key+'_lower95'] = dict_metrics[key] - 1.96 * sigma / sqrt(n)
+            dict_metrics[key+'_upper95'] = dict_metrics[key] + 1.96 * sigma / sqrt(n)
+        # print(dict_metrics)
         
         msg_loss, metrics = Metrics.report(dict_metrics, dtype='numpy')
         msg = msg_loss
@@ -162,18 +185,18 @@ if __name__ == "__main__":
     
     # import pdb; pdb.set_trace()
     parser = argparse.ArgumentParser()
-    parser.add_argument('--cfgs', type=str)
+    parser.add_argument('--cfgs', type=str, default='config')
     parser.add_argument('--cfgs_fodler', type=str, default='cgrasp')
     parser.add_argument('--exp_name', type=str, default=None)
     parser.add_argument('--cuda_id', type=str, default="0")
     parser.add_argument('--machine', type=str, default='41')
     parser.add_argument('--wandb', action='store_true')
-    
-    
     parser.add_argument('--resume', action='store_true')
+    
+    
     parser.add_argument('--mae', action='store_true')
     parser.add_argument('--comp', action='store_true')
-    parser.add_argument('--grasp', action='store_true')
+    parser.add_argument('--base', action='store_true')
 
     parser.add_argument('--chkpt', type=str, default=None)
     
@@ -183,6 +206,17 @@ if __name__ == "__main__":
     parser.add_argument('--sample_intv', type=str, default=None)
     parser.add_argument('--run_mode', type=str, default='train')
     parser.add_argument('--pt_model', type=str, default='trans')
+    parser.add_argument('--run_check', action='store_true')
+    parser.add_argument('--no_save', action='store_true')
+    
+    # parser.add_argument('--no_loss_edge', action='store_true')
+    # parser.add_argument('--no_loss_mesh_rec', action='store_true')
+    # parser.add_argument('--no_loss_dist_h', action='store_true')
+    # parser.add_argument('--no_loss_dist_o', action='store_true')
+    # parser.add_argument('--loss_penetr', action='store_false')
+    # parser.add_argument('--loss_mano', action='store_false')
+    parser.add_argument('--dloss_type', type=str, default=None)
+    parser.add_argument('--eval_iter', type=int, default=10)
     
     parser.add_argument('--CA', action='store_false')
     parser.add_argument('--IV', action='store_false')
@@ -194,9 +228,14 @@ if __name__ == "__main__":
     
     # cfg = MyOptions()
     # DONE: 读取配置文件并转化成字典，同时加入args的配置
-    conf = cfgsu.get_config(args, args.cfgs_fodler)
-    conf.update(cfgsu.config_exp_name(args))
-    conf.update(cfgsu.config_paths(args.machine, conf['exp_name']))
+    exp_name = cfgsu.config_exp_name(args)
+    paths = cfgsu.config_paths(args.machine, exp_name['exp_name'])
+    
+    # import pdb; pdb.set_trace()
+    
+    conf = cfgsu.get_config(args, paths, args.cfgs_fodler)
+    conf.update(exp_name)
+    conf.update(paths)
     conf.update(args.__dict__) # args的配置也记录下来
     
     cfg = EasyDict()

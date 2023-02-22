@@ -67,11 +67,11 @@ class MetersMonitor(object):
     
     def update(self, dict, dtype='torch'):
         for key in dict.keys():
-            # if dtype == 'torch':
-            #     self.Meters.add_value(key, float(dict[key].detach().to('cpu')))
-            # else:
-            #     self.Meters.add_value(key, float(dict[key]))
-            self.Meters.add_value(key, dict[key].item())
+            if dtype == 'torch':
+                self.Meters.add_value(key, float(dict[key].detach().to('cpu')))
+            else:
+                self.Meters.add_value(key, float(dict[key]))
+            # self.Meters.add_value(key, dict[key].item())
     
     def get_avg(self, mode=None):
         return self.Meters.avg(mode)
@@ -97,7 +97,7 @@ class CheckpointsManage(object):
         self.no_improve = 0
         return
     
-    def save_checkpoints(self, epoch, model, metric_value, optimizer, scheduler):
+    def save_checkpoints(self, epoch, model,  optimizer, scheduler, metric_value):
         if isinstance(optimizer, list):
             optimizer_states = [optim.state_dict() for optim in optimizer]
         else:
@@ -634,8 +634,8 @@ class EpochVAE_mae():
         return model, optimizer, scheduler, stop_flag
         
 class ValEpochVAE_mae(EpochVAE_mae):
-    def __init__(self, loss, dataset, optimizer, scheduler, output_dir, mode='train', cfg=None):
-        super().__init__(loss, dataset, optimizer, scheduler, output_dir, mode, cfg)
+    def __init__(self, loss, dataset, output_dir, mode='train', cfg=None):
+        super().__init__(loss, dataset, output_dir, mode, cfg)
         
     def model_forward(self, model, obj_input, hand_input=None, mask_center=None):
         device = 'cuda' if self.cfg.use_cuda else 'cpu'
@@ -672,12 +672,15 @@ class ValEpochVAE_mae(EpochVAE_mae):
                 
                 obj_points = obj_input_pc
                 
-                
-                
                 # NOTE: validation generation in several iters
                 Loss_iters = AverageMeters() # loss/metrics计算方式：取5个iter的平均
                 for iter in range(self.cfg.eval_iter):
-                    hand_params = hand_params_list[iter] # 输出每个iter的生成效果
+                    hand_params = hand_params_list[iter] # 输出每个iter的生成效果fi
+                    # B = hand_params[0]
+                    # rhand_pred, rh_model = decode_hand_params_batch(hand_params, B, self.cfg)
+                    # rhand_vs_pred = rhand_pred.vertices
+                    # rh_f_single = torch.from_numpy(rh_model.faces.astype(np.int32)).view(1, -1, 3)
+                    # rhand_faces = rh_f_single.repeat(B, 1, 1).to(rhand_vs_pred.device).to(torch.long)
                     if self.cfg.use_mano:
                         _, dict_loss, _, rhand_vs_pred, rhand_faces = self.loss_compute(hand_params, None, obj_points, gt_rhand_vs, region_mask, trans=sample['obj_trans'], cam_extr=sample['cam_extr'], gt_hand_params=sample['hand_params'], obj_normals=sample['obj_point_normals'])
                     else:
@@ -718,7 +721,7 @@ class ValEpochVAE_mae(EpochVAE_mae):
                 else:
                     raise NotImplementedError
                 
-                if epoch % self.cfg.check_interval == 0 and epoch != 0:
+                if epoch % self.cfg.check_interval == 0:
                     self.visual_gt(rhand_vs = gt_rhand_vs.transpose(2, 1).detach().to('cpu').numpy(),
                                 rhand_faces = rhand_faces.detach().to('cpu').numpy(),
                                 obj_pc=obj_points.detach().to('cpu').numpy(),
@@ -748,7 +751,7 @@ class ValEpochVAE_mae(EpochVAE_mae):
                         break
             
         if self.cfg.run_mode == 'train' and not self.cfg.no_save:
-            no_improve_epochs = self.Checkpt.save_checkpoints(epoch, model, metric_value=losses[f'{self.mode}_total_loss'], optimizer=optimizer, scheduler=scheduler)
+            no_improve_epochs = self.Checkpt.save_checkpoints(epoch, model, optimizer=optimizer, scheduler=scheduler, metric_value=losses[f'{self.mode}_total_loss'])
             if no_improve_epochs > self.cfg.early_stopping:
                 stop_flag = True
                 

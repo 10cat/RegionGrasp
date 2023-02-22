@@ -35,8 +35,9 @@ def main(sample_info, cfg):
         volume = intersect_vox_hand(hand_mesh, obj_mesh, cfg)
         
     if volume != 0:
-        inside_verts = obj_mesh.contains(hand_mesh.vertices)
-        _, distances, _ = trimesh.proximity.closest_point(obj_mesh, inside_verts)
+        # inside_verts = obj_mesh.contains(hand_mesh.vertices)
+        # import pdb; pdb.set_trace()
+        _, distances, _ = trimesh.proximity.closest_point(obj_mesh, hand_mesh.vertices)
         depth = distances.max()
     else:
         depth = 0

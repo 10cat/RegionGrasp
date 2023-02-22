@@ -18,7 +18,7 @@ import trimesh
 from utils.utils import makepath, retrieve_name, edges_for
 from utils.meters import AverageMeter, AverageMeters
 from utils.logger import Monitor
-from models.ConditionNet import ConditionNet
+# from models.ConditionNet import ConditionNet
 from models.cGrasp_vae import cGraspvae
 from traineval_utils.loss import cGraspvaeLoss
 from traineval_utils.metrics import ConditionNetMetrics, TestMetricsCPU, cGraspvaeMetrics

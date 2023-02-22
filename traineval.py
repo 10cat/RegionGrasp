@@ -116,11 +116,12 @@ def cgrasp(cfg=None):
         part_model_dict.update({'cnet_mae': model.cnet.MAE_encoder})
     optimizer, scheduler = build_optim_sche_grasp(model, part_model=part_model_dict, cfg=cfg)
     
+    device = 'cuda' if cfg.use_cuda else 'cpu'
+    model = model.to(device)
+    cgrasp_loss = cGraspvaeLoss(device, cfg)
+    cgrasp_loss.to(device)
+    
     if mode == 'train':
-        device = 'cuda' if cfg.use_cuda else 'cpu'
-        model = model.to(device)
-        cgrasp_loss = cGraspvaeLoss(device, cfg)
-        cgrasp_loss.to(device)
         
         if cfg.resume:
             assert cfg.chkpt is not None, "Checkpoint not configured!"
@@ -167,16 +168,20 @@ def cgrasp(cfg=None):
         testloader = data.DataLoader(testset, batch_size=bs, shuffle=False)
         
         # optimizer, scheduler = build_optim_sche_grasp(model, part_model={'cnet_mae': model.cnet.MAE_encoder}, cfg=cfg)
+        checkpoint = torch.load(os.path.join(cfg.output_dir, 'models', cfg.chkpt+'.pth'))
+        model.load_state_dict(checkpoint['state_dict'])
+        print(f"test {cfg.chkpt}")
         
         
-        device = 'cuda' if cfg.use_cuda else 'cpu'
-        model = model.to(device)
-        cgrasp_loss = cGraspvaeLoss(device, cfg)
-        cgrasp_loss.to(device)
+        # device = 'cuda' if cfg.use_cuda else 'cpu'
+        # model = model.to(device)
+        # cgrasp_loss = cGraspvaeLoss(device, cfg)
+        # cgrasp_loss.to(device)
+        # import pdb; pdb.set_trace()
         
-        testepoch = ValEpochVAE_mae(cgrasp_loss, testset, optimizer, scheduler, output_dir=cfg.output_dir, mode='val', cfg=cfg)
+        testepoch = ValEpochVAE_mae(cgrasp_loss, testset, output_dir=cfg.output_dir, mode='test', cfg=cfg)
         
-        _, _ = testepoch(testloader, 0, model, save_pred=True)
+        _, _ = testepoch(testloader, 0, model, optimizer, scheduler, save_pred=True)
         
     elif mode == 'val_only':
         valset = get_dataset(cfg, mode='val')
@@ -259,7 +264,7 @@ if __name__ == "__main__":
     # parser.add_argument('--loss_penetr', action='store_false')
     # parser.add_argument('--loss_mano', action='store_false')
     parser.add_argument('--dloss_type', type=str, default=None)
-    parser.add_argument('--eval_iter', type=int, default=20)
+    parser.add_argument('--eval_iter', type=int, default=10)
 
     args = parser.parse_args()
 
