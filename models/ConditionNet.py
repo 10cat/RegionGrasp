@@ -222,7 +222,7 @@ class ConditionMAE(nn.Module):
             
             full_mask = self.get_region_mask(mask, p_idx, pts) # B, 2048
             
-            return condition_feat, full_mask, embed_feat.transpose(1, 2), center
+            return condition_feat, full_mask, embed_feat, center
         
         embed_feat = embed_feat.transpose(1, 2)
         condition_feat = torch.max(self.increase_dim(embed_feat).transpose(1, 2), dim=1)[0] 
