@@ -67,7 +67,7 @@ def config_paths(machine, exp_name):
     if machine == '97':
         grabnet_root = "/home/datassd/yilin/GrabNet"
         obman_root = "/home/datassd/yilin/obman"
-        shapenet_root = "/home/datassd/yilin/ShapeNetCore.v2"
+        shapenet_root = "/home/datassd/yilin/ShapeNet_obman"
         output_root = "/home/datassd/yilin/Outputs/ConditionHOI/"
         output_dir = "/home/datassd/yilin/Outputs/ConditionHOI/"+exp_name
         mano_root = "/home/datassd/yilin/Codes/_toolbox/mano"
@@ -76,7 +76,7 @@ def config_paths(machine, exp_name):
     if machine == '208' or machine == '50':
         grabnet_root = "/home/shihao/yilin/GrabNet"
         obman_root = "/home/shihao/yilin/obman"
-        shapenet_root = "/home/shihao/yilin/ShapeNetCore.v2"
+        shapenet_root = "/home/shihao/yilin/ShapeNet_obman"
         output_root = "/home/shihao/yilin/Outputs/ConditionHOI/"
         output_dir = "/home/shihao/yilin/Outputs/ConditionHOI/"+exp_name
         mano_root = "/home/shihao/yilin/Codes/_toolbox/mano"
@@ -85,7 +85,7 @@ def config_paths(machine, exp_name):
     if machine == '195':
         grabnet_root = "/home/jupyter-yiling/GrabNet"
         obman_root = "/home/jupyter-yiling/obman"
-        shapenet_root = "/home/jupyter-yiling/ShapeNetCore.v2_obman"
+        shapenet_root = "/home/jupyter-yiling/ShapeNet_obman"
         output_root = "/home/jupyter-yiling/Outputs/ConditionHOI/"
         output_dir = "/home/jupyter-yiling/Outputs/ConditionHOI/"+exp_name
         mano_root = "/home/jupyter-yiling/Codes/_toolbox/mano"

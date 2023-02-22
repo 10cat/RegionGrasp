@@ -49,10 +49,12 @@ class PretrainDataset(data.Dataset):
         self.obman = ObManResample(ds_root=obman_root,
                                   shapenet_root=shapenet_root,
                                   mano_root=mano_root,
+                                #   split = 'test',
                                   split=split,
                                   resample_num=resample_num,
                                   use_cache=True)
         self.obman_objects = self.obman.obj_resampled
+        # import pdb; pdb.set_trace()
         
         
         

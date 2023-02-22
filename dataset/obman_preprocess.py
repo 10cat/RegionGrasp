@@ -427,6 +427,7 @@ def get_new_objpretrain(ds_root, args):
     for idx in tqdm(range(objdataset.__len__())):
         sample = objdataset.__getitem__(idx)
     
+
     
 if __name__ == "__main__":
     import argparse
