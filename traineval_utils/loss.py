@@ -88,6 +88,9 @@ class cGraspvaeLoss(nn.Module):
             obj_vs = obj_vs.transpose(2, 1)
         obj_vs = obj_vs.to(self.device)
         
+        faraway_origin = -50*torch.ones(region.shape)* (1 - region)
+        faraway_origin = faraway_origin.to(self.device)
+        region = region.to(self.device)
         rh_f_single = torch.from_numpy(rh_model.faces.astype(np.int32)).view(1, -1, 3)
         rhand_faces = rh_f_single.repeat(B, 1, 1).to(self.device).to(torch.long)
         # import pdb; pdb.set_trace() # to check decode module
@@ -119,19 +122,21 @@ class cGraspvaeLoss(nn.Module):
             if loss_cfg.loss_dist_o:
                 dict_loss.update({'loss_dist_o': loss_dist_o})
             if loss_cfg.get('metrics_cond') and loss_cfg.metrics_cond:
-                # import pdb; pdb.set_trace()
-                thumb_indices = torch.Tensor(config.bigfinger_vertices).reshape(1, -1).to(self.device)
-                thumb_prox_ids = torch.gather(h2o_vid_pred, dim=-1, index=thumb_indices.to(torch.long))
-                thumb_prox_points = obj_vs[thumb_prox_ids]
+                dict_loss['metrics_cond'] = None
+                thumb_indices = torch.Tensor(config.bigfinger_vertices).reshape(1, -1).repeat(B, 1).to(self.device)
+                thumb_prox_ids = torch.gather(h2o_vid_pred, dim=-1, index=thumb_indices.to(torch.long)).unsqueeze(-1).repeat(1, 1, 3)
+                # thumb_prox_points = obj_vs[:, thumb_prox_ids]
+                thumb_prox_points = torch.gather(obj_vs, dim=1, index=thumb_prox_ids.to(torch.long))
                 # obj_vids = torch.arange(0, obj_vs.shape[0])
-                region = region.to(self.device)
                 
-                region_points = obj_vs * (region)
-                _, t2r_signed, _, _ = self.cfg(region_points, thumb_prox_points)
+                # import pdb; pdb.set_trace()
+                region_points = obj_vs * (region.unsqueeze(-1)) + faraway_origin.unsqueeze(-1)
+                _, t2r_signed, _, _ = self.chd(region_points, thumb_prox_points)
                 hit_flag = t2r_signed.abs() < 0.00001
-                import pdb; pdb.set_trace()
-                cond_hit_rate = (thumb_prox_points[hit_flag].shape[0] / thumb_prox_points.reshape(-1).shape[0])
-                dict_loss.update({'metrics_cond': cond_hit_rate})
+                # import pdb; pdb.set_trace()
+                cond_hit_rate = (t2r_signed[hit_flag].shape[0] / t2r_signed.reshape(-1).shape[0])
+                
+                dict_loss.update({'metrics_cond': torch.Tensor([cond_hit_rate]).to(torch.float32)[0].to(self.device)})
                 
                 
         else:
@@ -142,6 +147,7 @@ class cGraspvaeLoss(nn.Module):
             obj_nn_dist_recon, obj_nn_idx_recon = get_NN(obj_vs, rhand_vs_pred)
             loss_penetr = self.coefs['lambda_penetr'] * self.PenetrLoss(rhand_vs_pred, rhand_faces, obj_vs,
                                         obj_nn_dist_recon, obj_nn_idx_recon)
+            # import pdb; pdb.set_trace()
             dict_loss.update({'loss_penetr': loss_penetr})
             
 
@@ -171,7 +177,8 @@ class cGraspvaeLoss(nn.Module):
             gt_hand_params = gt_hand_params.to(self.device)
             loss_mano = self.coefs['lambda_mano'] * (1 - self.coefs['kl_coef']) * F.mse_loss(recon_params, gt_hand_params).sum() / recon_params.size(0)
             dict_loss.update({'loss_mano': loss_mano})
-            
+        
+        # import pdb; pdb.set_trace()
         loss_total = torch.stack(list(dict_loss.values())).sum()
 
         signed_dists = [o2h_signed_pred, o2h_signed, h2o_signed, h2o_signed_pred]
