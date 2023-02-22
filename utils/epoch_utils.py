@@ -561,7 +561,7 @@ class EpochVAE_mae():
                 region_mask = region_mask[i]
                 obj_pc = obj_pc[i]
                 mask = region_mask > 0.
-                self.VisualPC.visual(pcs=[obj_pc[~mask], obj_pc[mask]], pc_colors=['green', 'pink'], sample_id=sample_id, epoch=epoch, name='obj')
+                self.VisualPC.visual(pcs=[obj_pc[~mask], obj_pc[mask]], pc_colors=['white', 'blue'], sample_id=sample_id, epoch=epoch, name='obj')
         return
         
     def __call__(self, dataloader, epoch, model, optimizer, scheduler):
@@ -601,7 +601,7 @@ class EpochVAE_mae():
             msg = msg_loss
             pbar.set_postfix_str(msg)
             
-            if epoch % self.cfg.check_interval == 0 and batch_idx % self.batch_interval and epoch != 0:
+            if epoch % self.cfg.check_interval == 0 and batch_idx % self.batch_interval:
                 if self.cfg.dataset.name == 'obman':
                     obj_trans = sample['obj_trans'].detach().to('cpu').numpy()
                 elif self.cfg.dataset.name == 'grabnet':
@@ -689,7 +689,7 @@ class ValEpochVAE_mae(EpochVAE_mae):
                     for key, val in dict_loss.items():
                         Loss_iters.add_value(key, val)
                         # import pdb; pdb.set_trace()
-                    if epoch % self.cfg.check_interval == 0 and epoch != 0 and batch_idx % self.batch_interval == 0:
+                    if epoch % self.cfg.check_interval == 0 and batch_idx % self.batch_interval == 0:
                         rhand_vs_pred_0 = rhand_vs_pred[0].detach().to('cpu').numpy()
                         rhand_faces_0 = rhand_faces[0].detach().to('cpu').numpy()
                         sample_id = int(sample_ids.detach().to('cpu').numpy()[0])
