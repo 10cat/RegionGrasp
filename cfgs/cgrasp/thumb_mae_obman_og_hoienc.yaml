@@ -111,7 +111,7 @@ model: {
           num_heads: 6,
           drop_path_rate: 0.,
           knn_k: 8,
-          knn_layer_num: 3
+          knn_layer_num: -1
         }
       }
     },
@@ -144,6 +144,15 @@ loss: {
     loss_dist_h: False,
     loss_dist_o: False,
     loss_penetr: True,
+    loss_mano: False
+  },
+  test: {
+    loss_edge: False,
+    loss_mesh_rec: False,
+    loss_dist_h: False,
+    loss_dist_o: False,
+    loss_penetr: True,
+    # metrics_cond: True,
     loss_mano: False
   },
   coef: {

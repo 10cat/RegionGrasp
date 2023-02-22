@@ -1,6 +1,7 @@
 import sys
 sys.path.append('.')
 sys.path.append('..')
+import config
 import numpy as np
 import torch
 import torch.nn as nn
@@ -32,6 +33,9 @@ class cGraspvaeLoss(nn.Module):
         self.batch_size = cfg.batch_size
         self.mano_rh_path = cfg.mano_rh_path
         self.coefs = cfg.loss.coef
+        
+        import chamfer_distance as chd
+        self.chd = chd.ChamferDistance()
         
 
     def dist_loss(self, h2o_signed, h2o_signed_pred, o2h_signed, o2h_signed_pred, region):
@@ -92,7 +96,7 @@ class cGraspvaeLoss(nn.Module):
         dict_loss = {}
         loss_cfg = self.cfg.loss[mode]
         #### dist Loss ####
-        if loss_cfg.loss_dist_h or loss_cfg.loss_dist_o:
+        if loss_cfg.loss_dist_h or loss_cfg.loss_dist_o or (loss_cfg.get('metrics_cond') and loss_cfg.metrics_cond):
             rh_normals = Meshes(verts=rhand_vs, faces=rhand_faces).to(self.device).verts_normals_packed().view(-1, 778, 3)
             rh_normals_pred = Meshes(verts=rhand_vs_pred, faces=rhand_faces).to(self.device).verts_normals_packed().view(-1, 778, 3) # packed representation of the vertex normals
             
@@ -115,7 +119,20 @@ class cGraspvaeLoss(nn.Module):
             if loss_cfg.loss_dist_o:
                 dict_loss.update({'loss_dist_o': loss_dist_o})
             if loss_cfg.get('metrics_cond') and loss_cfg.metrics_cond:
-                thumb_prox_verts = obj_vs[h2o_vid_pred]
+                # import pdb; pdb.set_trace()
+                thumb_indices = torch.Tensor(config.bigfinger_vertices).reshape(1, -1).to(self.device)
+                thumb_prox_ids = torch.gather(h2o_vid_pred, dim=-1, index=thumb_indices.to(torch.long))
+                thumb_prox_points = obj_vs[thumb_prox_ids]
+                # obj_vids = torch.arange(0, obj_vs.shape[0])
+                region = region.to(self.device)
+                
+                region_points = obj_vs * (region)
+                _, t2r_signed, _, _ = self.cfg(region_points, thumb_prox_points)
+                hit_flag = t2r_signed.abs() < 0.00001
+                import pdb; pdb.set_trace()
+                cond_hit_rate = (thumb_prox_points[hit_flag].shape[0] / thumb_prox_points.reshape(-1).shape[0])
+                dict_loss.update({'metrics_cond': cond_hit_rate})
+                
                 
         else:
             o2h_signed_pred, o2h_signed, h2o_signed, h2o_signed_pred = None, None, None, None

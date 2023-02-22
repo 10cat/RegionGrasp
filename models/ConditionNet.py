@@ -139,6 +139,97 @@ class ConditionBERT(ConditionTrans):
         
         return q, pred_pc
     
+# class ConditionMAE(nn.Module):
+#     def __init__(self, config):
+#         super().__init__()
+#         self.config = config
+#         self.group_size = config.group_size
+#         self.num_group = config.num_group
+#         self.region_size = config.region_size
+        
+#         trans_cfg = config.transformer # config = 全局cfg.model.cnet.kwargs
+#         self.trans_dim = trans_cfg.trans_dim
+#         self.depth = trans_cfg.depth
+#         self.num_heads = trans_cfg.num_heads
+        
+#         self.encoder_dims = trans_cfg.encoder_dims
+        
+#         self.group_divider = Grouper(self.num_group, self.group_size)
+        
+#         self.MAE_encoder = MaskTransformer(trans_cfg)
+        
+#         self.condition_dim = config.condition_dim
+        
+#         # TODO: extract local features of the masked and unmasked patches respectively
+#         self.increase_dim = nn.Sequential(
+#             nn.Conv1d(self.trans_dim, self.condition_dim, 1),
+#             nn.BatchNorm1d(self.condition_dim),
+#             nn.LeakyReLU(negative_slope=0.2),
+#             nn.Conv1d(self.condition_dim, self.condition_dim, 1)
+#         )
+        
+#         # self.increase_dim_masked = nn.Sequential(
+#         #     nn.Conv1d(self.trans_dim, self.condition_dim, 1),
+#         #     nn.BatchNorm1d(self.condition_dim),
+#         #     nn.LeakyReLU(negative_slope=0.2),
+#         #     nn.Conv1d(self.condition_dim, self.condition_dim, 1)
+#         # )
+        
+#         self.fuse = nn.Sequential(
+#             nn.Conv1d(2*self.condition_dim, self.condition_dim, 1),
+#             nn.BatchNorm1d(self.condition_dim)
+#         )
+        
+#     def mask_region_patch(self, center, mask_center):
+#         return mask_region_patch(center, mask_center, self.region_size)
+    
+#     def get_region_mask(self, mask, p_idx, obj_points):
+#         return get_region_mask(mask, p_idx, obj_points, self.region_size)
+        
+#     def forward(self, pts, mask_center=None):
+#         B, _, _ = pts.shape
+#         neighborhood, center, p_idx = self.group_divider(pts, return_idx=True)
+#         embed_feat, _ = self.MAE_encoder(neighborhood, center, noaug = True)
+#         embed_feat = embed_feat.transpose(1, 2)
+#         feat = self.increase_dim(embed_feat)
+        
+#         if mask_center is not None:
+            
+#             # import pdb; pdb.set_trace()
+#             # CHECK: 1)feat维度; 2)mask维度 3)mask之后的维度
+#             # mask - B, G
+#             # feat - B, G, 1024
+#             mask = self.mask_region_patch(center, mask_center)
+            
+#             feat = feat.transpose(1, 2)
+#             masked_feat = feat[mask].reshape(B, -1, self.condition_dim)
+#             other_feat = feat[~mask].reshape(B, -1, self.condition_dim)
+#             # import pdb; pdb.set_trace()
+#             # masked_embed_feat = embed_feat[mask].reshape(B, -1, self.encoder_dims).transpose(1, 2)
+#             # other_embed_feat = embed_feat[~mask].reshape(B, -1, self.encoder_dims).transpose(1, 2)
+            
+#             # masked_feat = self.increase_dim_masked(masked_embed_feat).transpose(1, 2)
+#             # other_feat = self.increase_dim(other_embed_feat).transpose(1, 2)
+            
+#             # 分别做max pooling
+#             masked_feat = torch.max(masked_feat, dim=1)[0]
+#             other_feat = torch.max(other_feat, dim=1)[0]
+            
+#             condition_feat = torch.cat([masked_feat, other_feat], dim=-1) # B, 2048
+            
+#             # conv1d特征融合
+#             condition_feat = self.fuse(condition_feat.unsqueeze(-1)) # B, 1024
+            
+#             condition_feat = condition_feat.reshape(B, -1)
+            
+#             full_mask = self.get_region_mask(mask, p_idx, pts) # B, 2048
+            
+#             return condition_feat, full_mask, embed_feat.transpose(1, 2), center
+        
+#         # embed_feat = embed_feat.transpose(1, 2)
+#         condition_feat = torch.max(feat, dim=1)[0] 
+#         return condition_feat, None, None, None
+    
 class ConditionMAE(nn.Module):
     def __init__(self, config):
         super().__init__()

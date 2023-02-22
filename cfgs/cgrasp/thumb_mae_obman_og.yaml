@@ -103,6 +103,15 @@ loss: {
     loss_penetr: True,
     loss_mano: False
   },
+  test: {
+    loss_edge: False,
+    loss_mesh_rec: False,
+    loss_dist_h: False,
+    loss_dist_o: False,
+    loss_penetr: True,
+    # metrics_cond: True,
+    loss_mano: False
+  },
   coef: {
     kl_coef: 0.005,
     lambda_edge: 30.,
