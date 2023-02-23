@@ -20,7 +20,7 @@ from utils.utils import set_random_seed
 
 from dataset.obman_preprocess import ObManObj
 from models.pointnet_encoder import ObjRegionConditionEncoder
-from models.ConditionNet import ConditionMAE, ConditionTrans, ConditionBERT
+from models.ConditionNet import ConditionMAE, ConditionMAE_origin, ConditionTrans, ConditionBERT
 from models.cGrasp_vae import cGraspvae
 from traineval_utils.loss import ChamferDistanceL2Loss, PointCloudCompletionLoss, cGraspvaeLoss
 from utils.optim import *
@@ -88,7 +88,7 @@ def cgrasp(cfg=None):
     bs = cfg.batch_size
     
     if cfg.mae:
-        cnet = ConditionMAE(cfg.model.cnet.kwargs)
+        cnet = ConditionMAE(cfg.model.cnet.kwargs) if not cfg.cmae_orig else ConditionMAE_origin(cfg.model.cnet.kwargs)
         
             
         if cfg.model.cnet.chkpt_path:
@@ -265,6 +265,7 @@ if __name__ == "__main__":
     # parser.add_argument('--loss_mano', action='store_false')
     parser.add_argument('--dloss_type', type=str, default=None)
     parser.add_argument('--eval_iter', type=int, default=10)
+    parser.add_argument('--cmae_orig', action='store_true')
 
     args = parser.parse_args()
 

@@ -557,7 +557,7 @@ class EpochVAE_mae():
                 obj_verts, obj_faces = self.dataset.get_obj_verts_faces(sample_id)
                 if self.cfg.dataset.name == 'obman':
                     obj_verts -= obj_trans[i]
-                self.VisualMesh.visual(vertices=obj_verts, faces=obj_faces, mesh_color='white', sample_id=sample_id, epoch=epoch, name='obj')
+                self.VisualMesh.visual(vertices=obj_verts, faces=obj_faces, mesh_color='grey', sample_id=sample_id, epoch=epoch, name='obj')
                 region_mask = region_mask[i]
                 obj_pc = obj_pc[i]
                 mask = region_mask > 0.

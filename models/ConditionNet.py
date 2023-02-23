@@ -139,96 +139,96 @@ class ConditionBERT(ConditionTrans):
         
         return q, pred_pc
     
-# class ConditionMAE(nn.Module):
-#     def __init__(self, config):
-#         super().__init__()
-#         self.config = config
-#         self.group_size = config.group_size
-#         self.num_group = config.num_group
-#         self.region_size = config.region_size
+class ConditionMAE_origin(nn.Module):
+    def __init__(self, config):
+        super().__init__()
+        self.config = config
+        self.group_size = config.group_size
+        self.num_group = config.num_group
+        self.region_size = config.region_size
         
-#         trans_cfg = config.transformer # config = 全局cfg.model.cnet.kwargs
-#         self.trans_dim = trans_cfg.trans_dim
-#         self.depth = trans_cfg.depth
-#         self.num_heads = trans_cfg.num_heads
+        trans_cfg = config.transformer # config = 全局cfg.model.cnet.kwargs
+        self.trans_dim = trans_cfg.trans_dim
+        self.depth = trans_cfg.depth
+        self.num_heads = trans_cfg.num_heads
         
-#         self.encoder_dims = trans_cfg.encoder_dims
+        self.encoder_dims = trans_cfg.encoder_dims
         
-#         self.group_divider = Grouper(self.num_group, self.group_size)
+        self.group_divider = Grouper(self.num_group, self.group_size)
         
-#         self.MAE_encoder = MaskTransformer(trans_cfg)
+        self.MAE_encoder = MaskTransformer(trans_cfg)
         
-#         self.condition_dim = config.condition_dim
+        self.condition_dim = config.condition_dim
         
-#         # TODO: extract local features of the masked and unmasked patches respectively
-#         self.increase_dim = nn.Sequential(
-#             nn.Conv1d(self.trans_dim, self.condition_dim, 1),
-#             nn.BatchNorm1d(self.condition_dim),
-#             nn.LeakyReLU(negative_slope=0.2),
-#             nn.Conv1d(self.condition_dim, self.condition_dim, 1)
-#         )
+        # TODO: extract local features of the masked and unmasked patches respectively
+        self.increase_dim = nn.Sequential(
+            nn.Conv1d(self.trans_dim, self.condition_dim, 1),
+            nn.BatchNorm1d(self.condition_dim),
+            nn.LeakyReLU(negative_slope=0.2),
+            nn.Conv1d(self.condition_dim, self.condition_dim, 1)
+        )
         
-#         # self.increase_dim_masked = nn.Sequential(
-#         #     nn.Conv1d(self.trans_dim, self.condition_dim, 1),
-#         #     nn.BatchNorm1d(self.condition_dim),
-#         #     nn.LeakyReLU(negative_slope=0.2),
-#         #     nn.Conv1d(self.condition_dim, self.condition_dim, 1)
-#         # )
+        # self.increase_dim_masked = nn.Sequential(
+        #     nn.Conv1d(self.trans_dim, self.condition_dim, 1),
+        #     nn.BatchNorm1d(self.condition_dim),
+        #     nn.LeakyReLU(negative_slope=0.2),
+        #     nn.Conv1d(self.condition_dim, self.condition_dim, 1)
+        # )
         
-#         self.fuse = nn.Sequential(
-#             nn.Conv1d(2*self.condition_dim, self.condition_dim, 1),
-#             nn.BatchNorm1d(self.condition_dim)
-#         )
+        self.fuse = nn.Sequential(
+            nn.Conv1d(2*self.condition_dim, self.condition_dim, 1),
+            nn.BatchNorm1d(self.condition_dim)
+        )
         
-#     def mask_region_patch(self, center, mask_center):
-#         return mask_region_patch(center, mask_center, self.region_size)
+    def mask_region_patch(self, center, mask_center):
+        return mask_region_patch(center, mask_center, self.region_size)
     
-#     def get_region_mask(self, mask, p_idx, obj_points):
-#         return get_region_mask(mask, p_idx, obj_points, self.region_size)
+    def get_region_mask(self, mask, p_idx, obj_points):
+        return get_region_mask(mask, p_idx, obj_points, self.region_size)
         
-#     def forward(self, pts, mask_center=None):
-#         B, _, _ = pts.shape
-#         neighborhood, center, p_idx = self.group_divider(pts, return_idx=True)
-#         embed_feat, _ = self.MAE_encoder(neighborhood, center, noaug = True)
-#         embed_feat = embed_feat.transpose(1, 2)
-#         feat = self.increase_dim(embed_feat)
+    def forward(self, pts, mask_center=None):
+        B, _, _ = pts.shape
+        neighborhood, center, p_idx = self.group_divider(pts, return_idx=True)
+        embed_feat, _ = self.MAE_encoder(neighborhood, center, noaug = True)
+        embed_feat = embed_feat.transpose(1, 2)
+        feat = self.increase_dim(embed_feat)
         
-#         if mask_center is not None:
+        if mask_center is not None:
             
-#             # import pdb; pdb.set_trace()
-#             # CHECK: 1)feat维度; 2)mask维度 3)mask之后的维度
-#             # mask - B, G
-#             # feat - B, G, 1024
-#             mask = self.mask_region_patch(center, mask_center)
+            # import pdb; pdb.set_trace()
+            # CHECK: 1)feat维度; 2)mask维度 3)mask之后的维度
+            # mask - B, G
+            # feat - B, G, 1024
+            mask = self.mask_region_patch(center, mask_center)
             
-#             feat = feat.transpose(1, 2)
-#             masked_feat = feat[mask].reshape(B, -1, self.condition_dim)
-#             other_feat = feat[~mask].reshape(B, -1, self.condition_dim)
-#             # import pdb; pdb.set_trace()
-#             # masked_embed_feat = embed_feat[mask].reshape(B, -1, self.encoder_dims).transpose(1, 2)
-#             # other_embed_feat = embed_feat[~mask].reshape(B, -1, self.encoder_dims).transpose(1, 2)
+            feat = feat.transpose(1, 2)
+            masked_feat = feat[mask].reshape(B, -1, self.condition_dim)
+            other_feat = feat[~mask].reshape(B, -1, self.condition_dim)
+            # import pdb; pdb.set_trace()
+            # masked_embed_feat = embed_feat[mask].reshape(B, -1, self.encoder_dims).transpose(1, 2)
+            # other_embed_feat = embed_feat[~mask].reshape(B, -1, self.encoder_dims).transpose(1, 2)
             
-#             # masked_feat = self.increase_dim_masked(masked_embed_feat).transpose(1, 2)
-#             # other_feat = self.increase_dim(other_embed_feat).transpose(1, 2)
+            # masked_feat = self.increase_dim_masked(masked_embed_feat).transpose(1, 2)
+            # other_feat = self.increase_dim(other_embed_feat).transpose(1, 2)
             
-#             # 分别做max pooling
-#             masked_feat = torch.max(masked_feat, dim=1)[0]
-#             other_feat = torch.max(other_feat, dim=1)[0]
+            # 分别做max pooling
+            masked_feat = torch.max(masked_feat, dim=1)[0]
+            other_feat = torch.max(other_feat, dim=1)[0]
             
-#             condition_feat = torch.cat([masked_feat, other_feat], dim=-1) # B, 2048
+            condition_feat = torch.cat([masked_feat, other_feat], dim=-1) # B, 2048
             
-#             # conv1d特征融合
-#             condition_feat = self.fuse(condition_feat.unsqueeze(-1)) # B, 1024
+            # conv1d特征融合
+            condition_feat = self.fuse(condition_feat.unsqueeze(-1)) # B, 1024
             
-#             condition_feat = condition_feat.reshape(B, -1)
+            condition_feat = condition_feat.reshape(B, -1)
             
-#             full_mask = self.get_region_mask(mask, p_idx, pts) # B, 2048
+            full_mask = self.get_region_mask(mask, p_idx, pts) # B, 2048
             
-#             return condition_feat, full_mask, embed_feat.transpose(1, 2), center
+            return condition_feat, full_mask, embed_feat.transpose(1, 2), center
         
-#         # embed_feat = embed_feat.transpose(1, 2)
-#         condition_feat = torch.max(feat, dim=1)[0] 
-#         return condition_feat, None, None, None
+        # embed_feat = embed_feat.transpose(1, 2)
+        condition_feat = torch.max(feat, dim=1)[0] 
+        return condition_feat, None, None, None
     
 class ConditionMAE(nn.Module):
     def __init__(self, config):
@@ -321,124 +321,124 @@ class ConditionMAE(nn.Module):
     
     
 
-# class ConditionNet(nn.Module):
-#     def __init__(self, input_channel_obj, input_channel_hand):
-#         super(ConditionNet, self).__init__()
-#         self.in_channel_obj = input_channel_obj
-#         self.in_channel_hand = input_channel_hand
+class ConditionNet(nn.Module):
+    def __init__(self, input_channel_obj, input_channel_hand):
+        super(ConditionNet, self).__init__()
+        self.in_channel_obj = input_channel_obj
+        self.in_channel_hand = input_channel_hand
 
-#         self.obj_encoder = PointNetEncoder(global_feat=False, feature_transform=False, channel=self.in_channel_obj)
-#         self.obj_masked_encoder = PointNetEncoder(global_feat=False, feature_transform=False, channel=self.in_channel_obj)
-#         self.hand_encoder = PointNetEncoder(global_feat=False, feature_transform=False, channel=self.in_channel_hand)
-#         self.mapnet = SDmapNet(input_dim=cfg.SDmap_input_dim, layer_dims=cfg.SDmap_layer_dims, output_dim=cfg.SDmap_output_dim)
-#         self.convfuse = nn.Conv1d(3778, 3000, 1)
-#         self.convfuse_m1 = nn.Conv1d(6000, 3000, 1)
-#         # self.convfuse_m2 = nn.Conv1d(4096, 3000, 1)
-#         self.bnfuse = nn.BatchNorm1d(3000)
-#         self.bnfuse_m1 = nn.BatchNorm1d(3000)
-#         # self.bnfuse_m2 = nn.BatchNorm1d(3000)
+        self.obj_encoder = PointNetEncoder(global_feat=False, feature_transform=False, channel=self.in_channel_obj)
+        self.obj_masked_encoder = PointNetEncoder(global_feat=False, feature_transform=False, channel=self.in_channel_obj)
+        self.hand_encoder = PointNetEncoder(global_feat=False, feature_transform=False, channel=self.in_channel_hand)
+        self.mapnet = SDmapNet(input_dim=cfg.SDmap_input_dim, layer_dims=cfg.SDmap_layer_dims, output_dim=cfg.SDmap_output_dim)
+        self.convfuse = nn.Conv1d(3778, 3000, 1)
+        self.convfuse_m1 = nn.Conv1d(6000, 3000, 1)
+        # self.convfuse_m2 = nn.Conv1d(4096, 3000, 1)
+        self.bnfuse = nn.BatchNorm1d(3000)
+        self.bnfuse_m1 = nn.BatchNorm1d(3000)
+        # self.bnfuse_m2 = nn.BatchNorm1d(3000)
 
-#     def mask_obj_pts(self, x, mask):
-#         # import pdb; pdb.set_trace()
-#         x = x * (1 - mask) # multiplied by negate mask
-#         return x
+    def mask_obj_pts(self, x, mask):
+        # import pdb; pdb.set_trace()
+        x = x * (1 - mask) # multiplied by negate mask
+        return x
 
-#     # @func_timer
-#     def feat_hand_fusion(self, x, hand):
-#         x = torch.cat((x, hand), dim=2).permute(0, 2, 1).contiguous()
-#         x = F.relu(self.bnfuse(self.convfuse(x)))
-#         x = x.permute(0, 2, 1).contiguous()
-#         return x
+    # @func_timer
+    def feat_hand_fusion(self, x, hand):
+        x = torch.cat((x, hand), dim=2).permute(0, 2, 1).contiguous()
+        x = F.relu(self.bnfuse(self.convfuse(x)))
+        x = x.permute(0, 2, 1).contiguous()
+        return x
 
-#     # @func_timer
-#     def feat_om_fusion(self, x, feat_om):
-#         x = torch.cat((x, feat_om), dim=2).permute(0, 2, 1).contiguous()
-#         x = F.relu(self.bnfuse_m1(self.convfuse_m1(x)))
-#         # x = F.relu(self.bnfuse_m2(self.convfuse_m2(x)))
-#         x = x.permute(0, 2, 1).contiguous()
-#         return x
+    # @func_timer
+    def feat_om_fusion(self, x, feat_om):
+        x = torch.cat((x, feat_om), dim=2).permute(0, 2, 1).contiguous()
+        x = F.relu(self.bnfuse_m1(self.convfuse_m1(x)))
+        # x = F.relu(self.bnfuse_m2(self.convfuse_m2(x)))
+        x = x.permute(0, 2, 1).contiguous()
+        return x
 
     
-#     def forward(self, obj_pc, hand_xyz, region_mask):
-#         """
-#         :param obj_pc: [B, 3, N]
-#         :param region_mask: [B, 1, N]
-#         :param hand_xyz: [B, 3, 778]
+    def forward(self, obj_pc, hand_xyz, region_mask):
+        """
+        :param obj_pc: [B, 3, N]
+        :param region_mask: [B, 1, N]
+        :param hand_xyz: [B, 3, 778]
 
-#         :return: predicted 
-#         """
+        :return: predicted 
+        """
         
-#         B = obj_pc.size(0)
-#         N = obj_pc.size(2)
+        B = obj_pc.size(0)
+        N = obj_pc.size(2)
 
-#         # mask the obj pointcloud
-#         obj_masked_pc = region_masked_pointwise(obj_pc, region_mask)
-#         # embed features
-#         feat_o, trans, trans_feat = self.obj_encoder(obj_pc)
-#         feat_h, trans2, trans_feat2 = self.hand_encoder(hand_xyz)
-#         feat_om, trans3, trans_feat3 = self.obj_masked_encoder(obj_masked_pc)
+        # mask the obj pointcloud
+        obj_masked_pc = region_masked_pointwise(obj_pc, region_mask)
+        # embed features
+        feat_o, trans, trans_feat = self.obj_encoder(obj_pc)
+        feat_h, trans2, trans_feat2 = self.hand_encoder(hand_xyz)
+        feat_om, trans3, trans_feat3 = self.obj_masked_encoder(obj_masked_pc)
 
-#         feat_oh = self.feat_hand_fusion(feat_o, feat_h)
-#         feat_oom = self.feat_om_fusion(feat_o, feat_om)
+        feat_oh = self.feat_hand_fusion(feat_o, feat_h)
+        feat_oom = self.feat_om_fusion(feat_o, feat_om)
 
-#         map_hand = self.mapnet(feat_oh, N) # w/ hand
-#         map_om = self.mapnet(feat_oom, N) # wo hand; w/ om
+        map_hand = self.mapnet(feat_oh, N) # w/ hand
+        map_om = self.mapnet(feat_oom, N) # wo hand; w/ om
 
-#         return [feat_oom, feat_oh], [map_om, map_hand]
+        return [feat_oom, feat_oh], [map_om, map_hand]
 
-#     def inference(self, obj_pc, region_mask):
-#         B = obj_pc.size(0)
-#         N = obj_pc.size(2)
+    def inference(self, obj_pc, region_mask):
+        B = obj_pc.size(0)
+        N = obj_pc.size(2)
 
-#         obj_masked_pc = self.mask_obj_pts(obj_pc, region_mask)
-#         # embed features
-#         feat_o, trans, trans_feat = self.obj_encoder(obj_pc)
-#         # feat_h, trans2, trans_feat2 = self.hand_encoder(hand_xyz)
-#         feat_om, trans3, trans_feat3 = self.obj_masked_encoder(obj_masked_pc)
+        obj_masked_pc = self.mask_obj_pts(obj_pc, region_mask)
+        # embed features
+        feat_o, trans, trans_feat = self.obj_encoder(obj_pc)
+        # feat_h, trans2, trans_feat2 = self.hand_encoder(hand_xyz)
+        feat_om, trans3, trans_feat3 = self.obj_masked_encoder(obj_masked_pc)
 
-#         # feat_oh = self.feat_hand_fusion(feat_o, feat_h)
-#         feat_oom = self.feat_om_fusion(feat_o, feat_om)
+        # feat_oh = self.feat_hand_fusion(feat_o, feat_h)
+        feat_oom = self.feat_om_fusion(feat_o, feat_om)
 
-#         map_om = self.mapnet(feat_oom, N) # wo hand; w/ om
+        map_om = self.mapnet(feat_oom, N) # wo hand; w/ om
 
 
-#         return [feat_oom], [map_om]
+        return [feat_oom], [map_om]
 
-# class SDmapNet(nn.Module):
-#     def __init__(self, input_dim, layer_dims, output_dim):
-#         super(SDmapNet, self).__init__()
-#         self.input_dim = input_dim
-#         self.output_dim = output_dim
-#         dim1, dim2, dim3 = layer_dims
-#         self.conv1 = nn.Conv1d(input_dim, dim1, 1)
-#         self.conv2 = nn.Conv1d(dim1, dim2, 1)
-#         self.conv3 = nn.Conv1d(dim2, dim3, 1)
-#         self.conv4 = nn.Conv1d(dim3, output_dim, 1)
-#         self.bn1 = nn.BatchNorm1d(dim1)
-#         self.bn2 = nn.BatchNorm1d(dim2)
-#         self.bn3 = nn.BatchNorm1d(dim3)
-#         self.activate = nn.LeakyReLU(negative_slope=cfg.SDmap_leaky_slope)
+class SDmapNet(nn.Module):
+    def __init__(self, input_dim, layer_dims, output_dim):
+        super(SDmapNet, self).__init__()
+        self.input_dim = input_dim
+        self.output_dim = output_dim
+        dim1, dim2, dim3 = layer_dims
+        self.conv1 = nn.Conv1d(input_dim, dim1, 1)
+        self.conv2 = nn.Conv1d(dim1, dim2, 1)
+        self.conv3 = nn.Conv1d(dim2, dim3, 1)
+        self.conv4 = nn.Conv1d(dim3, output_dim, 1)
+        self.bn1 = nn.BatchNorm1d(dim1)
+        self.bn2 = nn.BatchNorm1d(dim2)
+        self.bn3 = nn.BatchNorm1d(dim3)
+        self.activate = nn.LeakyReLU(negative_slope=cfg.SDmap_leaky_slope)
 
-#     # @func_timer
-#     def forward(self, x, N):
-#         """
-#         :param x: fused feature vector
-#         :param N: corresponds to the dim of obj verts
+    # @func_timer
+    def forward(self, x, N):
+        """
+        :param x: fused feature vector
+        :param N: corresponds to the dim of obj verts
 
-#         :return 
-#         """
-#         # batch_size = cfg.batch_size
-#         batch_size = x.shape[0]
-#         x = self.activate(self.bn1(self.conv1(x)))
-#         x = self.activate(self.bn2(self.conv2(x)))
-#         x = self.activate(self.bn3(self.conv3(x)))
-#         x = self.conv4(x)
+        :return 
+        """
+        # batch_size = cfg.batch_size
+        batch_size = x.shape[0]
+        x = self.activate(self.bn1(self.conv1(x)))
+        x = self.activate(self.bn2(self.conv2(x)))
+        x = self.activate(self.bn3(self.conv3(x)))
+        x = self.conv4(x)
 
-#         x = x.transpose(2, 1).contiguous()
-#         # x = torch.sigmoid(x)  # w/ sigmoid -- sigmoid the annotated target
-#         x = x.view(batch_size, N) # w/o sigmoid -- target directly use annotated target
+        x = x.transpose(2, 1).contiguous()
+        # x = torch.sigmoid(x)  # w/ sigmoid -- sigmoid the annotated target
+        x = x.view(batch_size, N) # w/o sigmoid -- target directly use annotated target
 
-#         return x
+        return x
         
 
 if __name__ == "__main__":
