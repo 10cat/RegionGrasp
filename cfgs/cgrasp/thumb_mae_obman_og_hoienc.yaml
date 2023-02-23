@@ -152,7 +152,7 @@ loss: {
     loss_dist_h: False,
     loss_dist_o: False,
     loss_penetr: True,
-    # metrics_cond: True,
+    metrics_cond: True,
     loss_mano: False
   },
   coef: {
