@@ -561,7 +561,8 @@ class EpochVAE_mae():
                 region_mask = region_mask[i]
                 obj_pc = obj_pc[i]
                 mask = region_mask > 0.
-                self.VisualPC.visual(pcs=[obj_pc[~mask], obj_pc[mask]], pc_colors=['white', 'blue'], sample_id=sample_id, epoch=epoch, name='obj')
+                self.VisualPC.visual(pcs=obj_pc[mask], pc_colors='blue', sample_id=sample_id, epoch=epoch, name='obj')
+                # self.VisualPC.visual(pcs=[obj_pc[~mask], obj_pc[mask]], pc_colors=['white', 'blue'], sample_id=sample_id, epoch=epoch, name='obj')
         return
         
     def __call__(self, dataloader, epoch, model, optimizer, scheduler):
