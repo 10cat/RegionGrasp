@@ -35,7 +35,7 @@ def get_dataset(cfg, mode='train'):
         shapenet_root = cfg.shapenet_root
         grabnet_root = cfg.grabnet_root
         mano_root = cfg.mano_root
-        configs = cfg.dataset[mode]._base_.kwargs
+        configs = cfg.dataset[mode]._base_.kwargs[mode]
         if isinstance(configs.rand_each_num, dict):
             dataset = PretrainDataset_balanced(obman_root=obman_root,
                                             shapenet_root=shapenet_root,

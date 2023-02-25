@@ -1,9 +1,18 @@
-type: mae
-kwargs:  {
-  use_cache: True,
-  resample_num: 2048,
-  rand_each_num: {
-    obman: 30,
-    grabnet: 1500
+kwargs: {
+  train:  {
+    use_cache: True,
+    resample_num: 2048,
+    rand_each_num: {
+      obman: 30,
+      grabnet: 1500
+    }
+  },
+  val: {
+    use_cache: True,
+    resample_num: 2048,
+    rand_each_num: {
+      obman: 5,
+      grabnet: 250
+    }
   }
 }

@@ -324,6 +324,11 @@ class PretrainMAEEpoch(PretrainEpoch):
         Losses = MetersMonitor()
         stop_flag = False
         pbar = tqdm(dataloader, desc=f"{self.mode} epoch {epoch}:")
+        if self.mode == 'train':
+            model.train()
+            model.apply(fix_bn)
+        else:
+            model.eval()
         for batch_idx, sample in enumerate(pbar):
             input = sample['input_points']
             sample_ids = sample['ids']
@@ -349,7 +354,7 @@ class PretrainMAEEpoch(PretrainEpoch):
             pbar.set_postfix_str(msg)
             
             # TODO: validation的可视化部分
-            if epoch % self.cfg.check_interval == 0 and epoch != 0:
+            if epoch % self.cfg.check_interval == 0:
                 self.visual(batch_idx, full_vis, full_pred, input, rebuild_centers, gt_centers, vis_centers, 
                             sample_ids, 
                             epoch, 
