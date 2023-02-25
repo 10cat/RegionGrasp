@@ -84,14 +84,14 @@ def mae(cfg=None):
         net = net.to('cuda')
         loss = loss.to('cuda')
         
-        trainepoch = PretrainMAEEpoch(loss, optimizer, scheduler, output_dir=cfg.output_dir, cfg=cfg)
-        valepoch = PretrainMAEEpoch(loss, optimizer, scheduler, output_dir=cfg.output_dir, mode='val', cfg=cfg)
+        trainepoch = PretrainMAEEpoch(loss, output_dir=cfg.output_dir, cfg=cfg)
+        valepoch = PretrainMAEEpoch(loss, output_dir=cfg.output_dir, mode='val', cfg=cfg)
         
         stopflag = False
         for epoch in range(cfg.num_epoch):
-            net, _ = trainepoch(trainloader, epoch, net)
+            net, _ = trainepoch(trainloader, epoch, net, optimizer, scheduler)
             # if epoch % cfg.check_interval == 0:
-            _, stop_flag = valepoch(valloader, epoch, net)
+            _, stop_flag = valepoch(valloader, epoch, net, optimizer, scheduler)
             if stop_flag:
                 print("Early stopping occur!")
                 break

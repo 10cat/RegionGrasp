@@ -25,7 +25,7 @@ from models.cGrasp_vae import cGraspvae
 from traineval_utils.loss import ChamferDistanceL2Loss, PointCloudCompletionLoss, cGraspvaeLoss
 from utils.optim import *
 from utils.datasets import get_dataset
-from utils.epoch_utils import EpochVAE_mae, ValEpochVAE_mae,  MetersMonitor, model_update, PretrainEpoch
+from utils.epoch_utils import EpochVAE_mae, EvalEpochVAE_mae,  MetersMonitor, model_update, PretrainEpoch
 
 def fix_bn(m):
     classname = m.__class__.__name__
@@ -180,7 +180,7 @@ def cgrasp(cfg=None):
         # cgrasp_loss.to(device)
         # import pdb; pdb.set_trace()
         
-        testepoch = ValEpochVAE_mae(cgrasp_loss, testset, output_dir=cfg.output_dir, mode='test', cfg=cfg)
+        testepoch = EvalEpochVAE_mae(cgrasp_loss, testset, output_dir=cfg.output_dir, mode='test', cfg=cfg)
         
         _, _ = testepoch(testloader, epoch, model, optimizer, scheduler, save_pred=True)
         
@@ -196,7 +196,7 @@ def cgrasp(cfg=None):
         cgrasp_loss = cGraspvaeLoss(device, cfg)
         cgrasp_loss.to(device)
         
-        valepoch = ValEpochVAE_mae(cgrasp_loss, valset, optimizer, scheduler, output_dir=cfg.output_dir, mode='val', cfg=cfg)
+        valepoch = EvalEpochVAE_mae(cgrasp_loss, valset, optimizer, scheduler, output_dir=cfg.output_dir, mode='val', cfg=cfg)
         
         
         interval = cfg.check_interval

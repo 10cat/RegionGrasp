@@ -25,7 +25,7 @@ optimizer : {
 scheduler: {
   type: CosLR,
   kwargs: {
-    epochs: 300,
+    epochs: 100,
     initial_epochs : 10
 }}
 
@@ -38,7 +38,7 @@ model: {
     mask_type: 'rand',
     trans_dim: 384,
     encoder_dims: 384,
-    depth: 12,
+    depth: 6,
     num_heads: 6,
     drop_path_rate: 0.1,
     decoder_depth: 4,

@@ -193,10 +193,8 @@ class VisualMesh(object):
     
     
 class PretrainEpoch():
-    def __init__(self, loss, optimizer, scheduler, output_dir, mode='train', cfg=None):
+    def __init__(self, loss, output_dir, mode='train', cfg=None):
         self.loss = loss
-        self.optimizer = optimizer
-        self.scheduler = scheduler
         self.mode = mode
         self.output_dir = output_dir
         makepath(self.output_dir)
@@ -291,8 +289,8 @@ class PretrainEpoch():
     
     
 class PretrainMAEEpoch(PretrainEpoch):
-    def __init__(self, loss, optimizer, scheduler, output_dir, mode='train', cfg=None):
-        super().__init__(loss, optimizer, scheduler, output_dir, mode, cfg)
+    def __init__(self, loss, output_dir, mode='train', cfg=None):
+        super().__init__(loss, output_dir, mode, cfg)
         
     def model_forward(self, pointmae, input, vis=False):
         dict_loss = {}
@@ -320,7 +318,9 @@ class PretrainMAEEpoch(PretrainEpoch):
             else:
                 raise NotImplementedError()
     
-    def __call__(self, dataloader, epoch, model):
+    def __call__(self, dataloader, epoch, model, optimizer, scheduler):
+        
+        Losses = MetersMonitor()
         stop_flag = False
         pbar = tqdm(dataloader, desc=f"{self.mode} epoch {epoch}:")
         for batch_idx, sample in enumerate(pbar):
@@ -336,9 +336,9 @@ class PretrainMAEEpoch(PretrainEpoch):
             total_loss = sum(dict_loss.values())
             
             if self.mode == 'train':
-                model_update(self.optimizer, total_loss, self.scheduler, epoch=epoch)
+                optimizer, scheduler = model_update(optimizer, total_loss, scheduler, epoch=epoch)
             
-            msg_loss, losses = self.Losses.report(dict_loss, total_loss, mode=self.mode)
+            msg_loss, losses = Losses.report(dict_loss, total_loss, mode=self.mode)
             msg = msg_loss
             pbar.set_postfix_str(msg)
             
@@ -352,11 +352,11 @@ class PretrainMAEEpoch(PretrainEpoch):
                     break 
             
         if self.mode == 'val' and epoch % self.cfg.check_interval == 0 and epoch != 0:
-            no_improve_epochs = self.Checkpt.save_checkpoints(epoch, model, metric_value=losses[f'{self.mode}_total_loss'], optimizer=self.optimizer, scheduler=self.scheduler)
+            no_improve_epochs = self.Checkpt.save_checkpoints(epoch, model, metric_value=losses[f'{self.mode}_total_loss'], optimizer=optimizer, scheduler=scheduler)
             if no_improve_epochs > self.cfg.early_stopping:
                 stop_flag = True
             
-        self.log(self.Losses, epoch=epoch)
+        self.log(Losses, epoch=epoch)
         return model, stop_flag    
             
     
@@ -634,7 +634,7 @@ class EpochVAE_mae():
         self.log(Losses, epoch=epoch)
         return model, optimizer, scheduler, stop_flag
         
-class ValEpochVAE_mae(EpochVAE_mae):
+class EvalEpochVAE_mae(EpochVAE_mae):
     def __init__(self, loss, dataset, output_dir, mode='train', cfg=None):
         super().__init__(loss, dataset, output_dir, mode, cfg)
         
@@ -690,12 +690,12 @@ class ValEpochVAE_mae(EpochVAE_mae):
                     for key, val in dict_loss.items():
                         Loss_iters.add_value(key, val)
                         # import pdb; pdb.set_trace()
-                    if epoch % self.cfg.check_interval == 0 and batch_idx % self.batch_interval == 0:
-                        rhand_vs_pred_0 = rhand_vs_pred[0].detach().to('cpu').numpy()
-                        rhand_faces_0 = rhand_faces[0].detach().to('cpu').numpy()
-                        sample_id = int(sample_ids.detach().to('cpu').numpy()[0])
-                        self.VisualMesh.visual(vertices=rhand_vs_pred_0, faces=rhand_faces_0, mesh_color='skin', sample_id=sample_id, epoch=epoch, name=f'pred_hand_{iter}')
-                
+                    # if epoch % self.cfg.check_interval == 0 and batch_idx % self.batch_interval == 0:
+                    rhand_vs_pred_0 = rhand_vs_pred[0].detach().to('cpu').numpy()
+                    rhand_faces_0 = rhand_faces[0].detach().to('cpu').numpy()
+                    sample_id = int(sample_ids.detach().to('cpu').numpy()[0])
+                    self.VisualMesh.visual(vertices=rhand_vs_pred_0, faces=rhand_faces_0, mesh_color='skin', sample_id=sample_id, epoch=epoch, name=f'pred_hand_{iter}')
+            
                 
                 bug_mode = self.mode # 其实要改掉成None，但只不过和之前的对比实验不好比较了
                 dict_loss = Loss_iters.avg(mode=bug_mode) # 取5个iter的平均loss
@@ -722,17 +722,17 @@ class ValEpochVAE_mae(EpochVAE_mae):
                 else:
                     raise NotImplementedError
                 
-                if epoch % self.cfg.check_interval == 0:
-                    self.visual_gt(rhand_vs = gt_rhand_vs.transpose(2, 1).detach().to('cpu').numpy(),
-                                rhand_faces = rhand_faces.detach().to('cpu').numpy(),
-                                obj_pc=obj_points.detach().to('cpu').numpy(),
-                                region_mask=region_mask.detach().to('cpu').numpy(),
-                                obj_trans=obj_trans,
-                                sample_ids=sample_ids.detach().to('cpu').numpy(),
-                                epoch=epoch,
-                                batch_idx=batch_idx,
-                                batch_interval=self.batch_interval,
-                                sample_interval=self.sample_interval)
+                # if epoch % self.cfg.check_interval == 0:
+                self.visual_gt(rhand_vs = gt_rhand_vs.transpose(2, 1).detach().to('cpu').numpy(),
+                            rhand_faces = rhand_faces.detach().to('cpu').numpy(),
+                            obj_pc=obj_points.detach().to('cpu').numpy(),
+                            region_mask=region_mask.detach().to('cpu').numpy(),
+                            obj_trans=obj_trans,
+                            sample_ids=sample_ids.detach().to('cpu').numpy(),
+                            epoch=epoch,
+                            batch_idx=batch_idx,
+                            batch_interval=self.batch_interval,
+                            sample_interval=self.sample_interval)
                     
                 if save_pred:
                     keys = hand_params_list[0].keys()
