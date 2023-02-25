@@ -354,7 +354,7 @@ class PointMAE(nn.Module):
         
         x_vis, mask = self.MAE_encoder(neighborhood, center)
         
-        B,_,C = x_vis.shape
+        B, _, C = x_vis.shape
         pos_emd_vis = self.decoder_pos_embed(center[~mask]).reshape(B, -1, C)
         pos_emd_mask = self.decoder_pos_embed(center[mask]).reshape(B, -1, C)
         

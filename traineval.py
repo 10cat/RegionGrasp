@@ -170,6 +170,7 @@ def cgrasp(cfg=None):
         # optimizer, scheduler = build_optim_sche_grasp(model, part_model={'cnet_mae': model.cnet.MAE_encoder}, cfg=cfg)
         checkpoint = torch.load(os.path.join(cfg.output_dir, 'models', cfg.chkpt+'.pth'))
         model.load_state_dict(checkpoint['state_dict'])
+        epoch = checkpoint['epoch']
         print(f"test {cfg.chkpt}")
         
         
@@ -181,7 +182,7 @@ def cgrasp(cfg=None):
         
         testepoch = ValEpochVAE_mae(cgrasp_loss, testset, output_dir=cfg.output_dir, mode='test', cfg=cfg)
         
-        _, _ = testepoch(testloader, 0, model, optimizer, scheduler, save_pred=True)
+        _, _ = testepoch(testloader, epoch, model, optimizer, scheduler, save_pred=True)
         
     elif mode == 'val_only':
         valset = get_dataset(cfg, mode='val')
