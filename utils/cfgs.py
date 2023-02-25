@@ -73,6 +73,15 @@ def config_paths(machine, exp_name):
         mano_root = "/home/datassd/yilin/Codes/_toolbox/mano"
         mano_rh_path = f"/home/datassd/yilin/Codes/_toolbox/mano/models/MANO_RIGHT.pkl"
         
+    if machine == '216':
+        grabnet_root = "/home/yilin/GrabNet"
+        obman_root = "/home/yilin/obman"
+        shapenet_root = "/home/yilin/ShapeNet_obman"
+        output_root = "/home/yilin/Outputs/ConditionHOI/"
+        output_dir = "/home/yilin/Outputs/ConditionHOI/"+exp_name
+        mano_root = "/home/yilin/Codes/_toolbox/mano"
+        mano_rh_path = f"/home/yilin/Codes/_toolbox/mano/models/MANO_RIGHT.pkl"
+        
     if machine == '208' or machine == '50':
         grabnet_root = "/home/shihao/yilin/GrabNet"
         obman_root = "/home/shihao/yilin/obman"
@@ -90,6 +99,7 @@ def config_paths(machine, exp_name):
         output_dir = "/home/jupyter-yiling/Outputs/ConditionHOI/"+exp_name
         mano_root = "/home/jupyter-yiling/Codes/_toolbox/mano"
         mano_rh_path = f"/home/jupyter-yiling/Codes/_toolbox/mano/models/MANO_RIGHT.pkl"
+        
     if machine == '41':
         grabnet_root = "/ssd_data/yilin/GrabNet"
         obman_root = "/ssd_data/yilin/obman"
