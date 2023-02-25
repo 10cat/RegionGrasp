@@ -544,25 +544,25 @@ class EpochVAE_mae():
         if self.cfg.wandb: wandb.log(Allmeters)
     
     def visual_gt(self, rhand_vs, rhand_faces, obj_pc, region_mask, obj_trans, sample_ids, batch_idx, epoch, batch_interval=None, sample_interval=None):
-        if batch_idx % batch_interval == 0:
-            if sample_interval is None:
-                i = 0
-                sample_id = int(sample_ids[i])
-                rhand_vs = rhand_vs[i]
-                rhand_faces = rhand_faces[i]
-                # import pdb; pdb.set_trace()
-                self.VisualMesh.visual(vertices=rhand_vs, faces=rhand_faces, mesh_color='skin', sample_id=sample_id, epoch=epoch, name='gt_hand')
-                # if self.cfg.dataset.name == 'obman'
-                # obj_mesh = self.dataset.get_sample_obj_mesh(sample_id)
-                obj_verts, obj_faces = self.dataset.get_obj_verts_faces(sample_id)
-                if self.cfg.dataset.name == 'obman':
-                    obj_verts -= obj_trans[i]
-                self.VisualMesh.visual(vertices=obj_verts, faces=obj_faces, mesh_color='grey', sample_id=sample_id, epoch=epoch, name='obj')
-                region_mask = region_mask[i]
-                obj_pc = obj_pc[i]
-                mask = region_mask > 0.
-                self.VisualPC.visual(pcs=obj_pc[mask], pc_colors='blue', sample_id=sample_id, epoch=epoch, name='obj')
-                # self.VisualPC.visual(pcs=[obj_pc[~mask], obj_pc[mask]], pc_colors=['white', 'blue'], sample_id=sample_id, epoch=epoch, name='obj')
+        # if batch_idx % batch_interval == 0:
+        if sample_interval is None:
+            i = 0
+            sample_id = int(sample_ids[i])
+            rhand_vs = rhand_vs[i]
+            rhand_faces = rhand_faces[i]
+            # import pdb; pdb.set_trace()
+            self.VisualMesh.visual(vertices=rhand_vs, faces=rhand_faces, mesh_color='skin', sample_id=sample_id, epoch=epoch, name='gt_hand')
+            # if self.cfg.dataset.name == 'obman'
+            # obj_mesh = self.dataset.get_sample_obj_mesh(sample_id)
+            obj_verts, obj_faces = self.dataset.get_obj_verts_faces(sample_id)
+            if self.cfg.dataset.name == 'obman':
+                obj_verts -= obj_trans[i]
+            self.VisualMesh.visual(vertices=obj_verts, faces=obj_faces, mesh_color='grey', sample_id=sample_id, epoch=epoch, name='obj')
+            region_mask = region_mask[i]
+            obj_pc = obj_pc[i]
+            mask = region_mask > 0.
+            self.VisualPC.visual(pcs=obj_pc[mask], pc_colors='blue', sample_id=sample_id, epoch=epoch, name='obj')
+            # self.VisualPC.visual(pcs=[obj_pc[~mask], obj_pc[mask]], pc_colors=['white', 'blue'], sample_id=sample_id, epoch=epoch, name='obj')
         return
         
     def __call__(self, dataloader, epoch, model, optimizer, scheduler):
@@ -602,7 +602,7 @@ class EpochVAE_mae():
             msg = msg_loss
             pbar.set_postfix_str(msg)
             
-            if epoch % self.cfg.check_interval == 0 and batch_idx % self.batch_interval:
+            if epoch % self.cfg.check_interval == 0 and batch_idx % self.batch_interval == 0:
                 if self.cfg.dataset.name == 'obman':
                     obj_trans = sample['obj_trans'].detach().to('cpu').numpy()
                 elif self.cfg.dataset.name == 'grabnet':

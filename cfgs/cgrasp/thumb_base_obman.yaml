@@ -153,6 +153,7 @@ loss: {
     loss_dist_h: False,
     loss_dist_o: False,
     loss_penetr: True,
+    metrics_cond: True,
     loss_mano: False
   },
   test: {
@@ -192,7 +193,7 @@ c_weights_path: "./cfgs/rhand_weight.npy"
 # checkpoint / visual / 
 check_interval: 2
 visual_interval: {
-  train:{
+  train: {
     batch: 500,
     sample: null
   },
