@@ -1,17 +1,17 @@
 import os
 import sys
+
 sys.path.append('.')
 sys.path.append('..')
+import config
+import mano
+import matplotlib.pyplot as plt
 import numpy as np
 import torch
 import trimesh
-import mano
 from mano.model import load
-import config
-from utils.visualization import colors_like
-import matplotlib.pyplot as plt
 from trimesh.constants import tol
-
+from utils.visualization import colors_like
 
 
 class Struct(object):
@@ -28,7 +28,7 @@ class MeshTransform():
             rotmat = sample['root_orient_obj_rotmat'][0]
             return trans, rotmat
     def self_centric(self, verts_orig, sample):
-        obj_trans, obj_rotmat = self.get_params(sample)
+        obj_trans, obj_rotmat = self.get_params(sample) # type: ignore
         verts = np.matmul(verts_orig, obj_rotmat) + obj_trans
         return verts
     def __call__(self, mesh_orig, sample):
@@ -36,7 +36,7 @@ class MeshTransform():
         faces = mesh_orig.faces
         if self.ds_name == "GrabNet":
             verts = self.self_centric(verts_orig, sample)
-        mesh = trimesh.Trimesh(vertices=verts, faces=faces)
+        mesh = trimesh.Trimesh(vertices=verts, faces=faces) # type: ignore
         return mesh
     
 class MeshInitialize():
@@ -69,7 +69,7 @@ class MeshInitialize():
 def load_mano_model(model_path, is_rhand=True, ext='pkl'):
     import os.path as osp
     import pickle
-    
+
     # Load the model
     if osp.isdir(model_path):
         model_fn = 'MANO_{}.{ext}'.format('RIGHT' if is_rhand else 'LEFT', ext=ext)
@@ -110,10 +110,10 @@ def cluster_threshold(sorted_array):
             diff_pos = diff_pos
             diff_max_idx = idx
     # import pdb; pdb.set_trace()
-    if diff_pos:
-        threshold = (sorted_array[diff_max_idx] + sorted_array[diff_max_idx+1]) / 2
+    if diff_pos: # type: ignore
+        threshold = (sorted_array[diff_max_idx] + sorted_array[diff_max_idx+1]) / 2 # type: ignore
     else:
-        threshold = (sorted_array[diff_max_idx] + sorted_array[diff_max_idx-1]) / 2
+        threshold = (sorted_array[diff_max_idx] + sorted_array[diff_max_idx-1]) / 2 # type: ignore
         
     return threshold
 

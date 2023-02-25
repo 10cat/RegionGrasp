@@ -1,24 +1,21 @@
 import os
 import sys
+
 sys.path.append('.')
 sys.path.append('..')
 
+import config
+import mano
 # from option import MyOptions as cfg
 import numpy as np
 import torch
-from torchvision import transforms
-from dataset import data_transforms
-
-from tqdm import tqdm
-import wandb
-
-import mano
 import trimesh
-
-import config
-
-from utils.utils import decode_hand_params_batch, func_timer, makepath
+import wandb
+from dataset import data_transforms
+from torchvision import transforms
+from tqdm import tqdm
 from utils.meters import AverageMeter, AverageMeters
+from utils.utils import decode_hand_params_batch, func_timer, makepath
 from utils.visualization import colors_like, visual_hand, visual_obj
 
 train_transforms = transforms.Compose(
@@ -296,18 +293,19 @@ class PretrainMAEEpoch(PretrainEpoch):
         dict_loss = {}
         input = input.to('cuda')
         if vis==False:
-            rebuild_points, gt_points = pointmae(input)
+            rebuild_centers, rebuild_points, gt_centers, gt_points = pointmae(input)
             full_vis, full_pred, full_center = None, None, None
         else:
-            full_vis, full_pred, full_center, rebuild_points, gt_points = pointmae(input, vis=True)
-        dict_loss = self.loss.forward(rebuild_points, gt_points, dict_loss)
-        return full_vis, full_pred, full_center, rebuild_points, gt_points, dict_loss
+            full_vis, full_pred, full_center, rebuild_centers, rebuild_points, gt_centers, gt_points = pointmae(input, vis=True)
+        dict_loss = self.loss.forward(rebuild_points, gt_points, rebuild_centers, gt_centers, dict_loss)
+        return full_vis, full_pred, full_center, rebuild_centers, rebuild_points, gt_centers, gt_points, dict_loss
     
-    def visual(self, batch_idx, full_vis, full_pred, full, sample_ids, epoch, batch_interval=None, sample_interval=None):
+    def visual(self, batch_idx, full_vis, full_pred, full, rebuild_centers, gt_centers, vis_centers,
+               sample_ids, epoch, batch_interval=None, sample_interval=None):
         if batch_idx % batch_interval == 0:
             if sample_interval is None:
                 i = 0
-                pcs = [full[i], full_pred[i], full_vis[i]]
+                pcs = [full[i], full_pred[i], full_vis[i], gt_centers[i], rebuild_centers[i], vis_centers[i]]
                 pcs = [pc.detach().to('cpu').numpy() for pc in pcs]
                 gt_colors = 'green'
                 pred_colors = 'yellow'
@@ -315,6 +313,9 @@ class PretrainMAEEpoch(PretrainEpoch):
                 self.Visual.visual(pcs=pcs[0], pc_colors=gt_colors, sample_id=int(sample_ids[i]), epoch=epoch, name='orig')
                 self.Visual.visual(pcs=pcs[1], pc_colors=pred_colors, sample_id=int(sample_ids[i]), epoch=epoch, name='pred')
                 self.Visual.visual(pcs=pcs[2], pc_colors=gt_colors, sample_id=int(sample_ids[i]), epoch=epoch, name='vis')
+                self.Visual.visual(pcs=pcs[3], pc_colors=gt_colors, sample_id=int(sample_ids[i]), epoch=epoch, name='orig_cs')
+                self.Visual.visual(pcs=pcs[4], pc_colors=pred_colors, sample_id=int(sample_ids[i]), epoch=epoch, name='pred_cs')
+                self.Visual.visual(pcs=pcs[5], pc_colors=gt_colors, sample_id=int(sample_ids[i]), epoch=epoch, name='vis_cs')
             else:
                 raise NotImplementedError()
     
@@ -327,13 +328,18 @@ class PretrainMAEEpoch(PretrainEpoch):
             input = sample['input_points']
             sample_ids = sample['ids']
             if self.mode != 'train':
-                with torch.no_grad(): full_pred, full_vis, full_center, rebuild_pc, gt_pc, dict_loss = self.model_forward(model, input, vis=True)
+                with torch.no_grad(): full_pred, full_vis, vis_centers, rebuild_centers, rebuild_points, gt_centers, gt_points, dict_loss = self.model_forward(model, input, vis=True)
             else:
                 input = input.to('cuda')
                 input = train_transforms(input)
-                _, _, _, rebuild_pc, gt_pc, dict_loss = self.model_forward(model, input)
+                full_pred, full_vis, vis_centers, rebuild_centers, rebuild_points, gt_centers, gt_points, dict_loss = self.model_forward(model, input, vis=True)
             
-            total_loss = sum(dict_loss.values())
+            total_loss = 0.
+            
+            for k, v in dict_loss.items():
+                total_loss += self.cfg.coef[k] * v
+            
+            # total_loss = sum(dict_loss.values())
             
             if self.mode == 'train':
                 optimizer, scheduler = model_update(optimizer, total_loss, scheduler, epoch=epoch)
@@ -343,8 +349,10 @@ class PretrainMAEEpoch(PretrainEpoch):
             pbar.set_postfix_str(msg)
             
             # TODO: validation的可视化部分
-            if self.mode == 'val' and epoch % self.cfg.check_interval == 0 and epoch != 0:
-                self.visual(batch_idx, full_vis, full_pred, input, sample_ids, epoch, 
+            if epoch % self.cfg.check_interval == 0 and epoch != 0:
+                self.visual(batch_idx, full_vis, full_pred, input, rebuild_centers, gt_centers, vis_centers, 
+                            sample_ids, 
+                            epoch, 
                             batch_interval=self.batch_interval, 
                             sample_interval=self.sample_interval)
             if self.cfg.run_check:

@@ -1,17 +1,17 @@
-import os
 import sys
+
 sys.path.append('.')
 sys.path.append('..')
+import random
+
 import numpy as np
 import torch
 import torch.nn as nn
-from timm.models.layers import DropPath, trunc_normal_
 from models.FoldingNet import Fold
+from models.PointTr import Attention, fps, knn_point
+from pytorch3d.ops import knn_points, sample_farthest_points
+from timm.models.layers import DropPath, trunc_normal_
 from traineval_utils import pointnet_util
-from pytorch3d.ops import sample_farthest_points, knn_points
-
-import random
-from models.PointTr import fps, knn_point, Attention
 
 # --复习用：
 # class Attention(nn.Module):
@@ -309,9 +309,9 @@ class MaskTransformer(nn.Module):
         
         return x_vis, bool_masked_pos
 
-class PointMAE(nn.Module):
+class PointMAE_orig(nn.Module):
     def __init__(self, config):
-        super(PointMAE, self).__init__()
+        super(PointMAE_orig, self).__init__()
         trans_cfg = config.transformer
         self.trans_dim = trans_cfg.trans_dim
         self.MAE_encoder = MaskTransformer(trans_cfg)
@@ -339,8 +339,9 @@ class PointMAE(nn.Module):
         
         # prediction head
         self.increase_dim = nn.Sequential(
-            nn.Conv1d(self.trans_dim, 3*self.group_size, 1)
+            nn.Conv1d(self.trans_dim, 3 * self.group_size, 1)
         )
+        
         
         trunc_normal_(self.mask_token, std=.02) # initialize the mask_token parameters
         
@@ -388,3 +389,62 @@ class PointMAE(nn.Module):
             return ret1, ret2, full_center, rebuild_points, gt_points
         
         return rebuild_points, gt_points
+    
+    
+class PointMAE(PointMAE_orig):
+    def __init__(self, config):
+        super().__init__(config)
+        self.neighbors_head = nn.Sequential(
+            nn.Conv1d(self.trans_dim, 3 * self.group_size, 1)
+        )
+        self.centers_head = nn.Sequential(
+            nn.Conv1d(self.trans_dim, 3, 1)
+        )
+        
+    def forward(self, pts, vis=False, feat_only=False, **kwargs):
+        neighborhood, center = self.group_divider(pts)
+        
+        if feat_only:
+            x_vis, mask = self.MAE_encoder(neighborhood, center, noaug=True)
+            return x_vis
+        
+        x_vis, mask = self.MAE_encoder(neighborhood, center)
+        
+        B, _, C = x_vis.shape
+        pos_emd_vis = self.decoder_pos_embed(center[~mask]).reshape(B, -1, C)
+        pos_emd_mask = self.decoder_pos_embed(center[mask]).reshape(B, -1, C)
+        
+        _,N,_ = pos_emd_mask.shape
+        
+        mask_token = self.mask_token.expand(B, N, -1)
+        x_full = torch.cat([x_vis, mask_token], dim=1)
+        pos_full = torch.cat([pos_emd_vis, pos_emd_mask], dim=1)
+        
+        x_rec = self.MAE_decoder(x_full, pos_full, N)
+        
+        B, M, C = x_rec.shape
+        # rebuild_points = self.increase_dim(x_rec.transpose(1, 2)).transpose(1, 2).reshape(B * M, -1, 3)
+        rebuild_points_centralized = self.neighbors_head(x_rec.transpose(1, 2)).transpose(1, 2).reshape(B * M, -1, 3)
+        rebuild_centers = self.centers_head(x_rec.transpose(1, 2)).transpose(1, 2).reshape(B, -1, 3)
+        rebuild_points = rebuild_points_centralized + rebuild_centers.reshape(-1, 1, 3)
+        
+        gt_points_centralized = neighborhood[mask].reshape(B * M, -1, 3)
+        gt_points = gt_points_centralized + center[mask].unsqueeze(1)
+        gt_centers = center[mask].reshape(B, -1, 3)
+        
+        if vis: #visualization
+            vis_points = neighborhood[~mask].reshape(B * (self.num_group - M), -1, 3)
+            full_vis = vis_points + center[~mask].unsqueeze(1)
+            # full = torch.cat([full_vis, rebuild_points], dim=0)
+            # full_points = torch.cat([rebuild_points,vis_points], dim=0)
+            # full_center = torch.cat([center[mask], center[~mask]], dim=0)
+            # full = full_points + full_center.unsqueeze(1)
+            # import pdb; pdb.set_trace()
+            ret2 = full_vis.reshape(B, -1, 3)
+            # ret1 = full.reshape(B, -1, 3)
+            ret1 = rebuild_points.reshape(B, -1, 3)
+            vis_center = center[mask].reshape(B, -1, 3)
+            # return ret1, ret2
+            return ret1, ret2, vis_center, rebuild_centers, rebuild_points, gt_centers, gt_points
+        
+        return rebuild_centers, rebuild_points, gt_centers, gt_points

@@ -1,31 +1,33 @@
-from argparse import ArgumentParser
 import os
 import sys
+from argparse import ArgumentParser
+
 sys.path.append('.')
 sys.path.append('..')
 import pdb
 import pickle
-from tqdm import tqdm
+
 import config
 import mano
-
 import numpy as np
 import torch
 import trimesh
+from dataset.data_utils import (contact_to_dict, faces2verts_no_rep,
+                                signed_distance)
+from dataset.obman_orig import obman
 from sklearn.neighbors import KDTree
-
+from tqdm import tqdm
 from utils.utils import func_timer, makepath
 from utils.visualization import colors_like
-from dataset.data_utils import faces2verts_no_rep, contact_to_dict, signed_distance
-from dataset.obman_orig import obman
+
 
 class ObManResample(obman):
     def __init__(self, ds_root, shapenet_root, mano_root, split='train', joint_nb=21, mini_factor=None, use_cache=False, root_palm=False, mode='all', segment=False, use_external_points=True, apply_obj_transform=True, expand_times=1, resample_num = 8192):
         super().__init__(ds_root, shapenet_root, mano_root, split, joint_nb, mini_factor, use_cache, root_palm, mode, segment, use_external_points, apply_obj_transform)
         self.unique_objs = np.unique(
-                    [(meta_info['obj_class_id'], meta_info['obj_sample_id'])
-                     for meta_info in self.meta_infos],
-                    axis=0)
+                    [(meta_info['obj_class_id'], meta_info['obj_sample_id'])# type: ignore
+                     for meta_info in self.meta_infos],# type: ignore
+                     axis=0)# type: ignore
         
         self.resample_num = resample_num
         self.obj_resampled = self.resample_obj_mesh(N=resample_num)
@@ -37,7 +39,7 @@ class ObManResample(obman):
         obj_mesh = trimesh.Trimesh(vertices=obj['vertices'], faces=obj['faces'])
         # areas = obj_mesh.area_faces
         # weight = 1 + areas 
-        obj_xyz_resampled, face_id = trimesh.sample.sample_surface(obj_mesh, N)
+        obj_xyz_resampled, face_id = trimesh.sample.sample_surface(obj_mesh, N) # type: ignore
         return obj_xyz_resampled, face_id
     
     def resample_obj_mesh(self, N):
@@ -104,7 +106,7 @@ class ObManObj(ObManResample):
         meta_infos_new = []
         obj_transforms_new = []
         for idx, meta_info in enumerate(self.meta_infos):
-            for _ in range(times):
+            for _ in range(times): # type: ignore
                 meta_infos_new.append(meta_info)
                 obj_transforms_new.append(self.obj_transforms[idx])
                 
@@ -127,7 +129,7 @@ class ObManObj(ObManResample):
     def KNNmask(self, points, idx):
         tree = KDTree(points)
         center_id = int(self.mask_centers[idx])
-        K = self.mask_Ks[idx]
+        K = self.mask_Ks[idx] # type: ignore
         # pdb.set_trace()
         distances, indices = tree.query(points[center_id].reshape(1, -1), K)
         
@@ -431,7 +433,7 @@ def get_new_objpretrain(ds_root, args):
     
 if __name__ == "__main__":
     import argparse
-    dataset_root = config.OBMAN_ROOT
+    dataset_root = config.OBMAN_ROOT 
     parser = ArgumentParser()
     parser.add_argument('--run', type=str, default='obj_pretrain')
     parser.add_argument('--split', type=str, default='train')

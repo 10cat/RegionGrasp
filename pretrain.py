@@ -2,32 +2,33 @@ import os
 import sys
 
 from tqdm import tqdm
+
 sys.path.append('.')
 sys.path.append('..')
+import argparse
+import random
+
+import config
 import numpy as np
 import torch
-from torch.utils import data
 import torch.optim as optim
-
-import argparse
-import config
 # from option import MyOptions
 from dataset.Dataset import GrabNetDataset
-
+from dataset.obman_preprocess import ObManObj
 from epochbase import TrainEpoch, ValEpoch
-import random
+from models.cGrasp_vae import cGraspvae
+from models.ConditionNet import ConditionBERT, ConditionTrans
+from models.PointMAE import PointMAE
+from torch.utils import data
+from traineval_utils.loss import (ChamferDistanceL2Loss, MPMLoss,
+                                  PointCloudCompletionLoss, cGraspvaeLoss)
+from utils.datasets import get_dataset
+from utils.epoch_utils import (MetersMonitor, PretrainEpoch, PretrainMAEEpoch,
+                               model_update)
+from utils.optim import *
 from utils.utils import set_random_seed
 
-from dataset.obman_preprocess import ObManObj
-from models.ConditionNet import ConditionTrans, ConditionBERT
-from models.PointMAE import PointMAE
-from models.cGrasp_vae import cGraspvae
-from traineval_utils.loss import ChamferDistanceL2Loss, PointCloudCompletionLoss, cGraspvaeLoss, MPMLoss
-from utils.optim import *
-from utils.datasets import get_dataset
-from utils.epoch_utils import MetersMonitor, model_update, PretrainEpoch, PretrainMAEEpoch
-    
-    
+
 def obj_comp(cfg=None):
     mode = cfg.run_mode
     model = cfg.model.type
@@ -101,12 +102,13 @@ def mae(cfg=None):
 
 
 if __name__ == "__main__":
-    import wandb
     import argparse
-    from omegaconf import OmegaConf
-    from easydict import EasyDict
+
     import utils.cfgs as cfgsu
-    
+    import wandb
+    from easydict import EasyDict
+    from omegaconf import OmegaConf
+
     # import pdb; pdb.set_trace()
     parser = argparse.ArgumentParser()
     parser.add_argument('--cfgs', type=str, required=True)

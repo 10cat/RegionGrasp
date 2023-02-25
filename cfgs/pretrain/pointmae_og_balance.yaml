@@ -51,7 +51,7 @@ model: {
 # checkpoint / visual / 
 check_interval: 5
 visual_interval: {
-  train:{
+  train: {
     batch: 500,
     sample: null
   },
@@ -59,6 +59,11 @@ visual_interval: {
     batch: 10,
     sample: null
   }
+}
+
+coef: {
+  recon_centers_loss: 1.,
+  recon_loss: 1.
 }
 
 

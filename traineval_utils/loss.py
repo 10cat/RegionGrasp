@@ -1,4 +1,5 @@
 import sys
+
 sys.path.append('.')
 sys.path.append('..')
 import config
@@ -6,12 +7,11 @@ import numpy as np
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-# from option import MyOptions as cfg
-from utils.utils import get_std, point2point_signed
-from pytorch3d.structures import Meshes
-
 from chamfer_distance import ChamferDistance as ch_dist
-from utils.utils import edges_for, decode_hand_params_batch, get_NN
+from pytorch3d.structures import Meshes
+# from option import MyOptions as cfg
+from utils.utils import (decode_hand_params_batch, edges_for, get_NN, get_std,
+                         point2point_signed)
 
 
 class cGraspvaeLoss(nn.Module):
@@ -352,10 +352,11 @@ class PointCloudCompletionLoss(nn.Module):
 class MPMLoss(nn.Module):
     def __init__(self):
         super().__init__()
-        self.pc_loss = ChamferDistanceL2Loss()
+        self.pc_loss_cham = ChamferDistanceL2Loss()
         
-    def forward(self, pred_pc, gt_pc, dict_loss):
-        dict_loss['recon_chamfer_loss'] = self.pc_loss(pred_pc, gt_pc)
+    def forward(self, pred_pc, gt_pc, pred_centers, gt_centers, dict_loss):
+        dict_loss['recon_centers_loss'] = self.pc_loss_cham(pred_centers, gt_centers)
+        dict_loss['recon_loss'] = self.pc_loss_cham(pred_pc, gt_pc)
         
         return dict_loss
 
