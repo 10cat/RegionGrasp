@@ -508,8 +508,8 @@ class PointMAE_PC(PointMAE):
         gt_points = gt_points_centralized + center[mask].unsqueeze(1)
         # rebuild_points = self.increase_dim(x_rec.transpose(1, 2)).transpose(1, 2).reshape(B * M, -1, 3)
         rebuild_points_centralized = self.neighbors_head(x_rec.transpose(1, 2)).transpose(1, 2).reshape(B * M, -1, 3)
-        rebuild_centers_bias = self.centers_head(x_rec.transpose(1, 2)).transpose(1, 2)
-        rebuild_centers = rebuild_centers + rebuild_centers_bias
+        # rebuild_centers_bias = self.centers_head(x_rec.transpose(1, 2)).transpose(1, 2)
+        # rebuild_centers = rebuild_centers + rebuild_centers_bias
         # import pdb; pdb.set_trace()
         rebuild_points = rebuild_points_centralized + rebuild_centers.reshape(-1, 1, 3)
         # rebuild_centers = rebuild_centers.reshape(B, -1, 3)
@@ -527,6 +527,6 @@ class PointMAE_PC(PointMAE):
             ret1 = rebuild_points.reshape(B, -1, 3)
             vis_center = center[mask].reshape(B, -1, 3)
             # return ret1, ret2
-            return ret1, ret2, vis_center, rebuild_centers, rebuild_points, gt_centers, gt_points
+            return ret1, ret2, vis_center, rebuild_centers, rebuild_points, gt_centers, gt_points, rebuild_points_centralized, gt_points_centralized
         
-        return rebuild_centers, rebuild_points, gt_centers, gt_points
+        return rebuild_centers, rebuild_points, gt_centers, gt_points, rebuild_points_centralized, gt_points_centralized

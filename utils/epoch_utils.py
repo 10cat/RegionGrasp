@@ -293,11 +293,11 @@ class PretrainMAEEpoch(PretrainEpoch):
         dict_loss = {}
         input = input.to('cuda')
         if vis==False:
-            rebuild_centers, rebuild_points, gt_centers, gt_points = pointmae(input)
+            rebuild_centers, rebuild_points, gt_centers, gt_points, rebuild_points_centralized, gt_points_centralized = pointmae(input)
             full_vis, full_pred, full_center = None, None, None
         else:
-            full_vis, full_pred, full_center, rebuild_centers, rebuild_points, gt_centers, gt_points = pointmae(input, vis=True)
-        dict_loss = self.loss.forward(rebuild_points, gt_points, rebuild_centers, gt_centers, dict_loss)
+            full_vis, full_pred, full_center, rebuild_centers, rebuild_points, gt_centers, gt_points, rebuild_points_centralized, gt_points_centralized = pointmae(input, vis=True)
+        dict_loss = self.loss.forward(rebuild_points_centralized, gt_points_centralized, rebuild_centers, gt_centers, dict_loss) # NOTE: 改成centralized的patch与中心点分开计算loss
         return full_vis, full_pred, full_center, rebuild_centers, rebuild_points, gt_centers, gt_points, dict_loss
     
     def visual(self, batch_idx, full_vis, full_pred, full, rebuild_centers, gt_centers, vis_centers,
@@ -338,6 +338,7 @@ class PretrainMAEEpoch(PretrainEpoch):
                 input = input.to('cuda')
                 input = train_transforms(input)
                 full_pred, full_vis, vis_centers, rebuild_centers, rebuild_points, gt_centers, gt_points, dict_loss = self.model_forward(model, input, vis=True)
+
             
             total_loss = 0.
             

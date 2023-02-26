@@ -67,7 +67,7 @@ model: {
           mask_type: 'rand',
           trans_dim: 384,
           encoder_dims: 384,
-          depth: 12,
+          depth: 6,
           num_heads: 6,
           drop_path_rate: 0.1,
         }
@@ -101,6 +101,7 @@ loss: {
     loss_dist_h: False,
     loss_dist_o: False,
     loss_penetr: True,
+    metrics_cond: True,
     loss_mano: False
   },
   test: {
