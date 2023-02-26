@@ -62,10 +62,10 @@ visual_interval: {
   }
 }
 
-# coef: {
-#   recon_centers_loss: 1.,
-#   recon_loss: 1.
-# }
+coef: {
+  recon_centers_loss: 1.,
+  recon_loss: 1.
+}
 
 
 # eval_inference_iteration
