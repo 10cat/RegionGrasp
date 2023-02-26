@@ -425,6 +425,7 @@ class PointMAE(PointMAE_orig):
         pos_full = torch.cat([pos_emd_vis, pos_emd_mask], dim=1)
         
         x_rec = self.MAE_decoder(x_full, pos_full, N)
+        # import pdb; pdb.set_trace()
         
         B, M, C = x_rec.shape
         # rebuild_points = self.increase_dim(x_rec.transpose(1, 2)).transpose(1, 2).reshape(B * M, -1, 3)
@@ -473,26 +474,26 @@ class PointMAE_PC(PointMAE):
         
     def forward(self, pts, vis=False, feat_only=False, **kwargs):
         neighborhood, center = self.group_divider(pts)
-        # gt_masked_points
-        gt_points_centralized = neighborhood[mask].reshape(B * M, -1, 3)
-        gt_points = gt_points_centralized + center[mask].unsqueeze(1)
-        gt_centers = center[mask].reshape(B, -1, 3)
-        
         if feat_only:
             x_vis, mask = self.MAE_encoder(neighborhood, center, noaug=True)
             return x_vis
-        
         x_vis, mask = self.MAE_encoder(neighborhood, center)
         
+        # gt_masked_points
+        B, _, C = x_vis.shape
+        # import pdb; pdb.set_trace()
+        gt_centers = center[mask].reshape(B, -1, 3)
+        
         # masked number
-        N = gt_centers.shape[1]
         pos = self.center_embed(center[~mask]).reshape(B, -1, C)
+        N = gt_centers.shape[1]
         c_rec = self.center_predictor(x_vis, pos, return_token_num=N)
         rebuild_centers = self.center_head_0(c_rec.transpose(1, 2)).transpose(1, 2)
+        # import pdb; pdb.set_trace()
         
-        B, _, C = x_vis.shape
         pos_emd_vis = self.decoder_pos_embed(center[~mask]).reshape(B, -1, C)
-        pos_emd_mask = self.decoder_pos_embed(rebuild_centers).reshape(B, -1, C)
+        # NOTE: use rebuild_centers to do the position embedding, instead of the ground truth masked centers
+        pos_emd_mask = self.decoder_pos_embed(rebuild_centers.reshape(-1, 3)).reshape(B, -1, C)
         
         _,N,_ = pos_emd_mask.shape
         
@@ -503,12 +504,15 @@ class PointMAE_PC(PointMAE):
         x_rec = self.MAE_decoder(x_full, pos_full, N)
         
         B, M, C = x_rec.shape
+        gt_points_centralized = neighborhood[mask].reshape(B * M, -1, 3)
+        gt_points = gt_points_centralized + center[mask].unsqueeze(1)
         # rebuild_points = self.increase_dim(x_rec.transpose(1, 2)).transpose(1, 2).reshape(B * M, -1, 3)
         rebuild_points_centralized = self.neighbors_head(x_rec.transpose(1, 2)).transpose(1, 2).reshape(B * M, -1, 3)
         rebuild_centers_bias = self.centers_head(x_rec.transpose(1, 2)).transpose(1, 2)
         rebuild_centers = rebuild_centers + rebuild_centers_bias
-        rebuild_points = rebuild_points_centralized + rebuild_centers.unsqueeze(1)
-        rebuild_centers = rebuild_centers.reshape(B, -1, 3)
+        # import pdb; pdb.set_trace()
+        rebuild_points = rebuild_points_centralized + rebuild_centers.reshape(-1, 1, 3)
+        # rebuild_centers = rebuild_centers.reshape(B, -1, 3)
         
         if vis: #visualization
             vis_points = neighborhood[~mask].reshape(B * (self.num_group - M), -1, 3)

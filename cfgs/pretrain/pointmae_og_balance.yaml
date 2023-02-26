@@ -34,7 +34,8 @@ model: {
   group_size: 32,
   num_group: 128,
   transformer: {
-    mask_ratio: 0.6,
+    # mask_ratio: 0.6,
+    mask_ratio: 0.4,
     mask_type: 'rand',
     trans_dim: 384,
     encoder_dims: 384,
