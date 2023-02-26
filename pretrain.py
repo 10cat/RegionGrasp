@@ -18,7 +18,7 @@ from dataset.obman_preprocess import ObManObj
 from epochbase import TrainEpoch, ValEpoch
 from models.cGrasp_vae import cGraspvae
 from models.ConditionNet import ConditionBERT, ConditionTrans
-from models.PointMAE import PointMAE, PointMAE_PC
+from models.PointMAE import PointMAE, PointMAE_PC, PointMAE_orig
 from torch.utils import data
 from traineval_utils.loss import (ChamferDistanceL2Loss, MPMLoss,
                                   PointCloudCompletionLoss, cGraspvaeLoss)
@@ -69,8 +69,10 @@ def mae(cfg=None):
     
     if cfg.cdec:
         net = PointMAE_PC(cfg.model)
-    else:
+    elif cfg.cpred:
         net = PointMAE(cfg.model)
+    else:
+        net = PointMAE_orig(cfg.model)
     # import pdb; pdb.set_trace()
     
     if mode == 'train':
@@ -126,7 +128,8 @@ if __name__ == "__main__":
     
     parser.add_argument('--machine', type=str, default='41')
     parser.add_argument('--checkpoint', type=str, default=None)
-    parser.add_argument('--cdec', action='store_true', help='whether predict center of masked regions or not')
+    parser.add_argument('--cdec', action='store_true', help='whether decode center of masked regions for position embedding or not')
+    parser.add_argument('--cpred', action='store_true', help='whether predict center of masked regions or not (but use gt for position embedding)')
     
     
     parser.add_argument('--start_epoch', type=int, default=None)
