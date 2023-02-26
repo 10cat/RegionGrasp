@@ -15,7 +15,7 @@ import numpy as np
 
 from models.pointnet_encoder import ObjRegionConditionEncoder, PointNetEncoder
 from models.CVAE import VAE
-from models.hand_encoder import HandEncoder_group
+from models.hand_encoder import HandEncoder_group, PN_HOIEncoder
 from utils.utils import CRot2rotmat, region_masked_pointwise, rotmat2aa
 
 # from option import MyOptions as cfg
@@ -37,6 +37,9 @@ class cGraspvae(nn.Module):
         if cfg.model.get('handenc'):
             self.hand_encoder = HandEncoder_group(cfg.model.handenc.kwargs)
             self.handenc_type = 'trans'
+        elif cfg.model.get('pn_hoienc'):
+            self.hand_encoder = PN_HOIEncoder(cfg.model.pn_hoienc.kwargs)
+            self.handenc_type = 'pn_trans'
         else:    
             self.hand_encoder = PointNetEncoder(global_feat=True, feature_transform=False, channel=self.in_channel_hand)
             self.handenc_type = 'pointnet'
@@ -81,6 +84,8 @@ class cGraspvae(nn.Module):
         
         if self.handenc_type == 'trans':
             hand_glb_feature, _, _ = self.hand_encoder(hand_xyz, feat_o, center_o, self.cfg.model.handenc.kwargs.hoienc) # [B, 1024]
+        elif self.handenc_type == 'pn_trans':
+            hand_glb_feature, _, _ = self.hand_encoder(hand_xyz, feat_o, center_o, self.cfg.model.pn_hoienc.kwargs.hoienc)
         else:
             hand_glb_feature, _, _ = self.hand_encoder(hand_xyz)
         
