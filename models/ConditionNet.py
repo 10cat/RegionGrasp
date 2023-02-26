@@ -277,10 +277,16 @@ class ConditionMAE(nn.Module):
     def get_region_mask(self, mask, p_idx, obj_points):
         return get_region_mask(mask, p_idx, obj_points, self.region_size)
         
-    def forward(self, pts, mask_center=None):
+    def forward(self, pts, mask_center=None, use_pos=False):
         B, _, _ = pts.shape
         neighborhood, center, p_idx = self.group_divider(pts, return_idx=True)
-        embed_feat, _ = self.MAE_encoder(neighborhood, center, noaug = True)
+        # import pdb; pdb.set_trace()
+        if use_pos:
+            # print("plus pos")
+            embed_feat, pos = self.MAE_encoder(neighborhood, center, noaug = True, use_pos = use_pos)
+            embed_feat = embed_feat + pos
+        else:
+            embed_feat, _ = self.MAE_encoder(neighborhood, center, noaug = True)
         
         if mask_center is not None:
             

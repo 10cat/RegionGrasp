@@ -274,6 +274,7 @@ if __name__ == "__main__":
     parser.add_argument('--dloss_type', type=str, default=None)
     parser.add_argument('--eval_iter', type=int, default=10)
     parser.add_argument('--cmae_orig', action='store_true')
+    parser.add_argument('--use_pos', action='store_true')
 
     args = parser.parse_args()
 

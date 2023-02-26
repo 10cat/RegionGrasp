@@ -284,7 +284,7 @@ class MaskTransformer(nn.Module):
         return batch_mask.to(center.device)
             
                 
-    def forward(self, neighborhood, center, noaug = False):
+    def forward(self, neighborhood, center, noaug = False, use_pos = False):
         B, G, _ = center.shape
         if self.mask_type == 'block':
             bool_masked_pos = self.mask_center_block(center, noaug=noaug)
@@ -307,7 +307,10 @@ class MaskTransformer(nn.Module):
         x_vis = self.blocks(x_vis, pos)
         x_vis = self.norm(x_vis)
         
-        return x_vis, bool_masked_pos
+        if not use_pos:
+            return x_vis, bool_masked_pos
+        else:
+            return x_vis, pos
 
 class PointMAE_orig(nn.Module):
     def __init__(self, config):

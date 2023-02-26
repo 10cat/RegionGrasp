@@ -56,7 +56,7 @@ optim: {
 model: {
     cnet_type: mae,
     cnet: {
-      chkpt_path: 'pointmae_og_balance/models/checkpoint_70.pth',
+      chkpt_path: 'pointmae_og_bal_d6/models/checkpoint_20.pth',
       kwargs: {
         group_size: 32,
         num_group: 128,
@@ -67,7 +67,7 @@ model: {
           mask_type: 'rand',
           trans_dim: 384,
           encoder_dims: 384,
-          depth: 12,
+          depth: 6,
           num_heads: 6,
           drop_path_rate: 0.1,
         }
@@ -101,6 +101,7 @@ loss: {
     loss_dist_h: False,
     loss_dist_o: False,
     loss_penetr: True,
+    metrics_cond: True,
     loss_mano: False
   },
   test: {

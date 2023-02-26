@@ -71,7 +71,7 @@ class cGraspvae(nn.Module):
         mask = None
         if self.cfg.model.cnet_type == 'mae':
             assert mask_center is not None, "Requires the center point of the masked region"
-            condition_vec, mask, feat_o, center_o = self.cnet(obj_pc, mask_center=mask_center)
+            condition_vec, mask, feat_o, center_o = self.cnet(obj_pc, mask_center=mask_center, use_pos=self.cfg.use_pos)
         elif self.cfg.model.cnet_type == 'obj_comp':
             condition_vec = self.cnet(obj_pc, feat_only=True)
         elif self.cfg.model.cnet_type == 'base':
@@ -101,7 +101,7 @@ class cGraspvae(nn.Module):
         mask = None
         if self.cfg.model.cnet_type == 'mae':
             assert mask_center is not None, "Requires the center point of the masked region"
-            condition_vec, mask, _, _ = self.cnet(obj_pc, mask_center=mask_center)
+            condition_vec, mask, _, _ = self.cnet(obj_pc, mask_center=mask_center, use_pos=self.cfg.use_pos)
         elif self.cfg.model.cnet_type == 'obj_comp':
             condition_vec = self.cnet(obj_pc, feat_only=True)
             
