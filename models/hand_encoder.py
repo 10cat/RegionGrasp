@@ -4,10 +4,12 @@ sys.path.append('.')
 sys.path.append('..')
 import torch
 import torch.nn as nn
+import torch.nn.functional as F
 
 from models.pointnet_encoder import STN3d
 from models.PointMAE import Grouper, Encoder, Block,  TransformerEncoder, MaskTransformer
 from models.PointTr import Attention, CrossAttention, get_knn_feature, get_knn_index
+from utils.utils import size_splits
 
 class HOIBlock(Block):
     def __init__(self, dim, num_heads, mlp_ratio=4, qkv_bias=False, qk_scale=None, drop=0, attn_drop=0, drop_path=0, act_layer=nn.GELU, norm_layer=nn.LayerNorm, knn_k=8):
@@ -31,12 +33,15 @@ class HOIBlock(Block):
         
     def forward(self, q, v, knn_index=None, cross_knn_index=None):
         
+        # self attention of query only
         norm_q = self.norm1(q)
         q_1 = self.attn(norm_q)
         
+        # cross attention between q and v
         norm_q = self.norm_q(q)
         norm_v = self.norm_v(v)
         q_2 = self.cross_attn(norm_q, norm_v)
+        
         if knn_index is not None:
             knn_f = get_knn_feature(norm_q, knn_index, k=self.knn_k)
             knn_f = self.knn_map(knn_f) # [B, k, np, dim]
@@ -150,3 +155,77 @@ class HandEncoder_group(nn.Module):
         feat = self.increase_dim(embed_feat)
         glob_feat = torch.max(feat, dim=2)[0]
         return glob_feat, None, None
+    
+class PN_HOIEncoder(nn.Module):
+    def __init__(self, config):
+        super().__init__()
+        channel = config.channel
+        loc_feat_dim = config.loc_feat_dim
+        embed_dim = config.hoienc.embed_dim
+        out_dim = config.out_dim
+        proj_drop = config.proj_drop
+        
+        self.feature_transform = config.feature_transform
+        self.stn = STN3d(channel=channel)
+        self.conv1 = nn.Conv1d(channel, loc_feat_dim, 1)
+        self.bn1 = nn.BatchNorm1d(loc_feat_dim)
+        
+        self.pn_map = nn.Sequential(
+            nn.Conv1d(loc_feat_dim, embed_dim, 1),
+            nn.BatchNorm1d(embed_dim),
+            nn.ReLU(inplace=True),
+            nn.Conv1d(embed_dim, embed_dim, 1)
+        )
+        
+        self.HOIencoder = HOITransformerEncoder(**config.hoienc) if config.get('hoienc') is not None else None
+        
+        self.increase_dim = nn.Sequential(
+            nn.Conv1d(embed_dim, out_dim, 1),
+            nn.BatchNorm1d(out_dim),
+            nn.LeakyReLU(negative_slope=0.2),
+            nn.Conv1d(out_dim, out_dim, 1)
+        )
+    
+    def pre_pointfeat_forward(self, x):
+    
+        B, D, N = x.size()
+        # - input transfrom based on STN3d
+        trans = self.stn(x) 
+        # - matrix-matrix product
+        x = x.transpose(2, 1)
+        if D > 3:
+            x, feature = size_splits(x, [3, D-3], dim=2) 
+        x = torch.bmm(x, trans)
+        if D > 3:
+            x = torch.cat([x, feature], dim=2)
+        x = x.transpose(2, 1) 
+        x = F.relu(self.bn1(self.conv1(x)))
+
+        if self.feature_transform:
+            trans_feat = self.fstn(x)
+            x = x.transpose(2, 1)
+            x = torch.bmm(x, trans_feat)
+            x = x.transpose(2, 1)
+        else:
+            trans_feat = None
+            
+        return x, trans, trans_feat, N
+    
+    def forward(self, verts, feat_o=None, center_o=None, cfg=None):
+        
+        x, trans, trans_feat, N = self.pre_pointfeat_forward(verts)
+        
+        # x = x.transpose(1, 2)
+        
+        feat_h = self.pn_map(x)
+        # import pdb; pdb.set_trace()
+        feat_h = feat_h.transpose(2, 1)
+        
+        embed_feat = self.HOIencoder(feat_h, feat_o, center_q=verts.transpose(2, 1), center_v=center_o, cfg=cfg)
+        
+        embed_feat = embed_feat.transpose(1, 2)
+        feat = self.increase_dim(embed_feat)
+        glob_feat = torch.max(feat, dim=2)[0]
+        
+        return glob_feat, None, None
+        
