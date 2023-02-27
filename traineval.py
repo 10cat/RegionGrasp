@@ -2,30 +2,33 @@ import os
 import sys
 
 from tqdm import tqdm
+
 sys.path.append('.')
 sys.path.append('..')
+import argparse
+import random
+
+import config
 import numpy as np
 import torch
-from torch.utils import data
 import torch.optim as optim
-
-import argparse
-import config
 # from option import MyOptions
 from dataset.Dataset import GrabNetDataset
-
+from dataset.obman_preprocess import ObManObj
 from epochbase import TrainEpoch, ValEpoch
-import random
+from models.cGrasp_vae import cGraspvae
+from models.ConditionNet import (ConditionBERT, ConditionMAE,
+                                 ConditionMAE_origin, ConditionTrans)
+from models.pointnet_encoder import ObjRegionConditionEncoder
+from torch.utils import data
+from traineval_utils.loss import (ChamferDistanceL2Loss,
+                                  PointCloudCompletionLoss, cGraspvaeLoss)
+from utils.datasets import get_dataset
+from utils.epoch_utils import (EpochVAE_mae, EvalEpochVAE_mae, MetersMonitor,
+                               PretrainEpoch, model_update)
+from utils.optim import *
 from utils.utils import set_random_seed
 
-from dataset.obman_preprocess import ObManObj
-from models.pointnet_encoder import ObjRegionConditionEncoder
-from models.ConditionNet import ConditionMAE, ConditionMAE_origin, ConditionTrans, ConditionBERT
-from models.cGrasp_vae import cGraspvae
-from traineval_utils.loss import ChamferDistanceL2Loss, PointCloudCompletionLoss, cGraspvaeLoss
-from utils.optim import *
-from utils.datasets import get_dataset
-from utils.epoch_utils import EpochVAE_mae, EvalEpochVAE_mae,  MetersMonitor, model_update, PretrainEpoch
 
 def fix_bn(m):
     classname = m.__class__.__name__
@@ -107,6 +110,10 @@ def cgrasp(cfg=None):
     
     model = cGraspvae(cnet,
                       **cfg.model.vae.kwargs, cfg=cfg)
+    param_size = 0
+    for param in model.parameters():
+        param_size += param.nelement() * param.element_size()
+    print(f"the parameter size is {param_size}MB")
     
     part_model_dict = {}
     # TODO: cnet/vae其他参数设置不同学习率
@@ -221,17 +228,17 @@ def cgrasp(cfg=None):
 
 
 if __name__ == "__main__":
-    import wandb
     import argparse
-    from omegaconf import OmegaConf
-    from easydict import EasyDict
+
     import utils.cfgs as cfgsu
-    
+    import wandb
+    from easydict import EasyDict
+    from omegaconf import OmegaConf
+
     # import psutil
     # p = psutil.Process()
     # p.cpu_affinity(range(16))
     # print(p.cpu_affinity())
-    
     # import pdb; pdb.set_trace()
     parser = argparse.ArgumentParser()
     parser.add_argument('--cfgs', type=str, default='config')

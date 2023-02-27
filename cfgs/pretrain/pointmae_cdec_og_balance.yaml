@@ -63,7 +63,7 @@ visual_interval: {
 }
 
 coef: {
-  recon_centers_loss: 1.,
+  recon_centers_loss: 5.,
   recon_loss: 1.
 }
 

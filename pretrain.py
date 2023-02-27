@@ -18,7 +18,7 @@ from dataset.obman_preprocess import ObManObj
 from epochbase import TrainEpoch, ValEpoch
 from models.cGrasp_vae import cGraspvae
 from models.ConditionNet import ConditionBERT, ConditionTrans
-from models.PointMAE import PointMAE, PointMAE_PC, PointMAE_orig
+from models.PointMAE import PointMAE, PointMAE_orig, PointMAE_PC
 from torch.utils import data
 from traineval_utils.loss import (ChamferDistanceL2Loss, MPMLoss,
                                   PointCloudCompletionLoss, cGraspvaeLoss)
