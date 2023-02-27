@@ -93,8 +93,8 @@ model: {
     handenc: {
       chkpt_path: ,
       kwargs: {
-        group_size: 32,
-        num_group: 128,
+        group_size: 16,
+        num_group: 96,
         region_size: 16,
         out_dim: 1024, # make sure that it's the same with vae.kwargs.condition_size
         transformer: {
@@ -102,7 +102,7 @@ model: {
           mask_type: 'rand',
           trans_dim: 384,
           encoder_dims: 384,
-          depth: 6,
+          depth: 3,
           num_heads: 6,
           drop_path_rate: 0.1,
         },
@@ -112,7 +112,7 @@ model: {
           num_heads: 6,
           drop_path_rate: 0.,
           knn_k: 8,
-          knn_layer_num: 3
+          knn_layer_num: 1
         }
       }
     },

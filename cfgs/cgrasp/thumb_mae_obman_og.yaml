@@ -29,7 +29,7 @@ optim: {
       type: CosLR,
       kwargs: {
         epochs: 100,
-        initial_epochs: 10
+        initial_epochs: 20
       }
     }
   },

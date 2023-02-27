@@ -145,7 +145,7 @@ class HandEncoder_group(nn.Module):
         verts = verts.transpose(2, 1)
         B, _, _ = verts.shape
         neighborhood, center_h, p_idx = self.group_divider(verts, return_idx=True)
-        embed_feat, _ = self.MAE_encoder(neighborhood, center_h, noaug=True)
+        embed_feat, pos = self.MAE_encoder(neighborhood, center_h, noaug=True, use_pos=True)
         
         if self.HOIencoder is not None:
             assert feat_o is not None, "Please input object local feature to the HOIenocder"
