@@ -29,7 +29,7 @@ Examples:
 
 + OpenCL (OFF)
 + Parameters
-	 input                                       tmp/objs/tmpp9z123ag.obj
+	 input                                       tmp/objs/tmp434zo_vq.obj
 	 resolution                                  1000000
 	 max. depth                                  20
 	 max. concavity                              0.001
@@ -46,27 +46,19 @@ Examples:
 	 OpenCL acceleration                         1
 	 OpenCL platform ID                          0
 	 OpenCL device ID                            0
-	 output                                      tmp/objs/tmpp9z123ag.obj
+	 output                                      tmp/objs/tmp434zo_vq.obj
 	 log                                         p_vhacd.txt
 + Load mesh
 + Voxelization
-	 dim = 64	-> 16304 voxels
-	 dim = 249	-> 787571 voxels
-	 time 0.897361s
+	 dim = 64	-> 4488 voxels
+	 dim = 381	-> 593344 voxels
+	 time 0.837951s
 + Compute primitive set
-	 # primitives               787571
-	 # inside surface           644179
-	 # on surface               143392
-	 time 0.041687s
+	 # primitives               593344
+	 # inside surface           436432
+	 # on surface               156912
+	 time 0.0161831s
 + Approximate Convex Decomposition
 	 Subdivision level 1
-	 -> Part[0] C  = 0.124157, E  = 0.161058, VS = 143392, VI = 644179
-+ Generate 1 convex-hulls 
-	 time 0.528689s
-+ Merge Convex Hulls
-	 time 6.457e-06s
-+ Simplify 1 convex-hulls 
-		 Simplify CH[00000] 270 V, 536 T
-	 time 0.00377733s
-+ Generate output: 1 convex-hulls 
-	 CH[00000] 64 V, 124 T
+	 -> Part[0] C  = 0.635846, E  = 0.0972648, VS = 156912, VI = 436432
+		 [Regular sampling] Number of clipping planes 166

@@ -60,7 +60,7 @@ optim: {
     scheduler: {
       type: StepLR,
       kwargs: {
-        milestones: [30, 60, 80, 90], 
+        milestones: [10, 30, 60, 90], 
         gamma: 0.5
       }
     }
