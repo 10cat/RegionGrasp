@@ -1,18 +1,23 @@
 import sys
+
 sys.path.append('.')
 sys.path.append('..')
 import numpy as np
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
+from models.DGCNN import DGCNN_grouper
+from models.PointMAE import Grouper, MaskTransformer, TransformerDecoder
 # from option import MyOptions as cfg
 from models.pointnet_encoder import PointNetEncoder
-from utils.utils import func_timer, region_masked_pointwise, mask_region_patch, get_region_mask
-from timm.models.layers import trunc_normal_
-from models.PointTr import get_knn_index, PoseEmbedding, Attention, CrossAttention, EncoderBlock, DecoderBlock, QueryGenerator, FinePointGenerator, knn_point
-from models.PointMAE import MaskTransformer, TransformerDecoder, Grouper
-from models.DGCNN import DGCNN_grouper
+from models.PointTr import (Attention, CrossAttention, DecoderBlock,
+                            EncoderBlock, FinePointGenerator, PoseEmbedding,
+                            QueryGenerator, get_knn_index, knn_point)
 from pytorch3d.ops import knn_gather, knn_points
+from timm.models.layers import trunc_normal_
+from utils.utils import (func_timer, get_region_mask, mask_region_patch,
+                         region_masked_pointwise)
+
 
 class ConditionTrans(nn.Module):
     def __init__(self, in_chans=3, embed_dim=768, num_heads=6, mlp_ratio=2., qkv_bias=False, qk_scale=None, drop_rate=0., attn_drop_rate=0., glob_feat_dim=1024, depth={'encoder':6, 'decoder':6}, num_query=224, knn_layer_num=-1, fps=False, num_pred=6144, knn_k=8):
@@ -449,6 +454,7 @@ class SDmapNet(nn.Module):
 
 if __name__ == "__main__":
     import os
+
     from tqdm import tqdm
     os.environ['CUDA_VISIBLE_DEVICES'] = "1"
     B = 8

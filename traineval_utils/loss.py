@@ -8,6 +8,7 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 from chamfer_distance import ChamferDistance as ch_dist
+from dataset.data_utils import faces2verts_no_rep
 from pytorch3d.structures import Meshes
 # from option import MyOptions as cfg
 from utils.utils import (decode_hand_params_batch, edges_for, get_NN, get_std,
@@ -28,6 +29,11 @@ class cGraspvaeLoss(nn.Module):
         self.v_weights = torch.from_numpy(np.load(cfg.c_weights_path)).to(torch.float32).to(self.device) # 这个到底是啥呀？ 能不能用在其他数据集上？
         self.v_weights2 = torch.pow(self.v_weights, 1.0/2.5) # 这个到底是啥呀？ 能不能用在其他数据集上？
         self.vpe = torch.from_numpy(np.load(cfg.vpe_path)).to(self.device).to(torch.long) # 这个到底是啥呀？ 能不能用在其他数据集上？
+        
+        cam_extr = np.array([[1., 0., 0., 0.], [0., -1., 0., 0.],
+                                  [0., 0., -1., 0.]]).astype(np.float32)
+        self.cam_extr = torch.from_numpy(cam_extr[:3, :3]).unsqueeze(0)
+        
         self.cfg = cfg
         self.latent_size = cfg.model.vae.kwargs.latent_size
         self.batch_size = cfg.batch_size
@@ -68,6 +74,11 @@ class cGraspvaeLoss(nn.Module):
         rhand_pred, rh_model = decode_hand_params_batch(hand_params, B, self.cfg, self.device)
         
         rhand_vs_pred = rhand_pred.vertices
+        
+        if self.cfg.tta:
+            cam_extr = self.cam_extr.repeat(B, 1, 1).to('cuda')
+            rhand_vs_pred = torch.matmul(rhand_vs_pred, cam_extr.transpose(1, 2))
+        
         
         if self.cfg.use_mano and self.cfg.dataset.name == 'obman':
             assert trans is not None and cam_extr is not None
@@ -122,43 +133,70 @@ class cGraspvaeLoss(nn.Module):
             if loss_cfg.loss_dist_o:
                 dict_loss.update({'loss_dist_o': loss_dist_o})
             if loss_cfg.get('metrics_cond') and loss_cfg.metrics_cond:
-                dict_loss['metrics_cond'] = None
-                thumb_indices = torch.Tensor(config.bigfinger_vertices).reshape(1, -1).repeat(B, 1).to(self.device)
-                thumb_prox_ids = torch.gather(h2o_vid_pred, dim=-1, index=thumb_indices.to(torch.long)).unsqueeze(-1).repeat(1, 1, 3)
-                # thumb_prox_points = obj_vs[:, thumb_prox_ids]
-                thumb_prox_points = torch.gather(obj_vs, dim=1, index=thumb_prox_ids.to(torch.long))
-                # obj_vids = torch.arange(0, obj_vs.shape[0])
+                dict_loss['cond_contact'] = None
+                dict_loss['cond_region'] = None
                 
-                # import pdb; pdb.set_trace()
+                # thumb_indices = torch.Tensor(config.bigfinger_vertices).reshape(1, -1).repeat(B, 1).to(self.device)
+                
+                # thumb_prox_ids = torch.gather(h2o_vid_pred, dim=-1, index=thumb_indices.to(torch.long)).unsqueeze(-1).repeat(1, 1, 3)
+                # # thumb_prox_points = obj_vs[:, thumb_prox_ids]
+                # thumb_prox_points = torch.gather(obj_vs, dim=1, index=thumb_prox_ids.to(torch.long))
+                # # obj_vids = torch.arange(0, obj_vs.shape[0])
+                
+                # # import pdb; pdb.set_trace()
+                #d region_points = obj_vs * (region.unsqueeze(-1)) + faraway_origin.unsqueeze(-1)
+                # _, t2r_signed, _, _ = self.chd(region_points, thumb_prox_points)
+                # hit_flag = t2r_signed.abs() < 0.00001
+                # # import pdb; pdb.set_trace()
+                # cond_hit_rate = (t2r_signed[hit_flag].shape[0] / t2r_signed.reshape(-1).shape[0])
+                
+                # dict_loss.update({'metrics_cond': torch.Tensor([cond_hit_rate]).to(torch.float32)[0].to(self.device)})
+                
+                # TODO: ------- new thumb condition hit rate with thumb pulp ------ #
+                thumb_pulp_indices = torch.Tensor(faces2verts_no_rep(rh_f_single.squeeze(0)[config.thumb_center]))
+                thumb_pulp_indices = thumb_pulp_indices.view(1, -1).repeat(B, 1).to(self.device)
+                
+                # import pdb; pdb.set_trace() #check: dims
+                dists = torch.gather(h2o_signed_pred, dim=-1, index=thumb_pulp_indices.to(torch.long))
+                thumb_prox_ids = torch.gather(h2o_vid_pred, dim=-1, index=thumb_pulp_indices.to(torch.long)).unsqueeze(-1).repeat(1, 1, 3)
+                thumb_prox_points = torch.gather(obj_vs, dim=1, index=thumb_prox_ids.to(torch.long))
                 region_points = obj_vs * (region.unsqueeze(-1)) + faraway_origin.unsqueeze(-1)
                 _, t2r_signed, _, _ = self.chd(region_points, thumb_prox_points)
-                hit_flag = t2r_signed.abs() < 0.00001
-                # import pdb; pdb.set_trace()
-                cond_hit_rate = (t2r_signed[hit_flag].shape[0] / t2r_signed.reshape(-1).shape[0])
                 
-                dict_loss.update({'metrics_cond': torch.Tensor([cond_hit_rate]).to(torch.float32)[0].to(self.device)})
+                hit_flag_in_contact = (dists > self.cfg.hoi_hparams['th_penet']) & (dists < self.cfg.hoi_hparams['th_contact']) & (t2r_signed.abs() < 1e-5)
+                hit_in_contact = torch.zeros_like(thumb_pulp_indices).to(self.device)
+                hit_in_contact[hit_flag_in_contact] = 1.
+                cond_hit_rate_in_contact = hit_in_contact.sum() / hit_in_contact.reshape(-1).shape[0]
+                
+                hit_flag_in_region = (t2r_signed.abs() < 1e-5)
+                hit_in_region = torch.zeros_like(thumb_pulp_indices).to(self.device)
+                hit_in_region[hit_flag_in_region] = 1.
+                cond_hit_rate_in_region = hit_in_region.sum() / hit_in_region.reshape(-1).shape[0]
+                
+                dict_loss.update({'cond_contact': torch.Tensor([cond_hit_rate_in_contact]).to(torch.float32)[0].to(self.device)})
+                dict_loss.update({'cond_region': torch.Tensor([cond_hit_rate_in_region]).to(torch.float32)[0].to(self.device)})
                 
                 
         else:
             o2h_signed_pred, o2h_signed, h2o_signed, h2o_signed_pred = None, None, None, None
             
         #### penetration loss ####
-        if loss_cfg.get('loss_penetr') and loss_cfg.loss_penetr:
-            obj_nn_dist_recon, obj_nn_idx_recon = get_NN(obj_vs, rhand_vs_pred)
-            loss_penetr = self.coefs['lambda_penetr'] * self.PenetrLoss(rhand_vs_pred, rhand_faces, obj_vs,
-                                        obj_nn_dist_recon, obj_nn_idx_recon)
-            # import pdb; pdb.set_trace()
-            dict_loss.update({'loss_penetr': loss_penetr})
+        # if loss_cfg.get('loss_penetr') and loss_cfg.loss_penetr:
+        #     obj_nn_dist_recon, obj_nn_idx_recon = get_NN(obj_vs, rhand_vs_pred)
+        #     loss_penetr = self.coefs['lambda_penetr'] * self.PenetrLoss(rhand_vs_pred, rhand_faces, obj_vs,
+        #                                 obj_nn_dist_recon, obj_nn_idx_recon)
+        #     # import pdb; pdb.set_trace()
+        #     dict_loss.update({'loss_penetr': loss_penetr})
             
 
         #### KL Loss ####
-        if sample_stats is not None: 
-            p_mean, log_vars, Zin = sample_stats
-            loss_kl = self.KLLoss(rhand_vs, p_mean, log_vars)
-        else:
-            # validation / test中loss_kl = 0
-            loss_kl = torch.tensor(0.0, dtype=float).to(self.device)
-        dict_loss.update({'loss_kl': loss_kl})
+        # if sample_stats is not None: 
+        #     p_mean, log_vars, Zin = sample_stats
+        #     loss_kl = self.KLLoss(rhand_vs, p_mean, log_vars)
+        # else:
+        #     # validation / test中loss_kl = 0
+        #     loss_kl = torch.tensor(0.0, dtype=float).to(self.device)
+        # dict_loss.update({'loss_kl': loss_kl})
 
         #### verts Loss ####
         if loss_cfg.loss_mesh_rec:

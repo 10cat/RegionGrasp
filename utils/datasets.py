@@ -1,14 +1,17 @@
 import os
 import sys
+
 sys.path.append('.')
 sys.path.append('..')
 
+from dataset.Dataset import (GrabNetDataset, ObManDataset,
+                             ObManDataset_obj_comp, PretrainDataset,
+                             PretrainDataset_balanced)
 from dataset.obman_preprocess import ObManObj, ObManObj_MAE
-from dataset.Dataset import GrabNetDataset, ObManDataset, ObManDataset_obj_comp, PretrainDataset, PretrainDataset_balanced
 
 
 def get_dataset(cfg, mode='train'):
-    ds_name = cfg.dataset.name
+    ds_name = cfg.dataset.name if not cfg.grabnet else 'grabnet'
     
     if ds_name == 'obman_pretrain':
         ds_root = cfg.obman_root
@@ -63,6 +66,7 @@ def get_dataset(cfg, mode='train'):
                                     shapenet_root = shapenet_root,
                                     mano_root = cfg.mano_root,
                                     split = mode,
+                                    cfg = cfg,
                                     **configs)
         elif cfg.comp:
             assert cfg.dataset[mode]._base_.type == 'comp'
@@ -76,18 +80,28 @@ def get_dataset(cfg, mode='train'):
                                     shapenet_root = shapenet_root,
                                     mano_root = cfg.mano_root,
                                     split = mode,
+                                    cfg = cfg,
                                     **configs)
         else:
             raise NotImplementedError
         
     elif ds_name == 'grabnet':
         ds_root = cfg.grabnet_root
-        configs = cfg.dataset[mode]._base_.kwargs
-        dataset = GrabNetDataset(dataset_root=ds_root, 
-                                 ds_name=mode,
-                                 mano_path=cfg.mano_rh_path,
-                                 **configs)
-        
+        if mode != 'test':
+            configs = cfg.dataset[mode]._base_.kwargs
+            dataset = GrabNetDataset(dataset_root=ds_root, 
+                                    ds_name=mode,
+                                    mano_path=cfg.mano_rh_path,
+                                    cfg = cfg,
+                                    **configs)
+        else:
+            dataset = GrabNetDataset(dataset_root=ds_root, 
+                                    ds_name=mode,
+                                    mano_path=cfg.mano_rh_path,
+                                    frame_names_file = 'frame_names_thumb.npz',
+                                    grabnet_thumb = True,
+                                    resample_num = cfg.grabnet_rnum,
+                                    cfg = cfg)
         
     else:
         raise NotImplementedError

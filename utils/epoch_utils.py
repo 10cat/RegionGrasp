@@ -1,21 +1,28 @@
 import os
 import sys
 
+from models.PointMAE import Grouper
+
 sys.path.append('.')
 sys.path.append('..')
+
+import random
 
 import config
 import mano
 # from option import MyOptions as cfg
 import numpy as np
 import torch
+import torch.nn.functional as F
 import trimesh
 import wandb
 from dataset import data_transforms
+from GraspTTA.utils import loss, utils, utils_loss
 from torchvision import transforms
 from tqdm import tqdm
 from utils.meters import AverageMeter, AverageMeters
-from utils.utils import decode_hand_params_batch, func_timer, makepath
+from utils.utils import (decode_hand_params_batch, func_timer, get_region_mask,
+                         makepath, mask_region_patch, region_masked_pointwise)
 from utils.visualization import colors_like, visual_hand, visual_obj
 
 train_transforms = transforms.Compose(
@@ -536,6 +543,7 @@ class EpochVAE_mae():
         self.VisualMesh = VisualMesh(root=self.visual_dir)
         self.batch_interval = cfg.batch_intv if cfg.run_mode == 'test' else cfg.visual_interval[mode].batch
         self.sample_interval = cfg.sample_intv if cfg.run_mode == 'test' else cfg.visual_interval[mode].sample
+        
         self.cfg = cfg
         
     def model_forward(self, model, obj_input, hand_input=None, mask_center=None):
@@ -569,11 +577,12 @@ class EpochVAE_mae():
             # if self.cfg.dataset.name == 'obman'
             # obj_mesh = self.dataset.get_sample_obj_mesh(sample_id)
             obj_verts, obj_faces = self.dataset.get_obj_verts_faces(sample_id)
-            if self.cfg.dataset.name == 'obman':
+            if self.cfg.dataset.name == 'obman' and not self.cfg.tta and not self.cfg.grabnet:
                 obj_verts -= obj_trans[i]
             self.VisualMesh.visual(vertices=obj_verts, faces=obj_faces, mesh_color='grey', sample_id=sample_id, epoch=epoch, name='obj')
             region_mask = region_mask[i]
             obj_pc = obj_pc[i]
+            # obj_pc = obj_pc[i] + obj_trans[i]
             mask = region_mask > 0.
             self.VisualPC.visual(pcs=obj_pc[mask], pc_colors='blue', sample_id=sample_id, epoch=epoch, name='obj')
             # self.VisualPC.visual(pcs=[obj_pc[~mask], obj_pc[mask]], pc_colors=['white', 'blue'], sample_id=sample_id, epoch=epoch, name='obj')
@@ -651,7 +660,9 @@ class EpochVAE_mae():
 class EvalEpochVAE_mae(EpochVAE_mae):
     def __init__(self, loss, dataset, output_dir, mode='train', cfg=None):
         super().__init__(loss, dataset, output_dir, mode, cfg)
-        
+        cam_extr = np.array([[1., 0., 0., 0.], [0., -1., 0., 0.],
+                                  [0., 0., -1., 0.]]).astype(np.float32)
+        self.cam_extr = torch.from_numpy(cam_extr).unsqueeze(0)
     def model_forward(self, model, obj_input, hand_input=None, mask_center=None):
         device = 'cuda' if self.cfg.use_cuda else 'cpu'
         with torch.no_grad():
@@ -665,105 +676,165 @@ class EvalEpochVAE_mae(EpochVAE_mae):
                 # torch.cuda.empty_cache()
         return hand_params_list, mask
         
-    def __call__(self, dataloader, epoch, model, optimizer, scheduler, save_pred=False):
+    def __call__(self, dataloader, epoch, model, optimizer, scheduler, save_pred=False, cmap_model=False):
         self.Losses = MetersMonitor()
         stop_flag = False
         if save_pred:
             recon_rhand_params = []
         pbar = tqdm(dataloader, desc=f"{self.mode} epoch {epoch}:")
         model.eval()
-        with torch.no_grad():
-            for batch_idx, sample in enumerate(pbar):
-                # model.apply(fix_bn)
-                obj_input_pc = sample['input_pc']
-                gt_rhand_vs = sample['hand_verts'].transpose(2, 1) # gt for the masked points
-                mask_centers = sample['contact_center']
-                # import pdb; pdb.set_trace()
-                sample_ids = sample['sample_id']
-                
-                # import pdb; pdb.set_trace()
-                
-                hand_params_list, region_mask = self.model_forward(model, obj_input_pc, gt_rhand_vs, mask_centers)
-                
-                obj_points = obj_input_pc
-                
-                # NOTE: validation generation in several iters
-                Loss_iters = AverageMeters() # loss/metrics计算方式：取5个iter的平均
-                for iter in range(self.cfg.eval_iter):
-                    hand_params = hand_params_list[iter] # 输出每个iter的生成效果fi
-                    # B = hand_params[0]
-                    # rhand_pred, rh_model = decode_hand_params_batch(hand_params, B, self.cfg)
-                    # rhand_vs_pred = rhand_pred.vertices
-                    # rh_f_single = torch.from_numpy(rh_model.faces.astype(np.int32)).view(1, -1, 3)
-                    # rhand_faces = rh_f_single.repeat(B, 1, 1).to(rhand_vs_pred.device).to(torch.long)
-                    if self.cfg.use_mano:
-                        _, dict_loss, _, rhand_vs_pred, rhand_faces = self.loss_compute(hand_params, None, obj_points, gt_rhand_vs, region_mask, trans=sample['obj_trans'], cam_extr=sample['cam_extr'], gt_hand_params=sample['hand_params'], obj_normals=sample['obj_point_normals'])
-                    else:
-                        _, dict_loss, _, rhand_vs_pred, rhand_faces = self.loss_compute(hand_params, None, obj_points, gt_rhand_vs, region_mask, obj_normals=sample['obj_point_normals'])
-                    
-                    for key, val in dict_loss.items():
-                        Loss_iters.add_value(key, val)
-                        # import pdb; pdb.set_trace()
-                    # if epoch % self.cfg.check_interval == 0 and batch_idx % self.batch_interval == 0:
-                    rhand_vs_pred_0 = rhand_vs_pred[0].detach().to('cpu').numpy()
-                    rhand_faces_0 = rhand_faces[0].detach().to('cpu').numpy()
-                    sample_id = int(sample_ids.detach().to('cpu').numpy()[0])
-                    self.VisualMesh.visual(vertices=rhand_vs_pred_0, faces=rhand_faces_0, mesh_color='skin', sample_id=sample_id, epoch=epoch, name=f'pred_hand_{iter}')
+        for batch_idx, sample in enumerate(pbar):
+            # model.apply(fix_bn)
+            obj_input_pc = sample['input_pc']
+            gt_rhand_vs = sample['hand_verts'].transpose(2, 1) # gt for the masked points
+            mask_centers = sample['contact_center']
+            # import pdb; pdb.set_trace()
+            sample_ids = sample['sample_id']
             
+            # import pdb; pdb.set_trace()
+            
+            hand_params_list, region_mask = self.model_forward(model, obj_input_pc, gt_rhand_vs, mask_centers)
+            
+            obj_points = obj_input_pc
+            
+            # NOTE: validation generation in several iters
+            Loss_iters = AverageMeters() # loss/metrics计算方式：取5个iter的平均
+            rhand_vs_pred_list = []
+            for iter in range(self.cfg.eval_iter):
+                hand_params = hand_params_list[iter] # 输出每个iter的生成效果fi
+                # B = hand_params[0]
+                # rhand_pred, rh_model = decode_hand_params_batch(hand_params, B, self.cfg)
+                # rhand_vs_pred = rhand_pred.vertices
+                # rh_f_single = torch.from_numpy(rh_model.faces.astype(np.int32)).view(1, -1, 3)
+                # rhand_faces = rh_f_single.repeat(B, 1, 1).to(rhand_vs_pred.device).to(torch.long)
                 
-                bug_mode = self.mode # 其实要改掉成None，但只不过和之前的对比实验不好比较了
-                dict_loss = Loss_iters.avg(mode=bug_mode) # 取5个iter的平均loss
+                # TODO: ========== refine procedure ========#
+                if cmap_model:
+                    recon_params = torch.cat([hand_params['global_orient'], hand_params['hand_pose'], hand_params['transl']], dim=1)
+                    recon_params = torch.autograd.Variable(recon_params, requires_grad=True)
+                    optimizer = torch.optim.SGD([recon_params], lr=0.00000625, momentum=0.8)
+                    obj_points = obj_points.to('cuda')
+                    for j in tqdm(range(300)):
+                        optimizer.zero_grad()
+                        rh_model = mano.load(model_path=self.cfg.mano_rh_path,
+                                            model_type='mano',
+                                            use_pca=self.cfg.use_mano,
+                                            num_pca_comps=45,
+                                            batch_size=obj_points.shape[0],
+                                            flat_hand_mean=True)
+                        rh_model = rh_model.to('cuda')
+                        rhand_pred = rh_model(global_orient=recon_params[:, :3], hand_pose=recon_params[:, 3:48], transl=recon_params[:, 48:])
+                        rh_faces = torch.from_numpy(rh_model.faces.astype(np.int32)).view(1, -1, 3).to('cuda')
+                        rhand_vs_pred = rhand_pred.vertices
+                        obj_nn_dist_affordance, _ = utils_loss.get_NN(obj_points[:, :, :3], rhand_vs_pred)
+                        cmap_affordance = utils.get_pseudo_cmap(obj_nn_dist_affordance)  # [B,3000]
+                        # import pdb; pdb.set_trace()
+                        recon_cmap = cmap_model(obj_points.permute(0, 2, 1)[:, :3, :], rhand_vs_pred.permute(0, 2, 1).contiguous())
+                        # import pdb; pdb.set_trace()
+                        recon_cmap = (recon_cmap / torch.max(recon_cmap, dim=1)[0].reshape(-1, 1)).detach()
+                        penetr_loss, consistency_loss, contact_loss = loss.TTT_loss(rhand_vs_pred, rh_faces,
+                                                                    obj_points.contiguous(),
+                                                                    cmap_affordance, recon_cmap)
+                        loss_tta = 1 * contact_loss + 1 * consistency_loss + 7 * penetr_loss
+                        loss_tta.backward()
+                        optimizer.step()
+                    recon_params = recon_params.detach()
+                    hand_params = {'global_orient':recon_params[:, :3], 'hand_pose':recon_params[:, 3:48], 'transl': recon_params[:, 48:]}
+                    hand_params_list[iter] = hand_params
                 
-                total_loss = sum(dict_loss.values())
-                
-                # valid_keys = self.cfg.loss.train.keys()
-                # valid_loss_dict = {}
-                # for key in valid_keys:
-                #     if self.cfg.loss.train[key]:
-                #         if bug_mode is not None: key_name = bug_mode + '_' + key
-                #         valid_loss_dict.update({key: dict_loss[key_name]})
-                # total_loss = sum(valid_loss_dict.values())   
-                
-                # 还是记录loss_dist_h, loss_dist_o但是不计入total_loss
-                msg_loss, losses = self.Losses.report(dict_loss, total_loss, mode=self.mode)
-                msg = msg_loss
-                pbar.set_postfix_str(msg)
-                
-                if self.cfg.dataset.name == 'obman':
-                    obj_trans = sample['obj_trans'].detach().to('cpu').numpy()
-                elif self.cfg.dataset.name == 'grabnet':
-                    obj_trans = None
-                else:
-                    raise NotImplementedError
-                
-                # if epoch % self.cfg.check_interval == 0:
-                self.visual_gt(rhand_vs = gt_rhand_vs.transpose(2, 1).detach().to('cpu').numpy(),
-                            rhand_faces = rhand_faces.detach().to('cpu').numpy(),
-                            obj_pc=obj_points.detach().to('cpu').numpy(),
-                            region_mask=region_mask.detach().to('cpu').numpy(),
-                            obj_trans=obj_trans,
-                            sample_ids=sample_ids.detach().to('cpu').numpy(),
-                            epoch=epoch,
-                            batch_idx=batch_idx,
-                            batch_interval=self.batch_interval,
-                            sample_interval=self.sample_interval)
+                if self.cfg.tta:
+                    recon_params = hand_params
+                    # import pdb; pdb.set_trace()
+                    hand_params = {'global_orient':recon_params[:, 10:13], 'hand_pose':recon_params[:, 13:58], 'transl': recon_params[:, 58:]}
                     
-                if save_pred:
+                if self.cfg.use_mano:
+                    _, dict_loss, _, rhand_vs_pred, rhand_faces = self.loss_compute(hand_params, None, obj_points, gt_rhand_vs, region_mask, trans=sample['obj_trans'], cam_extr=sample['cam_extr'], gt_hand_params=sample['hand_params'], obj_normals=sample['obj_point_normals'])
+                else:
+                    _, dict_loss, _, rhand_vs_pred, rhand_faces = self.loss_compute(hand_params, None, obj_points[:,:,:3], gt_rhand_vs, region_mask, obj_normals=sample['obj_point_normals'])
+                
+                rhand_vs_pred_list.append(rhand_vs_pred.unsqueeze(0))
+                
+                
+                for key, val in dict_loss.items():
+                    Loss_iters.add_value(key, val)
+                    # import pdb; pdb.set_trace()
+                # if epoch % self.cfg.check_interval == 0 and batch_idx % self.batch_interval == 0:
+                rhand_vs_pred_0 = rhand_vs_pred[0].detach().to('cpu').numpy()
+                rhand_faces_0 = rhand_faces[0].detach().to('cpu').numpy()
+                sample_id = int(sample_ids.detach().to('cpu').numpy()[0])
+                self.VisualMesh.visual(vertices=rhand_vs_pred_0, faces=rhand_faces_0, mesh_color='skin', sample_id=sample_id, epoch=epoch, name=f'pred_hand_{iter}')
+                
+            
+            # TODO: diversity
+            # import pdb; pdb.set_trace()
+            random.shuffle(rhand_vs_pred_list)
+            rhand_vs_preds = torch.cat(rhand_vs_pred_list)
+            rhand_vs_preds_group1 = rhand_vs_preds[:5]
+            rhand_vs_preds_group2 = rhand_vs_preds[5:]
+            
+            diverse_dists = F.mse_loss(rhand_vs_preds_group1, rhand_vs_preds_group2)
+            
+            Loss_iters.add_value('diversity', diverse_dists)
+        
+            
+            bug_mode = self.mode # 其实要改掉成None，但只不过和之前的对比实验不好比较了
+            dict_loss = Loss_iters.avg(mode=bug_mode) # 取5个iter的平均loss
+            
+            total_loss = sum(dict_loss.values())
+            
+            # valid_keys = self.cfg.loss.train.keys()
+            # valid_loss_dict = {}
+            # for key in valid_keys:
+            #     if self.cfg.loss.train[key]:
+            #         if bug_mode is not None: key_name = bug_mode + '_' + key
+            #         valid_loss_dict.update({key: dict_loss[key_name]})
+            # total_loss = sum(valid_loss_dict.values())   
+            
+            # 还是记录loss_dist_h, loss_dist_o但是不计入total_loss
+            msg_loss, losses = self.Losses.report(dict_loss, total_loss, mode=self.mode)
+            msg = msg_loss
+            pbar.set_postfix_str(msg)
+            
+            if self.cfg.dataset.name == 'obman' and not self.cfg.grabnet:
+                obj_trans = sample['obj_trans'].detach().to('cpu').numpy()
+            elif self.cfg.dataset.name == 'grabnet' or self.cfg.grabnet:
+                obj_trans = None
+            else:
+                raise NotImplementedError
+            
+            # if epoch % self.cfg.check_interval == 0:
+            self.visual_gt(rhand_vs = gt_rhand_vs.transpose(2, 1).detach().to('cpu').numpy(),
+                        rhand_faces = rhand_faces.detach().to('cpu').numpy(),
+                        obj_pc=obj_points[:,:,:3].detach().to('cpu').numpy(),
+                        region_mask=region_mask.detach().to('cpu').numpy(),
+                        obj_trans=obj_trans,
+                        sample_ids=sample_ids.detach().to('cpu').numpy(),
+                        epoch=epoch,
+                        batch_idx=batch_idx,
+                        batch_interval=self.batch_interval,
+                        sample_interval=self.sample_interval)
+                
+            if save_pred:
+                recon_params_list = []
+                if isinstance(hand_params_list[0], dict):
                     keys = hand_params_list[0].keys()
-                    recon_params_list = []
                     for hand_params in hand_params_list:
                         recon_params = torch.cat([hand_params['global_orient'], hand_params['hand_pose'], hand_params['transl']], dim=1)
                         recon_params_list.append(recon_params)
-                    # import pdb; pdb.set_trace()
-                    B = recon_params.shape[0]      
-                    
-                    hand_params_all = torch.cat(recon_params_list, dim=0) # B*iter_nums, D
-                    hand_params_all = hand_params_all.reshape(self.cfg.eval_iter, B, -1).transpose(0, 1) # B, iter_nums, D
-                    hand_params_all = hand_params_all.cpu()
-                    recon_rhand_params.append(hand_params_all)
-                if self.cfg.run_check:
-                    if batch_idx > 5:
-                        break
+                else:
+                    for hand_params in hand_params_list:
+                        recon_params = hand_params[:, 10:]
+                        recon_params_list.append(recon_params)
+                # import pdb; pdb.set_trace()
+                B = recon_params.shape[0]      
+                
+                hand_params_all = torch.cat(recon_params_list, dim=0) # B*iter_nums, D
+                hand_params_all = hand_params_all.reshape(self.cfg.eval_iter, B, -1).transpose(0, 1) # B, iter_nums, D
+                hand_params_all = hand_params_all.cpu()
+                recon_rhand_params.append(hand_params_all)
+            if self.cfg.run_check:
+                if batch_idx > 5:
+                    break
             
         if self.cfg.run_mode == 'train' and not self.cfg.no_save:
             no_improve_epochs = self.Checkpt.save_checkpoints(epoch, model, optimizer=optimizer, scheduler=scheduler, metric_value=losses[f'{self.mode}_total_loss'])
@@ -787,6 +858,215 @@ class EvalEpochVAE_mae(EpochVAE_mae):
                 
         self.log(self.Losses, epoch=epoch)
         return model, stop_flag
+    
+class TestTTAEpoch(EvalEpochVAE_mae):
+    def __init__(self, loss, dataset, output_dir, mode='train', cfg=None):
+        super().__init__(loss, dataset, output_dir, mode, cfg)
+        self.group_divider = Grouper(128, 32)
+        
+    def model_forward(self, model, obj_input, hand_input=None, mask_center=None):
+        device = 'cuda' if self.cfg.use_cuda else 'cpu'
+        with torch.no_grad():
+            hand_params_list = []
+            # torch.cuda.manual_seed(3407)
+            obj_input = obj_input.to(device)
+            mask_center = mask_center.to(device)
+            neighborhood, center, p_idx = self.group_divider(obj_input[:, :, :3], return_idx=True)
+            batch_mask = mask_region_patch(center, mask_center, self.cfg.region_size)
+            region_mask = get_region_mask(batch_mask, p_idx, obj_input, self.cfg.region_size)
+            for iter in range(self.cfg.eval_iter):
+                B = obj_input.shape[0]
+                # hand_params, mask =  model.inference(obj_input.to(device), mask_center=mask_center.to(device))
+                hand_params =  model.inference(obj_input.transpose(1, 2))
+                hand_params_list.append(hand_params)
+                # torch.cuda.empty_cache()
+        return hand_params_list, region_mask
+        
+    def __call__(self, dataloader, epoch, model, optimizer, scheduler, save_pred=False, cmap_model=False):
+        self.Losses = MetersMonitor()
+        stop_flag = False
+        if save_pred:
+            recon_rhand_params = []
+        pbar = tqdm(dataloader, desc=f"{self.mode} epoch {epoch}:")
+        model.eval()
+        for batch_idx, sample in enumerate(pbar):
+            # model.apply(fix_bn)
+            obj_input_pc = sample['input_pc']
+            gt_rhand_vs = sample['hand_verts'].transpose(2, 1) # gt for the masked points
+            mask_centers = sample['contact_center']
+            # import pdb; pdb.set_trace()
+            sample_ids = sample['sample_id']
+            
+            # import pdb; pdb.set_trace()
+            
+            hand_params_list, region_mask = self.model_forward(model, obj_input_pc, gt_rhand_vs, mask_centers)
+            
+            obj_points = obj_input_pc
+            
+            # NOTE: validation generation in several iters
+            Loss_iters = AverageMeters() # loss/metrics计算方式：取5个iter的平均
+            rhand_vs_pred_list = []
+            for iter in range(self.cfg.eval_iter):
+                hand_params = hand_params_list[iter] # 输出每个iter的生成效果fi
+                # B = hand_params[0]
+                # rhand_pred, rh_model = decode_hand_params_batch(hand_params, B, self.cfg)
+                # rhand_vs_pred = rhand_pred.vertices
+                # rh_f_single = torch.from_numpy(rh_model.faces.astype(np.int32)).view(1, -1, 3)
+                # rhand_faces = rh_f_single.repeat(B, 1, 1).to(rhand_vs_pred.device).to(torch.long)
+                
+                # TODO: ========== refine procedure ========#
+                if cmap_model:
+                    recon_params = torch.cat([hand_params['global_orient'], hand_params['hand_pose'], hand_params['transl']], dim=1)
+                    recon_params = torch.autograd.Variable(recon_params, requires_grad=True)
+                    optimizer = torch.optim.SGD([recon_params], lr=0.00000625, momentum=0.8)
+                    obj_points = obj_points.to('cuda')
+                    for j in tqdm(range(50)):
+                        optimizer.zero_grad()
+                        rh_model = mano.load(model_path=self.cfg.mano_rh_path,
+                                            model_type='mano',
+                                            use_pca=self.cfg.use_mano,
+                                            num_pca_comps=45,
+                                            batch_size=obj_points.shape[0],
+                                            flat_hand_mean=True)
+                        rh_model = rh_model.to('cuda')
+                        rhand_pred = rh_model(global_orient=recon_params[:, :3], hand_pose=recon_params[:, 3:48], transl=recon_params[:, 48:])
+                        rh_faces = torch.from_numpy(rh_model.faces.astype(np.int32)).view(1, -1, 3).to('cuda')
+                        rhand_vs_pred = rhand_pred.vertices
+                        obj_nn_dist_affordance, _ = utils_loss.get_NN(obj_points[:, :, :3], rhand_vs_pred)
+                        cmap_affordance = utils.get_pseudo_cmap(obj_nn_dist_affordance)  # [B,3000]
+                        # import pdb; pdb.set_trace()
+                        recon_cmap = cmap_model(obj_points.permute(0, 2, 1)[:, :3, :], rhand_vs_pred.permute(0, 2, 1).contiguous())
+                        # import pdb; pdb.set_trace()
+                        recon_cmap = (recon_cmap / torch.max(recon_cmap, dim=1)[0].reshape(-1, 1)).detach()
+                        penetr_loss, consistency_loss, contact_loss = loss.TTT_loss(rhand_vs_pred, rh_faces,
+                                                                    obj_points.contiguous(),
+                                                                    cmap_affordance, recon_cmap)
+                        loss_tta = 1 * contact_loss + 1 * consistency_loss + 7 * penetr_loss
+                        loss_tta.backward()
+                        optimizer.step()
+                    recon_params = recon_params.detach()
+                    hand_params = {'global_orient':recon_params[:, :3], 'hand_pose':recon_params[:, 3:48], 'transl': recon_params[:, 48:]}
+                    hand_params_list[iter] = hand_params
+                
+                if self.cfg.tta: 
+                    if obj_points.shape[-1] != 3:
+                        cam_extr = self.cam_extr.repeat(obj_points.shape[0], 1, 1).to('cuda')
+                        # import pdb; pdb.set_trace()
+                        obj_points = obj_points.to('cuda')
+                        obj_points = torch.bmm(obj_points, cam_extr.transpose(1, 2))
+                
+                    recon_params = hand_params
+                    # import pdb; pdb.set_trace()
+                    hand_params = {'beta': recon_params[:, :10],'global_orient':recon_params[:, 10:13], 'hand_pose':recon_params[:, 13:58], 'transl': recon_params[:, 58:]}
+                    
+                    # import pdb; pdb.set_trace()
+                if self.cfg.use_mano:
+                    _, dict_loss, _, rhand_vs_pred, rhand_faces = self.loss_compute(hand_params, None, obj_points, gt_rhand_vs, region_mask, trans=sample['obj_trans'], cam_extr=sample['cam_extr'], gt_hand_params=sample['hand_params'], obj_normals=sample['obj_point_normals'])
+                else:
+                    _, dict_loss, _, rhand_vs_pred, rhand_faces = self.loss_compute(hand_params, None, obj_points[:,:,:3], gt_rhand_vs, region_mask, obj_normals=sample['obj_point_normals'])
+                
+                for key, val in dict_loss.items():
+                    Loss_iters.add_value(key, val)
+                    # import pdb; pdb.set_trace()
+                rhand_vs_pred_list.append(rhand_vs_pred.unsqueeze(0))
+                # if epoch % self.cfg.check_interval == 0 and batch_idx % self.batch_interval == 0:
+                rhand_vs_pred_0 = rhand_vs_pred[0].detach().to('cpu').numpy()
+                rhand_faces_0 = rhand_faces[0].detach().to('cpu').numpy()
+                sample_id = int(sample_ids.detach().to('cpu').numpy()[0])
+                self.VisualMesh.visual(vertices=rhand_vs_pred_0, faces=rhand_faces_0, mesh_color='skin', sample_id=sample_id, epoch=epoch, name=f'pred_hand_{iter}')
+                
+            random.shuffle(rhand_vs_pred_list)
+            rhand_vs_preds = torch.cat(rhand_vs_pred_list)
+            rhand_vs_preds_group1 = rhand_vs_preds[:5]
+            rhand_vs_preds_group2 = rhand_vs_preds[5:]
+            
+            diverse_dists = F.mse_loss(rhand_vs_preds_group1, rhand_vs_preds_group2)
+            
+            Loss_iters.add_value('diversity', diverse_dists)
+            
+            bug_mode = self.mode # 其实要改掉成None，但只不过和之前的对比实验不好比较了
+            dict_loss = Loss_iters.avg(mode=bug_mode) # 取5个iter的平均loss
+            
+            total_loss = sum(dict_loss.values())
+            
+            # valid_keys = self.cfg.loss.train.keys()
+            # valid_loss_dict = {}
+            # for key in valid_keys:
+            #     if self.cfg.loss.train[key]:
+            #         if bug_mode is not None: key_name = bug_mode + '_' + key
+            #         valid_loss_dict.update({key: dict_loss[key_name]})
+            # total_loss = sum(valid_loss_dict.values())   
+            
+            # 还是记录loss_dist_h, loss_dist_o但是不计入total_loss
+            msg_loss, losses = self.Losses.report(dict_loss, total_loss, mode=self.mode)
+            msg = msg_loss
+            pbar.set_postfix_str(msg)
+            
+            if self.cfg.dataset.name == 'obman' and not self.cfg.grabnet:
+                obj_trans = sample['obj_trans'].detach().to('cpu').numpy()
+            elif self.cfg.dataset.name == 'grabnet' or self.cfg.grabnet:
+                obj_trans = None
+            else:
+                raise NotImplementedError
+            
+            # if epoch % self.cfg.check_interval == 0:
+            self.visual_gt(rhand_vs = gt_rhand_vs.transpose(2, 1).detach().to('cpu').numpy(),
+                        rhand_faces = rhand_faces.detach().to('cpu').numpy(),
+                        obj_pc=obj_points[:,:,:3].detach().to('cpu').numpy(),
+                        region_mask=region_mask.detach().to('cpu').numpy(),
+                        obj_trans=obj_trans,
+                        sample_ids=sample_ids.detach().to('cpu').numpy(),
+                        epoch=epoch,
+                        batch_idx=batch_idx,
+                        batch_interval=self.batch_interval,
+                        sample_interval=self.sample_interval)
+                
+            if save_pred:
+                recon_params_list = []
+                if isinstance(hand_params_list, dict):
+                    keys = hand_params_list[0].keys()
+                    for hand_params in hand_params_list:
+                        recon_params = torch.cat([hand_params['global_orient'], hand_params['hand_pose'], hand_params['transl']], dim=1)
+                        recon_params_list.append(recon_params)
+                else:
+                    for hand_params in hand_params_list:
+                        recon_params = hand_params[:, 10:]
+                        recon_params_list.append(recon_params)
+                # import pdb; pdb.set_trace()
+                B = recon_params.shape[0]      
+                
+                hand_params_all = torch.cat(recon_params_list, dim=0) # B*iter_nums, D
+                hand_params_all = hand_params_all.reshape(self.cfg.eval_iter, B, -1).transpose(0, 1) # B, iter_nums, D
+                hand_params_all = hand_params_all.cpu()
+                recon_rhand_params.append(hand_params_all)
+            if self.cfg.run_check:
+                if batch_idx > 5:
+                    break
+            
+        if self.cfg.run_mode == 'train' and not self.cfg.no_save:
+            no_improve_epochs = self.Checkpt.save_checkpoints(epoch, model, optimizer=optimizer, scheduler=scheduler, metric_value=losses[f'{self.mode}_total_loss'])
+            if no_improve_epochs > self.cfg.early_stopping:
+                stop_flag = True
+                
+        if save_pred:
+            recon_rhand_params = torch.cat(recon_rhand_params)
+            name = f'{self.cfg.chkpt}_{self.cfg.eval_ds}set_grabnet_pred' if self.cfg.grabnet else f'{self.cfg.chkpt}_{self.cfg.eval_ds}set_pred'
+            pth_path = os.path.join(self.output_dir, name + '.pth')
+            torch.save(recon_rhand_params, pth_path)
+            
+            recon_rhand_params = recon_rhand_params.numpy()
+            data = {
+                'recon_params': recon_rhand_params
+            }
+            path = os.path.join(self.output_dir, name + '.pkl')
+            import pickle
+            with open(path, 'wb') as f:
+                pickle.dump(data, f)
+            print(f"predicted rhand params saved!")
+                
+        self.log(self.Losses, epoch=epoch)
+        return model, stop_flag
+                    
         
         
     

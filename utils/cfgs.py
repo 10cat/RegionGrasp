@@ -1,11 +1,14 @@
-from genericpath import exists
+# from genericpath import exists
 import os
 import sys
+
 from utils.utils import makepath
+
 sys.path.append('.')
 sys.path.append('..')
 from easydict import EasyDict
 from omegaconf import OmegaConf
+
 
 def get_config(args, paths, folder=None):
     cfg_path = os.path.join(paths['output_dir'], 'config.yaml')
@@ -81,6 +84,7 @@ def config_paths(machine, exp_name):
         output_dir = "/home/yilin/Outputs/ConditionHOI/"+exp_name
         mano_root = "/home/yilin/Codes/_toolbox/mano"
         mano_rh_path = f"/home/yilin/Codes/_toolbox/mano/models/MANO_RIGHT.pkl"
+        # mano_rh_path = f"/home/yilin/Codes/Hand/affordance-CVAE/models/mano/MANO_RIGHT.pkl"
         
     if machine == '208' or machine == '50':
         grabnet_root = "/home/shihao/yilin/GrabNet"

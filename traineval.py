@@ -16,6 +16,7 @@ import torch.optim as optim
 from dataset.Dataset import GrabNetDataset
 from dataset.obman_preprocess import ObManObj
 from epochbase import TrainEpoch, ValEpoch
+from GraspTTA.network.cmapnet_objhand import pointnet_reg
 from models.cGrasp_vae import cGraspvae
 from models.ConditionNet import (ConditionBERT, ConditionMAE,
                                  ConditionMAE_origin, ConditionTrans)
@@ -174,6 +175,11 @@ def cgrasp(cfg=None):
         testset = get_dataset(cfg, mode=cfg.eval_ds)
         testloader = data.DataLoader(testset, batch_size=bs, shuffle=False)
         
+        cmap_model = pointnet_reg(with_rgb=False)
+        checkpoint_cmap = torch.load('../tta_checkpoints/model_cmap_best.pth', map_location=torch.device('cpu'))['network']
+        cmap_model.load_state_dict(checkpoint_cmap)
+        cmap_model = cmap_model.to(device)
+        
         # optimizer, scheduler = build_optim_sche_grasp(model, part_model={'cnet_mae': model.cnet.MAE_encoder}, cfg=cfg)
         checkpoint = torch.load(os.path.join(cfg.output_dir, 'models', cfg.chkpt+'.pth'))
         model.load_state_dict(checkpoint['state_dict'])
@@ -186,10 +192,10 @@ def cgrasp(cfg=None):
         # cgrasp_loss = cGraspvaeLoss(device, cfg)
         # cgrasp_loss.to(device)
         # import pdb; pdb.set_trace()
-        
+        kwargs_cmap = cmap_model if cfg.refine else None
         testepoch = EvalEpochVAE_mae(cgrasp_loss, testset, output_dir=cfg.output_dir, mode='test', cfg=cfg)
         
-        _, _ = testepoch(testloader, epoch, model, optimizer, scheduler, save_pred=True)
+        _, _ = testepoch(testloader, epoch, model, optimizer, scheduler, save_pred=True, cmap_model=kwargs_cmap)
         
     elif mode == 'val_only':
         valset = get_dataset(cfg, mode='val')
@@ -275,6 +281,11 @@ if __name__ == "__main__":
     parser.add_argument('--eval_iter', type=int, default=10)
     parser.add_argument('--cmae_orig', action='store_true')
     parser.add_argument('--use_pos', action='store_true')
+    parser.add_argument('--refine', action='store_true')
+    parser.add_argument('--rand', action='store_true')
+    parser.add_argument('--tta', action='store_true')
+    parser.add_argument('--grabnet', action='store_true')
+    parser.add_argument('--grabnet_rnum', type=int, default=2048)
 
     args = parser.parse_args()
 

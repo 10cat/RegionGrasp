@@ -64,7 +64,7 @@ class ObManResample(obman):
         return resampled
     
     
-    def get_obj_resampled_trans(self, meta_infos, obj_transforms, idx, obj_centric=False):
+    def get_obj_resampled_trans(self, meta_infos, obj_transforms, idx, obj_centric=False, tta=False):
         meta_info = meta_infos[idx]
         class_id, sample_id = meta_info['obj_class_id'], meta_info['obj_sample_id']
         # -- for resampled 
@@ -75,8 +75,11 @@ class ObManResample(obman):
         
         obj_transform = obj_transforms[idx]
         hom_points = np.concatenate([points, np.ones([points.shape[0], 1])], axis=1)
-        transform_mat = self.cam_extr.dot(obj_transform)
-        trans_points = transform_mat.dot(hom_points.T).T
+        if tta:
+            trans_points = obj_transform
+        else:
+            trans_points = self.cam_extr.dot(obj_transform)
+        trans_points = trans_points.dot(hom_points.T).T[:, :3]
         
         # rotmat = transform_mat[:, :3]
         # trans = transform_mat[:, -1]

@@ -1,21 +1,18 @@
 # torch related
 import sys
 
-
 sys.path.append('.')
 sys.path.append('..')
+import numpy as np
 import torch
 import torch.nn as nn
+import torch.nn.functional as F
 import torch.nn.parallel
 import torch.utils.data
-from torch.autograd import Variable
-import torch.nn.functional as F
-
-import numpy as np
-
-from models.pointnet_encoder import ObjRegionConditionEncoder, PointNetEncoder
 from models.CVAE import VAE
 from models.hand_encoder import HandEncoder_group, PN_HOIEncoder
+from models.pointnet_encoder import ObjRegionConditionEncoder, PointNetEncoder
+from torch.autograd import Variable
 from utils.utils import CRot2rotmat, region_masked_pointwise, rotmat2aa
 
 # from option import MyOptions as cfg
