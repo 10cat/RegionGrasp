@@ -17,7 +17,7 @@ import torch
 import torch.optim as optim
 import trimesh
 # from option import MyOptions
-from dataset.Dataset import GrabNetDataset, ObManDataset_test
+from dataset.Dataset import GrabNet_test, GrabNetDataset, ObManDataset_test
 from dataset.obman_preprocess import ObManObj
 from epochbase import TrainEpoch, ValEpoch
 from models.cGrasp_vae import cGraspvae
@@ -39,7 +39,7 @@ def testmetrics(cfg):
     ds_root = cfg.obman_root
     shapenet_root = cfg.shapenet_root
     configs = cfg.dataset[mode]._base_.kwargs
-    dataset = ObManDataset_test(ds_root = ds_root,
+    dataset = GrabNet_test(ds_root = ds_root,
                                 shapenet_root = shapenet_root,
                                 mano_root = cfg.mano_root,
                                 split = mode,
@@ -60,27 +60,27 @@ def testmetrics(cfg):
     records = []
     for idx in pbar:
         sample = dataset.__getitem__(idx)
-        index = int(sample['sample_id'].numpy()[0])
-        obj_trans = sample['obj_trans'].numpy()
+        # index = int(sample['sample_id'].numpy()[0])
+        # obj_trans = sample['obj_trans'].numpy()
         
         hand_params_pred_t = sample['hand_params_pred']
         hand_params_pred_iters = {'global_orient':hand_params_pred_t[:, :3], 'hand_pose':hand_params_pred_t[:, 3:48], 'transl':hand_params_pred_t[:, 48:]}
         hand_verts_pred_iters = rh_model(**hand_params_pred_iters)
         hand_verts_pred_iters = hand_verts_pred_iters.vertices.detach().numpy()
         
-        obj_mesh = dataset.get_sample_obj_mesh(index)
-        obj_verts, _ = dataset.get_obj_verts_faces(index)
+        obj_name = dataset.frame_objs[idx]
+        obj_mesh = dataset.object_meshes[obj_name]
+        obj_verts, _ = dataset.get_obj_verts_faces(idx)
+        # obj_verts -= obj_trans
         
         obj_faces = obj_mesh['faces']
         
         hand_verts = sample['hand_verts'].numpy()
-        if not cfg.tta:
-            obj_verts -= obj_trans
         sample_info_gt = {'hand_verts': hand_verts,
                            'hand_faces': rh_faces,
                            'obj_verts': obj_verts,
                            'obj_faces': obj_faces,
-                           'index': index}
+                           'index': idx}
         gt_CA, gt_contact_rh_faces, gt_contact_rh_verts = contact.get_contact_area(sample_info_gt)
         gt_IV, gt_ID = interpenetraion.main(sample_info_gt, cfg)
         
@@ -92,7 +92,7 @@ def testmetrics(cfg):
                            'hand_faces': rh_faces,
                            'obj_verts': obj_verts,
                            'obj_faces': obj_faces,
-                           'index': index}
+                           'index': idx}
             dict_metrics_iters = {}
             if cfg.CA:
                 CA, pred_contact_rh_faces, pred_contact_rh_verts = contact.get_contact_area(sample_info)

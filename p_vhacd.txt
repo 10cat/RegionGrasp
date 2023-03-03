@@ -29,7 +29,7 @@ Examples:
 
 + OpenCL (OFF)
 + Parameters
-	 input                                       tmp/objs/tmp434zo_vq.obj
+	 input                                       tmp/objs/tmp76_3hmz2.obj
 	 resolution                                  1000000
 	 max. depth                                  20
 	 max. concavity                              0.001
@@ -46,19 +46,35 @@ Examples:
 	 OpenCL acceleration                         1
 	 OpenCL platform ID                          0
 	 OpenCL device ID                            0
-	 output                                      tmp/objs/tmp434zo_vq.obj
+	 output                                      tmp/objs/tmp76_3hmz2.obj
 	 log                                         p_vhacd.txt
 + Load mesh
 + Voxelization
-	 dim = 64	-> 4488 voxels
-	 dim = 381	-> 593344 voxels
-	 time 0.837951s
+	 dim = 64	-> 15526 voxels
+	 dim = 253	-> 868489 voxels
+	 dim = 265	-> 996318 voxels
+	 time 0.322786s
 + Compute primitive set
-	 # primitives               593344
-	 # inside surface           436432
-	 # on surface               156912
-	 time 0.0161831s
+	 # primitives               996318
+	 # inside surface           908437
+	 # on surface               87881
+	 time 0.00998491s
 + Approximate Convex Decomposition
 	 Subdivision level 1
-	 -> Part[0] C  = 0.635846, E  = 0.0972648, VS = 156912, VI = 436432
-		 [Regular sampling] Number of clipping planes 166
+	 -> Part[0] C  = 0.109281, E  = 0.0793523, VS = 87881, VI = 908437
+		 [Regular sampling] Number of clipping planes 124
+
+			 Best  0033 T=0.089016 C=0.078865 B=0.004687 S=0.005464 (0.0, 1.0, 0.0, 0.071)
+
+		 [Refining] Number of clipping planes 9
+
+			 Best  0001 T=0.090597 C=0.080427 B=0.004706 S=0.005464 (0.0, 1.0, 0.0, 0.073)
+
+	 Subdivision level 2
+	 -> Part[0] C  = 0.00254757, E  = 0.00429353, VS = 4755, VI = 11764
+	 -> Part[1] C  = 0.0808789, E  = 0.0757955, VS = 83942, VI = 895857
+		 [Regular sampling] Number of clipping planes 115
+
+			 Best  0062 T=0.060101 C=0.055190 B=0.000867 S=0.004044 (0.0, 1.0, 0.0, -0.010)
+
+		 [Refining] Number of clipping planes 9

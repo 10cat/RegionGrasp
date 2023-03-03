@@ -1,17 +1,19 @@
-from multiprocessing.sharedctypes import Value
-import numpy as np
-import torch
+import inspect
 import logging
+import random
+import sys
 import time
 from functools import wraps
-import inspect
-import random
-import torch.nn.functional as F
+from multiprocessing.sharedctypes import Value
+
 import chamfer_distance as chd
+import numpy as np
+import torch
+import torch.nn.functional as F
+from pytorch3d.ops import knn_gather, knn_points
 # from chamfer_distance import ChamferDistance as ch_dist
 from pytorch3d.structures import Meshes
-from pytorch3d.ops import knn_gather, knn_points
-import sys
+
 sys.path.append('.')
 sys.path.append('..')
 # from option import MyOptions as cfg
@@ -465,7 +467,7 @@ def decode_hand_params_batch(hand_params, batch_size, cfg, device):
     import mano
     rh_model = mano.load(model_path=cfg.mano_rh_path,
                         model_type='mano',
-                        use_pca=cfg.use_mano,
+                        use_pca=cfg.get('use_pca'),
                         num_pca_comps=45,
                         batch_size=B,
                         flat_hand_mean=True)

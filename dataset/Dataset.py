@@ -1,24 +1,25 @@
 import os
 import sys
+
 sys.path.append('.')
 sys.path.append('..')
-import numpy as np
-import torch
-import mano
-from torch.utils import data
-from torch.utils.data._utils.collate import default_collate
-from mano.model import load
-import trimesh
-import config
+import pickle
+import random
 from copy import deepcopy
 
-import random
-import pickle
-from tqdm import tqdm
-from utils.utils import func_timer, makepath
+import config
+import mano
+import numpy as np
+import torch
+import trimesh
 from dataset.Dataset_origin import GrabNetDataset_orig
 from dataset.grabnet_preprocess import GrabNetResample, GrabNetThumb
 from dataset.obman_preprocess import ObManResample, ObManThumb
+from mano.model import load
+from torch.utils import data
+from torch.utils.data._utils.collate import default_collate
+from tqdm import tqdm
+from utils.utils import func_timer, makepath
 
 set_seed = lambda val: np.random.seed(val)
 
@@ -243,7 +244,7 @@ class PretrainDataset_balanced(PretrainDataset):
         
         
 class ObManDataset(ObManThumb):
-    def __init__(self, ds_root, shapenet_root, mano_root, split='train', joint_nb=21, mini_factor=None, use_cache=False, root_palm=False, mode='all', segment=False, use_external_points=True, apply_obj_transform=True, expand_times=1, resample_num=2048, object_centric=False, use_mano=False):
+    def __init__(self, ds_root, shapenet_root, mano_root, split='train', joint_nb=21, mini_factor=None, use_cache=False, root_palm=False, mode='all', segment=False, use_external_points=True, apply_obj_transform=True, expand_times=1, resample_num=2048, object_centric=False, use_mano=False, cfg=None):
         super().__init__(ds_root, shapenet_root, mano_root, split, joint_nb, mini_factor, use_cache, root_palm, mode, segment, use_external_points, apply_obj_transform, expand_times, resample_num, object_centric, use_mano)
         annot_root = os.path.join(self.root, 'thumbHOI_new')
         sample_id = np.load(os.path.join(annot_root, 'samples_id.npy'))
@@ -257,6 +258,7 @@ class ObManDataset(ObManThumb):
         self.samples_selected = sample_id
         self.annotations_thumb = annotations_thumb
         self.use_mano = use_mano
+        self.cfg = cfg
         
     def get_verts3d_mano(self, idx):
         
@@ -280,8 +282,8 @@ class ObManDataset(ObManThumb):
         index = self.samples_selected[idx]
         
         sample = {}
-        obj_points, obj_trans, face_ids = self.get_obj_resampled_trans(self.meta_infos, self.obj_transforms, index, obj_centric=self.obj_centric)
-        
+        obj_points, obj_trans, face_ids = self.get_obj_resampled_trans(self.meta_infos, self.obj_transforms, index, obj_centric=self.obj_centric, tta=self.cfg.tta)
+        obj_scale = self.meta_infos[index]['obj_scale']
         # DONE: 获取用于计算point2point_signed的obj_point_normals
         # NOTE: 由于obj_points是由原mesh进行了resample之后得到的，所以这里索引采样点所在的面的face_normals作为点的normals
         obj_mesh = self.get_sample_obj_mesh(index)
@@ -301,12 +303,26 @@ class ObManDataset(ObManThumb):
         ObjMesh = trimesh.Trimesh(vertices=obj_verts, faces=obj_mesh['faces'])
         obj_point_normals = ObjMesh.face_normals[face_ids]
         
-        contact_point = annot['center_point']
+        if self.cfg.rand:
+            np.random.seed(index + 1)
+            pick_face = np.random.randint(0, ObjMesh.faces.shape[0] - 1)
+            mask_center = ObjMesh.triangles_center[int(pick_face)]
+            # import pdb; pdb.set_trace()
+        else:
+            mask_center = annot['center_point']
         # mask_center = np.mean(contact_points, axis=0)
         
+        obj_points = torch.from_numpy(obj_points).to(torch.float32)
+        # import pdb; pdb.set_trace()
+        
+        if self.cfg.tta:
+            obj_scale_tensor = torch.tensor(obj_scale).type_as(obj_points).repeat(self.resample_num, 1) # [N', 1]
+            obj_points = torch.cat((obj_points, obj_scale_tensor), dim=-1)# [N', 4]
+        sample['input_pc'] = obj_points
+        
         sample['sample_id'] = torch.Tensor([index])
-        sample['input_pc'] = torch.from_numpy(obj_points).to(torch.float32)
-        sample['contact_center'] = torch.from_numpy(contact_point).to(torch.float32)
+        # sample['input_pc'] = torch.from_numpy(obj_points).to(torch.float32)
+        sample['contact_center'] = torch.from_numpy(mask_center).to(torch.float32)
         sample['obj_point_normals'] = torch.from_numpy(obj_point_normals).to(torch.float32)
         # sample['region_mask'] = torch.from_numpy(region_mask)
         sample['obj_trans'] = torch.from_numpy(obj_trans).to(torch.float32)
@@ -316,6 +332,8 @@ class ObManDataset(ObManThumb):
             sample['hand_params'] = hand_params_torch.to(torch.float32)
         
         return sample
+    
+
     
 class ObManDataset_test(ObManDataset):
     def __init__(self, ds_root, shapenet_root, mano_root, split='train', joint_nb=21, mini_factor=None, use_cache=False, root_palm=False, mode='all', segment=False, use_external_points=True, apply_obj_transform=True, expand_times=1, resample_num=2048, object_centric=False, use_mano=False, cfg=None):
@@ -439,13 +457,15 @@ class ObManDataset_obj_comp(ObManThumb):
         return sample
     
 class GrabNetDataset(GrabNetThumb):
-    def __init__(self, dataset_root, ds_name='train', batch_size=32, sample_same=False, mano_path=None, frame_names_file='frame_names.npz', grabnet_thumb=False, obj_meshes_folder='contact_meshes', output_root=None, dtype=torch.float32, only_params=False, load_on_ram=False, resample_num=8192):
+    def __init__(self, dataset_root, ds_name='train', batch_size=32, sample_same=False, mano_path=None, frame_names_file='frame_names.npz', grabnet_thumb=False, obj_meshes_folder='contact_meshes', output_root=None, dtype=torch.float32, only_params=False, load_on_ram=False, resample_num=8192, cfg=None):
         super().__init__(dataset_root, ds_name, mano_path, frame_names_file, grabnet_thumb, obj_meshes_folder, output_root, dtype, only_params, load_on_ram, resample_num)
         self.obj_rotmat = self.ds['root_orient_obj_rotmat']
         self.obj_trans = self.ds['trans_obj']
         
         self.sample_same = sample_same
         self.batch_size = batch_size
+        self.cfg = cfg
+        self.resample_num = resample_num
         
         # test
         # self.ds = {k: v[:32] for k,v in self.ds.items()}
@@ -508,9 +528,13 @@ class GrabNetDataset(GrabNetThumb):
         
         # global_orient, pose, transl = sample['global_orient_rhand_rotmat_f'], sample['fpose_rhand_rotmat_f'], sample['trans_rhand_f']
         # import pdb; pdb.set_trace()
+        obj_resp_points_trans = torch.from_numpy(obj_resp_points_trans).to(self.dtype)
+        if self.cfg.tta:
+            obj_scale_tensor = torch.tensor(1.0).type_as(obj_resp_points_trans).repeat(self.resample_num, 1) # [N', 1]
+            obj_resp_points_trans = torch.cat((obj_resp_points_trans, obj_scale_tensor), dim=-1)# [N', 4]
         
         sample['sample_id'] = torch.Tensor([idx]).to(torch.int32)
-        sample['input_pc'] = torch.from_numpy(obj_resp_points_trans).to(self.dtype)
+        sample['input_pc'] = obj_resp_points_trans
         # import pdb; pdb.set_trace()
         sample['contact_center'] = data_out['contact_center'].to(self.dtype)
         sample['obj_point_normals'] = torch.from_numpy(obj_point_normal_trans).to(self.dtype)
@@ -524,6 +548,49 @@ class GrabNetDataset(GrabNetThumb):
         # import pdb; pdb.set_trace()
         
         return sample
+    
+class GrabNet_test(GrabNetDataset):
+    def __init__(self, dataset_root, ds_name='train', batch_size=32, sample_same=False, mano_path=None, frame_names_file='frame_names.npz', grabnet_thumb=False, obj_meshes_folder='contact_meshes', output_root=None, dtype=torch.float32, only_params=False, load_on_ram=False, resample_num=8192, cfg=None):
+        super().__init__(dataset_root, ds_name, batch_size, sample_same, mano_path, frame_names_file, grabnet_thumb, obj_meshes_folder, output_root, dtype, only_params, load_on_ram, resample_num)
+        
+        test_pred_path = os.path.join(cfg.output_dir, f'{cfg.chkpt}_{cfg.run_mode}set_pred.pkl')
+        
+        with open(test_pred_path, 'rb') as f:
+            data = pickle.load(f)
+        self.pred_hand_params = data['recon_params']
+        
+    def __getitem__(self, idx):
+        if self.sample_same:
+            idx = idx % self.batch_size
+        sample = {}
+        data_out = {k: self.ds[k][idx] for k in self.ds.keys()}
+        if not self.only_params:
+            data = self.get_frames_data(idx, self.frame_names)
+            # import pdb; pdb.set_trace()
+            data_out.update(data)
+        # import pdb; pdb.set_trace() 
+        # obj_resp_points_trans, obj_point_normal_trans = self.get_obj_trans(idx)
+        
+        # NOTE: 手的顶点对应的键名从verts_rhand变为hand_verts, 并删除掉原来的键名verts_rhand
+        # del sample['verts_rhand']
+        # self.obj_verts_trans.append(obj_verts_trans)
+        # self.obj_rotmat.append(sample['root_orient_obj_rotmat'][0])
+        # self.obj_trans.append(sample['trans_obj'])
+        # import pdb; pdb.set_trace()
+        
+        hand_params_pred = self.pred_hand_params[idx]
+        
+        index = self.samples_selected[idx]
+        
+        sample = {}
+            
+        sample['hand_verts'] = data_out['verts_rhand'].to(self.dtype)
+        sample['hand_params_pred'] = torch.from_numpy(hand_params_pred)
+        # sample['obj_trans'] = torch.from_numpy(obj_trans)
+        sample['sample_id'] = torch.Tensor([index])
+        
+        return sample
+    
     
     
         

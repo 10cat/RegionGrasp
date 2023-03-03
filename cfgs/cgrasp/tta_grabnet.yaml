@@ -1,0 +1,9 @@
+dataset: {
+  name: grabnet,
+
+  train: {_base_: ./cfgs/dataset_cfgs/grabnet_mae.yaml,
+          others: {subset: 'train'}},
+  val: {_base_: ./cfgs/dataset_cfgs/grabnet_mae.yaml,
+        others: {subset: 'val'}},
+  test: {_base_: ./cfgs/dataset_cfgs/grabnet_mae.yaml,
+        others: {subset: 'test'}}}
