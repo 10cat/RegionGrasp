@@ -209,12 +209,13 @@ class ObjRegionConditionEncoder(PointNetEncoder):
         # NOTE: obj masked pointfeat -> mask方式是region_mask(B, 1, N)直接与obj pointfeat点乘(B, 64, N)
         # FIXME: 由于选取出来的点一般相对于N来说较少，二值化的region_mask(B, 1, N)直接与obj pointfeat点乘(B, 64, N)的特征向量(B, 64, N)会特别稀疏
         # import pdb; pdb.set_trace()
-        pointfeat_masked = region_masked_pointwise(pointfeat, region_mask.unsqueeze(1).to(pointfeat.device)) 
+        # pointfeat_masked = region_masked_pointwise(pointfeat, region_mask.unsqueeze(1).to(pointfeat.device)) 
         
-        x1 = self.pointfeat_forward(pointfeat)
-        x2 = self.pointfeat_masked_forward(pointfeat_masked)
+        # x1 = self.pointfeat_forward(pointfeat)
+        # x2 = self.pointfeat_masked_forward(pointfeat_masked)
+        x = self.pointfeat_forward(pointfeat)
 
-        x = self.bnfuse(self.convfuse(torch.cat((x1, x2), dim=-1).unsqueeze(2))) # use global fuse feature
+        # x = self.bnfuse(self.convfuse(torch.cat((x1, x2), dim=-1).unsqueeze(2))) # use global fuse feature
         x = x.view(B, -1)
         
         return x, trans, trans_feat, region_mask

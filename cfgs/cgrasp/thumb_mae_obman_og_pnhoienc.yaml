@@ -74,6 +74,7 @@ model: {
     cnet: {
       # chkpt_path: 'pointmae_og_balance/models/checkpoint_70.pth',
       chkpt_path: 'pointmae_og_bal_d6/models/checkpoint_20.pth',
+      # chkpt_path: ,
       kwargs: {
         group_size: 32,
         num_group: 128,
@@ -100,7 +101,7 @@ model: {
           embed_dim: 384,
           depth: 1,
           num_heads: 6,
-          drop_path_rate: 0.,
+          drop_path_rate: 0.1,
           knn_k: 8,
           knn_layer_num: 1
         }

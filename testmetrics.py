@@ -31,7 +31,7 @@ from models.cGrasp_vae import cGraspvae
 from traineval_utils.loss import ChamferDistanceL2Loss, PointCloudCompletionLoss, cGraspvaeLoss
 from utils.optim import *
 from utils.datasets import get_dataset
-from utils.epoch_utils import EpochVAE_mae, ValEpochVAE_mae,  MetersMonitor, model_update, PretrainEpoch
+from utils.epoch_utils import EpochVAE_mae, EvalEpochVAE_mae,  MetersMonitor, model_update, PretrainEpoch
     
 def testmetrics(cfg):
     mode = cfg.run_mode
