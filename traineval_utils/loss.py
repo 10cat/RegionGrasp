@@ -159,6 +159,7 @@ class cGraspvaeLoss(nn.Module):
                 # import pdb; pdb.set_trace() #check: dims
                 dists = torch.gather(h2o_signed_pred, dim=-1, index=thumb_pulp_indices.to(torch.long))
                 thumb_prox_ids = torch.gather(h2o_vid_pred, dim=-1, index=thumb_pulp_indices.to(torch.long)).unsqueeze(-1).repeat(1, 1, 3)
+                
                 thumb_prox_points = torch.gather(obj_vs, dim=1, index=thumb_prox_ids.to(torch.long))
                 region_points = obj_vs * (region.unsqueeze(-1)) + faraway_origin.unsqueeze(-1)
                 _, t2r_signed, _, _ = self.chd(region_points, thumb_prox_points)
@@ -189,14 +190,14 @@ class cGraspvaeLoss(nn.Module):
         #     dict_loss.update({'loss_penetr': loss_penetr})
             
 
-        #### KL Loss ####
-        # if sample_stats is not None: 
-        #     p_mean, log_vars, Zin = sample_stats
-        #     loss_kl = self.KLLoss(rhand_vs, p_mean, log_vars)
-        # else:
-        #     # validation / test中loss_kl = 0
-        #     loss_kl = torch.tensor(0.0, dtype=float).to(self.device)
-        # dict_loss.update({'loss_kl': loss_kl})
+        ### KL Loss ####
+        if sample_stats is not None: 
+            p_mean, log_vars, Zin = sample_stats
+            loss_kl = self.KLLoss(rhand_vs, p_mean, log_vars)
+        else:
+            # validation / test中loss_kl = 0
+            loss_kl = torch.tensor(0.0, dtype=float).to(self.device)
+        dict_loss.update({'loss_kl': loss_kl})
 
         #### verts Loss ####
         if loss_cfg.loss_mesh_rec:

@@ -580,14 +580,14 @@ class GrabNet_test(GrabNetDataset):
         
         hand_params_pred = self.pred_hand_params[idx]
         
-        index = self.samples_selected[idx]
+        # index = self.samples_selected[idx]
         
         sample = {}
             
         sample['hand_verts'] = data_out['verts_rhand'].to(self.dtype)
         sample['hand_params_pred'] = torch.from_numpy(hand_params_pred)
         # sample['obj_trans'] = torch.from_numpy(obj_trans)
-        sample['sample_id'] = torch.Tensor([index])
+        sample['sample_id'] = torch.Tensor([idx])
         
         return sample
     

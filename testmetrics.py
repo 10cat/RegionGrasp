@@ -31,15 +31,9 @@ from utils.epoch_utils import (EpochVAE_mae, EvalEpochVAE_mae, MetersMonitor,
                                PretrainEpoch, model_update)
 from utils.meters import AverageMeter, AverageMeters
 from utils.optim import *
-<<<<<<< HEAD
-from utils.datasets import get_dataset
-from utils.epoch_utils import EpochVAE_mae, EvalEpochVAE_mae,  MetersMonitor, model_update, PretrainEpoch
-    
-=======
 from utils.utils import makepath, set_random_seed
 
 
->>>>>>> a2503e6085b8de138dba88fae3fedc5e8dce1f79
 def testmetrics(cfg):
     mode = cfg.run_mode
     ds_root = cfg.obman_root
@@ -60,6 +54,8 @@ def testmetrics(cfg):
                             flat_hand_mean=True)
     
     rh_faces = rh_model.faces.astype(np.int32)
+    cam_extr = np.array([[1., 0., 0., 0.], [0., -1., 0., 0.],
+                                  [0., 0., -1., 0.]]).astype(np.float32)
     
     Metrics = MetersMonitor()
     pbar = tqdm(range(dataset.__len__()), desc='Testing metrics')
@@ -94,6 +90,8 @@ def testmetrics(cfg):
         Metrics_iters = AverageMeters()
         for i in range(cfg.eval_iter):
             hand_verts_pred = hand_verts_pred_iters[i]
+            if cfg.tta:
+                hand_verts_pred = cam_extr[:3, :3].dot(hand_verts_pred.transpose()).transpose()
             sample_info = {'hand_verts': hand_verts_pred,
                            'hand_faces': rh_faces,
                            'obj_verts': obj_verts,
@@ -138,7 +136,7 @@ def testmetrics(cfg):
                 makepath(save_obj_folder)
                 
                 sim_dist = simulation.main(sample_idx=sample_info['index'], 
-                                        sample=sample_info, 
+                                        sample=sample_info_gt, 
                                         save_gif_folder=save_gif_folder, 
                                         save_obj_folder=save_obj_folder)
                 
@@ -230,6 +228,7 @@ if __name__ == "__main__":
     parser.add_argument('--CA', action='store_false')
     parser.add_argument('--IV', action='store_false')
     parser.add_argument('--sim', action='store_false')
+    parser.add_argument('--tta', action='store_true')
 
     args = parser.parse_args()
 
