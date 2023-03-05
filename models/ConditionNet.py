@@ -276,13 +276,18 @@ class ConditionMAE(nn.Module):
             nn.BatchNorm1d(self.condition_dim)
         )
         
-    def mask_region_patch(self, center, mask_center):
-        return mask_region_patch(center, mask_center, self.region_size)
+    def mask_region_patch(self, center, mask_center, mode):
+        if mode == 'rand':
+            region_size = np.random.choice(np.arange(start=8, stop=16))
+            region_size = int(region_size)
+        else:
+            region_size = self.region_size
+        return mask_region_patch(center, mask_center, self.region_size), region_size
     
-    def get_region_mask(self, mask, p_idx, obj_points):
-        return get_region_mask(mask, p_idx, obj_points, self.region_size)
+    def get_region_mask(self, mask, p_idx, obj_points, region_size):
+        return get_region_mask(mask, p_idx, obj_points, region_size)
         
-    def forward(self, pts, mask_center=None, use_pos=False):
+    def forward(self, pts, mask_center=None, use_pos=False, rand=True):
         B, _, _ = pts.shape
         neighborhood, center, p_idx = self.group_divider(pts, return_idx=True)
         # import pdb; pdb.set_trace()
@@ -299,7 +304,8 @@ class ConditionMAE(nn.Module):
             # CHECK: 1)feat维度; 2)mask维度 3)mask之后的维度
             # mask - B, G
             # feat - B, G, 1024
-            mask = self.mask_region_patch(center, mask_center)
+            mask, region_size = self.mask_region_patch(center, mask_center, rand)
+            full_mask = self.get_region_mask(mask, p_idx, pts, region_size) # the final region_mask with 2048-D, (B, 2048)
             
             # feat = feat.transpose(1, 2)
             # masked_feat = feat[mask].reshape(B, -1, self.condition_dim)
@@ -321,8 +327,6 @@ class ConditionMAE(nn.Module):
             condition_feat = self.fuse(condition_feat.unsqueeze(-1)) # B, 1024
             
             condition_feat = condition_feat.reshape(B, -1)
-            
-            full_mask = self.get_region_mask(mask, p_idx, pts) # B, 2048
             
             return condition_feat, full_mask, embed_feat, center
         

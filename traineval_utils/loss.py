@@ -190,13 +190,13 @@ class cGraspvaeLoss(nn.Module):
             
 
         #### KL Loss ####
-        # if sample_stats is not None: 
-        #     p_mean, log_vars, Zin = sample_stats
-        #     loss_kl = self.KLLoss(rhand_vs, p_mean, log_vars)
-        # else:
-        #     # validation / test中loss_kl = 0
-        #     loss_kl = torch.tensor(0.0, dtype=float).to(self.device)
-        # dict_loss.update({'loss_kl': loss_kl})
+        if sample_stats is not None: 
+            p_mean, log_vars, Zin = sample_stats
+            loss_kl = self.KLLoss(rhand_vs, p_mean, log_vars)
+        else:
+            # validation / test中loss_kl = 0
+            loss_kl = torch.tensor(0.0, dtype=float).to(self.device)
+        dict_loss.update({'loss_kl': loss_kl})
 
         #### verts Loss ####
         if loss_cfg.loss_mesh_rec:
@@ -392,8 +392,8 @@ class MPMLoss(nn.Module):
         super().__init__()
         self.pc_loss_cham = ChamferDistanceL2Loss()
         
-    def forward(self, pred_pc, gt_pc, pred_centers, gt_centers, dict_loss):
-        dict_loss['recon_centers_loss'] = self.pc_loss_cham(pred_centers, gt_centers)
+    def forward(self, pred_pc, gt_pc, dict_loss):
+        # dict_loss['recon_centers_loss'] = self.pc_loss_cham(pred_centers, gt_centers)
         dict_loss['recon_loss'] = self.pc_loss_cham(pred_pc, gt_pc)
         
         return dict_loss

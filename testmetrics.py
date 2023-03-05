@@ -54,6 +54,8 @@ def testmetrics(cfg):
                             flat_hand_mean=True)
     
     rh_faces = rh_model.faces.astype(np.int32)
+    cam_extr = np.array([[1., 0., 0., 0.], [0., -1., 0., 0.],
+                                  [0., 0., -1., 0.]]).astype(np.float32)
     
     Metrics = MetersMonitor()
     pbar = tqdm(range(dataset.__len__()), desc='Testing metrics')
@@ -88,6 +90,8 @@ def testmetrics(cfg):
         Metrics_iters = AverageMeters()
         for i in range(cfg.eval_iter):
             hand_verts_pred = hand_verts_pred_iters[i]
+            if cfg.tta:
+                hand_verts_pred = cam_extr[:3, :3].dot(hand_verts_pred.transpose()).transpose()
             sample_info = {'hand_verts': hand_verts_pred,
                            'hand_faces': rh_faces,
                            'obj_verts': obj_verts,
@@ -224,6 +228,7 @@ if __name__ == "__main__":
     parser.add_argument('--CA', action='store_false')
     parser.add_argument('--IV', action='store_false')
     parser.add_argument('--sim', action='store_false')
+    parser.add_argument('--tta', action='store_true')
 
     args = parser.parse_args()
 

@@ -36,15 +36,15 @@ from utils.utils import makepath, set_random_seed
 
 def testmetrics(cfg):
     mode = cfg.run_mode
-    ds_root = cfg.obman_root
-    shapenet_root = cfg.shapenet_root
-    configs = cfg.dataset[mode]._base_.kwargs
-    dataset = GrabNet_test(ds_root = ds_root,
-                                shapenet_root = shapenet_root,
-                                mano_root = cfg.mano_root,
-                                split = mode,
-                                cfg = cfg,
-                                **configs)
+    ds_root = cfg.grabnet_root
+    # configs = cfg.dataset[mode]._base_.kwargs
+    dataset = GrabNet_test(dataset_root=ds_root, 
+                                    ds_name=mode,
+                                    mano_path=cfg.mano_rh_path,
+                                    frame_names_file = 'frame_names_thumb.npz',
+                                    grabnet_thumb = True,
+                                    resample_num = cfg.grabnet_rnum,
+                                    cfg = cfg)
     with torch.no_grad():
         rh_model = mano.load(model_path=cfg.mano_rh_path,
                             model_type='mano',
@@ -54,6 +54,9 @@ def testmetrics(cfg):
                             flat_hand_mean=True)
     
     rh_faces = rh_model.faces.astype(np.int32)
+    
+    cam_extr = np.array([[1., 0., 0., 0.], [0., -1., 0., 0.],
+                                  [0., 0., -1., 0.]]).astype(np.float32)
     
     Metrics = MetersMonitor()
     pbar = tqdm(range(dataset.__len__()), desc='Testing metrics')
@@ -73,7 +76,7 @@ def testmetrics(cfg):
         obj_verts, _ = dataset.get_obj_verts_faces(idx)
         # obj_verts -= obj_trans
         
-        obj_faces = obj_mesh['faces']
+        obj_faces = obj_mesh.faces
         
         hand_verts = sample['hand_verts'].numpy()
         sample_info_gt = {'hand_verts': hand_verts,
@@ -88,6 +91,8 @@ def testmetrics(cfg):
         Metrics_iters = AverageMeters()
         for i in range(cfg.eval_iter):
             hand_verts_pred = hand_verts_pred_iters[i]
+            if cfg.tta:
+                hand_verts_pred = cam_extr[:3, :3].dot(hand_verts_pred.transpose()).transpose()
             sample_info = {'hand_verts': hand_verts_pred,
                            'hand_faces': rh_faces,
                            'obj_verts': obj_verts,
@@ -131,12 +136,18 @@ def testmetrics(cfg):
                 save_obj_folder = os.path.join(cfg.output_dir, 'gt_sim', 'obj')
                 makepath(save_obj_folder)
                 
-                sim_dist = simulation.main(sample_idx=sample_info['index'], 
-                                        sample=sample_info, 
+                # sim_dist_pred = simulation.main(sample_idx=sample_info['index'], 
+                #                         sample=sample_info, 
+                #                         save_gif_folder=save_gif_folder, 
+                #                         save_obj_folder=save_obj_folder)
+                
+                sim_dist_gt = simulation.main(sample_idx=sample_info['index'], 
+                                        sample=sample_info_gt, 
                                         save_gif_folder=save_gif_folder, 
                                         save_obj_folder=save_obj_folder)
                 
-                dict_metrics_iters['sim_dist'] = sim_dist
+                # dict_metrics_iters['sim_dist_pred'] = sim_dist_pred
+                dict_metrics_iters['sim_dist_gt'] = sim_dist_gt
             
             records.append(dict_metrics_iters)
             for key, val in dict_metrics_iters.items():
@@ -224,6 +235,8 @@ if __name__ == "__main__":
     parser.add_argument('--CA', action='store_false')
     parser.add_argument('--IV', action='store_false')
     parser.add_argument('--sim', action='store_false')
+    parser.add_argument('--tta', action='store_true')
+    parser.add_argument('--grabnet_rnum', type=int, default=2048)
 
     args = parser.parse_args()
 

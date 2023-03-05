@@ -147,15 +147,22 @@ class CheckpointsManage(object):
         return
     
 class VisualPC(object):
-    def __init__(self, root):
+    def __init__(self, root, cfg, suffix):
         self.root = root
         self.colors = config.colors
+        self.cfg = cfg
+        self.suffix = suffix # very important for not overwrite previous results
         return
     
     def create_path(self, epoch, sample_id, name):
-        folder = os.path.join(self.root, f'epoch_{epoch}')
+        """
+        create path name for outputs
+        
+        -
+        """
+        folder = os.path.join(self.root, f'epoch_{epoch}'+self.suffix)
         makepath(folder)
-        path = os.path.join(folder, f'{sample_id}_{name}_pc.ply')
+        path = os.path.join(folder, f'{sample_id}_{name}.ply')
         return path
     
     
@@ -175,20 +182,13 @@ class VisualPC(object):
             colors = colors_like(self.colors[pc_colors])
         # import pdb; pdb.set_trace()
         PC_visual = trimesh.PointCloud(vertices=pcs, colors=colors)
-        PC_visual.export(self.create_path(epoch, sample_id, name))
+        PC_visual.export(self.create_path(epoch, sample_id, name+'_pc'))
                 
         return 
     
-class VisualMesh(object):
-    def __init__(self, root):
-        self.root = root
-        self.colors = config.colors
-        return
-    def create_path(self, epoch, sample_id, name):
-        folder = os.path.join(self.root, f'epoch_{epoch}')
-        makepath(folder)
-        path = os.path.join(folder, f'{sample_id}_{name}.ply')
-        return path
+class VisualMesh(VisualPC):
+    def __init__(self, root, cfg, suffix):
+        super().__init__(root, cfg, suffix)
     
     def visual(self, vertices, faces, mesh_color, sample_id, epoch, name):
         Mesh_visual = trimesh.Trimesh(vertices=vertices, faces=faces, face_colors=colors_like(self.colors[mesh_color]))
@@ -213,7 +213,7 @@ class PretrainEpoch():
         
         self.Losses = MetersMonitor()
         self.Checkpt = CheckpointsManage(root=self.model_dir, interval=cfg.check_interval)
-        self.Visual = VisualPC(root=self.visual_dir)
+        self.Visual = VisualPC(root=self.visual_dir, cfg=cfg, suffix='')
         self.batch_interval = cfg.visual_interval[mode].batch
         self.sample_interval = cfg.visual_interval[mode].sample
         
@@ -300,19 +300,24 @@ class PretrainMAEEpoch(PretrainEpoch):
         dict_loss = {}
         input = input.to('cuda')
         if vis==False:
-            rebuild_centers, rebuild_points, gt_centers, gt_points, rebuild_points_centralized, gt_points_centralized = pointmae(input)
+            # rebuild_centers, rebuild_points, gt_centers, gt_points, rebuild_points_centralized, gt_points_centralized = pointmae(input)
+            rebuild_points, gt_points = pointmae(input, vis=True)
             full_vis, full_pred, full_center = None, None, None
         else:
-            full_vis, full_pred, full_center, rebuild_centers, rebuild_points, gt_centers, gt_points, rebuild_points_centralized, gt_points_centralized = pointmae(input, vis=True)
-        dict_loss = self.loss.forward(rebuild_points_centralized, gt_points_centralized, rebuild_centers, gt_centers, dict_loss) # NOTE: 改成centralized的patch与中心点分开计算loss
-        return full_vis, full_pred, full_center, rebuild_centers, rebuild_points, gt_centers, gt_points, dict_loss
+            # full_vis, full_pred, full_center,rebuild_points, gt_centers, gt_points, rebuild_points_centralized, gt_points_centralized = pointmae(input, vis=True)
+            full_vis, full_pred, full_center, rebuild_points, gt_points = pointmae(input, vis=True)
+        # dict_loss = self.loss.forward(rebuild_points_centralized, gt_points_centralized, rebuild_centers, gt_centers, dict_loss) # NOTE: 改成centralized的patch与中心点分开计算loss
+        dict_loss = self.loss.forward(rebuild_points, gt_points, dict_loss)
+        # return full_vis, full_pred, full_center, rebuild_centers, rebuild_points, gt_centers, gt_points, dict_loss
+        return full_vis, full_pred, full_center, rebuild_points, gt_points, dict_loss
     
-    def visual(self, batch_idx, full_vis, full_pred, full, rebuild_centers, gt_centers, vis_centers,
+    def visual(self, batch_idx, full_vis, full_pred, full,
                sample_ids, epoch, batch_interval=None, sample_interval=None):
         if batch_idx % batch_interval == 0:
             if sample_interval is None:
                 i = 0
-                pcs = [full[i], full_pred[i], full_vis[i], gt_centers[i], rebuild_centers[i], vis_centers[i]]
+                # pcs = [full[i], full_pred[i], full_vis[i], gt_centers[i], rebuild_centers[i], vis_centers[i]]
+                pcs = [full[i], full_pred[i], full_vis[i]]
                 pcs = [pc.detach().to('cpu').numpy() for pc in pcs]
                 gt_colors = 'green'
                 pred_colors = 'yellow'
@@ -320,9 +325,9 @@ class PretrainMAEEpoch(PretrainEpoch):
                 self.Visual.visual(pcs=pcs[0], pc_colors=gt_colors, sample_id=int(sample_ids[i]), epoch=epoch, name='orig')
                 self.Visual.visual(pcs=pcs[1], pc_colors=pred_colors, sample_id=int(sample_ids[i]), epoch=epoch, name='pred')
                 self.Visual.visual(pcs=pcs[2], pc_colors=gt_colors, sample_id=int(sample_ids[i]), epoch=epoch, name='vis')
-                self.Visual.visual(pcs=pcs[3], pc_colors=gt_colors, sample_id=int(sample_ids[i]), epoch=epoch, name='orig_cs')
-                self.Visual.visual(pcs=pcs[4], pc_colors=pred_colors, sample_id=int(sample_ids[i]), epoch=epoch, name='pred_cs')
-                self.Visual.visual(pcs=pcs[5], pc_colors=gt_colors, sample_id=int(sample_ids[i]), epoch=epoch, name='vis_cs')
+                # self.Visual.visual(pcs=pcs[3], pc_colors=gt_colors, sample_id=int(sample_ids[i]), epoch=epoch, name='orig_cs')
+                # self.Visual.visual(pcs=pcs[4], pc_colors=pred_colors, sample_id=int(sample_ids[i]), epoch=epoch, name='pred_cs')
+                # self.Visual.visual(pcs=pcs[5], pc_colors=gt_colors, sample_id=int(sample_ids[i]), epoch=epoch, name='vis_cs')
             else:
                 raise NotImplementedError()
     
@@ -340,11 +345,11 @@ class PretrainMAEEpoch(PretrainEpoch):
             input = sample['input_points']
             sample_ids = sample['ids']
             if self.mode != 'train':
-                with torch.no_grad(): full_pred, full_vis, vis_centers, rebuild_centers, rebuild_points, gt_centers, gt_points, dict_loss = self.model_forward(model, input, vis=True)
+                with torch.no_grad(): full_vis, full_pred, full_center, rebuild_points, gt_points, dict_loss = self.model_forward(model, input, vis=True)
             else:
                 input = input.to('cuda')
                 input = train_transforms(input)
-                full_pred, full_vis, vis_centers, rebuild_centers, rebuild_points, gt_centers, gt_points, dict_loss = self.model_forward(model, input, vis=True)
+                full_vis, full_pred, full_center, rebuild_points, gt_points, dict_loss = self.model_forward(model, input, vis=True)
 
             
             total_loss = 0.
@@ -363,7 +368,7 @@ class PretrainMAEEpoch(PretrainEpoch):
             
             # TODO: validation的可视化部分
             if epoch % self.cfg.check_interval == 0:
-                self.visual(batch_idx, full_vis, full_pred, input, rebuild_centers, gt_centers, vis_centers, 
+                self.visual(batch_idx, full_vis, full_pred, input,
                             sample_ids, 
                             epoch, 
                             batch_interval=self.batch_interval, 
@@ -524,6 +529,7 @@ class PretrainMAEEpoch(PretrainEpoch):
     
 class EpochVAE_mae():
     def __init__(self, loss, dataset, output_dir, mode='train', cfg=None):
+        self.cfg = cfg
         self.loss = loss
         self.dataset = dataset
         self.mode = mode
@@ -537,14 +543,19 @@ class EpochVAE_mae():
             self.visual_dir = os.path.join(self.output_dir, 'visual', cfg.run_mode)
         makepath(self.visual_dir)
         
+        suffix = ''
+        if self.cfg.grabnet:
+            suffix = '_grabnet' + suffix
+        if self.cfg.rand_id is not None:
+            suffix += f'_rand_{self.cfg.rand_id}'
+        self.suffix = suffix
+        
         # self.Losses = MetersMonitor()
         self.Checkpt = CheckpointsManage(root=self.model_dir, interval=cfg.check_interval)
-        self.VisualPC = VisualPC(root=self.visual_dir)
-        self.VisualMesh = VisualMesh(root=self.visual_dir)
+        self.VisualPC = VisualPC(root=self.visual_dir, cfg=cfg, suffix=suffix)
+        self.VisualMesh = VisualMesh(root=self.visual_dir, cfg=cfg, suffix=suffix)
         self.batch_interval = cfg.batch_intv if cfg.run_mode == 'test' else cfg.visual_interval[mode].batch
         self.sample_interval = cfg.sample_intv if cfg.run_mode == 'test' else cfg.visual_interval[mode].sample
-        
-        self.cfg = cfg
         
     def model_forward(self, model, obj_input, hand_input=None, mask_center=None):
         device = 'cuda' if self.cfg.use_cuda else 'cpu'
@@ -675,6 +686,20 @@ class EvalEpochVAE_mae(EpochVAE_mae):
                 hand_params_list.append(hand_params)
                 # torch.cuda.empty_cache()
         return hand_params_list, mask
+        
+    def save_pred_pkl(self, recon_rhand_params):
+        recon_rhand_params = torch.cat(recon_rhand_params)
+        name = f'{self.cfg.chkpt}_{self.cfg.eval_ds}set' + self.suffix
+        
+        recon_rhand_params = recon_rhand_params.numpy()
+        data = {
+            'recon_params': recon_rhand_params
+        }
+        path = os.path.join(self.output_dir, name + '.pkl')
+        import pickle
+        with open(path, 'wb') as f:
+            pickle.dump(data, f)
+        print(f"predicted rhand params saved!")
         
     def __call__(self, dataloader, epoch, model, optimizer, scheduler, save_pred=False, cmap_model=False):
         self.Losses = MetersMonitor()
@@ -816,15 +841,10 @@ class EvalEpochVAE_mae(EpochVAE_mae):
                 
             if save_pred:
                 recon_params_list = []
-                if isinstance(hand_params_list[0], dict):
-                    keys = hand_params_list[0].keys()
-                    for hand_params in hand_params_list:
-                        recon_params = torch.cat([hand_params['global_orient'], hand_params['hand_pose'], hand_params['transl']], dim=1)
-                        recon_params_list.append(recon_params)
-                else:
-                    for hand_params in hand_params_list:
-                        recon_params = hand_params[:, 10:]
-                        recon_params_list.append(recon_params)
+                keys = hand_params_list[0].keys()
+                for hand_params in hand_params_list:
+                    recon_params = torch.cat([hand_params['global_orient'], hand_params['hand_pose'], hand_params['transl']], dim=1)
+                    recon_params_list.append(recon_params)
                 # import pdb; pdb.set_trace()
                 B = recon_params.shape[0]      
                 
@@ -842,19 +862,7 @@ class EvalEpochVAE_mae(EpochVAE_mae):
                 stop_flag = True
                 
         if save_pred:
-            recon_rhand_params = torch.cat(recon_rhand_params)
-            pth_path = path = os.path.join(self.output_dir, f'{self.cfg.chkpt}_{self.cfg.eval_ds}set_pred.pth')
-            torch.save(recon_rhand_params, pth_path)
-            
-            recon_rhand_params = recon_rhand_params.numpy()
-            data = {
-                'recon_params': recon_rhand_params
-            }
-            path = os.path.join(self.output_dir, f'{self.cfg.chkpt}_{self.cfg.eval_ds}set_pred.pkl')
-            import pickle
-            with open(path, 'wb') as f:
-                pickle.dump(data, f)
-            print(f"predicted rhand params saved!")
+            self.save_pred_pkl(recon_rhand_params)
                 
         self.log(self.Losses, epoch=epoch)
         return model, stop_flag
@@ -920,7 +928,7 @@ class TestTTAEpoch(EvalEpochVAE_mae):
                     recon_params = torch.autograd.Variable(recon_params, requires_grad=True)
                     optimizer = torch.optim.SGD([recon_params], lr=0.00000625, momentum=0.8)
                     obj_points = obj_points.to('cuda')
-                    for j in tqdm(range(50)):
+                    for j in range(100):
                         optimizer.zero_grad()
                         rh_model = mano.load(model_path=self.cfg.mano_rh_path,
                                             model_type='mano',
@@ -929,7 +937,8 @@ class TestTTAEpoch(EvalEpochVAE_mae):
                                             batch_size=obj_points.shape[0],
                                             flat_hand_mean=True)
                         rh_model = rh_model.to('cuda')
-                        rhand_pred = rh_model(global_orient=recon_params[:, :3], hand_pose=recon_params[:, 3:48], transl=recon_params[:, 48:])
+                        params = {'beta': recon_params[:, :10],'global_orient':recon_params[:, 10:13], 'hand_pose':recon_params[:, 13:58], 'transl': recon_params[:, 58:]}
+                        rhand_pred = rh_model(**params)
                         rh_faces = torch.from_numpy(rh_model.faces.astype(np.int32)).view(1, -1, 3).to('cuda')
                         rhand_vs_pred = rhand_pred.vertices
                         obj_nn_dist_affordance, _ = utils_loss.get_NN(obj_points[:, :, :3], rhand_vs_pred)
@@ -939,26 +948,26 @@ class TestTTAEpoch(EvalEpochVAE_mae):
                         # import pdb; pdb.set_trace()
                         recon_cmap = (recon_cmap / torch.max(recon_cmap, dim=1)[0].reshape(-1, 1)).detach()
                         penetr_loss, consistency_loss, contact_loss = loss.TTT_loss(rhand_vs_pred, rh_faces,
-                                                                    obj_points.contiguous(),
+                                                                    obj_points[:, :, :3].contiguous(),
                                                                     cmap_affordance, recon_cmap)
                         loss_tta = 1 * contact_loss + 1 * consistency_loss + 7 * penetr_loss
                         loss_tta.backward()
                         optimizer.step()
                     recon_params = recon_params.detach()
-                    hand_params = {'global_orient':recon_params[:, :3], 'hand_pose':recon_params[:, 3:48], 'transl': recon_params[:, 48:]}
+                    hand_params = recon_params
                     hand_params_list[iter] = hand_params
                 
-                if self.cfg.tta: 
-                    if obj_points.shape[-1] != 3:
-                        cam_extr = self.cam_extr.repeat(obj_points.shape[0], 1, 1).to('cuda')
-                        # import pdb; pdb.set_trace()
-                        obj_points = obj_points.to('cuda')
-                        obj_points = torch.bmm(obj_points, cam_extr.transpose(1, 2))
                 
-                    recon_params = hand_params
-                    # import pdb; pdb.set_trace()
-                    hand_params = {'beta': recon_params[:, :10],'global_orient':recon_params[:, 10:13], 'hand_pose':recon_params[:, 13:58], 'transl': recon_params[:, 58:]}
-                    
+                # TODO: grasptta requires extra camera fitting coordinate
+                cam_extr = self.cam_extr.repeat(obj_points.shape[0], 1, 1).to('cuda')
+                # import pdb; pdb.set_trace()
+                obj_points = obj_points.to('cuda')
+                obj_points = torch.bmm(obj_points, cam_extr.transpose(1, 2))
+            
+                recon_params = hand_params
+                # import pdb; pdb.set_trace()
+                hand_params = {'beta': recon_params[:, :10],'global_orient':recon_params[:, 10:13], 'hand_pose':recon_params[:, 13:58], 'transl': recon_params[:, 58:]}
+                
                     # import pdb; pdb.set_trace()
                 if self.cfg.use_mano:
                     _, dict_loss, _, rhand_vs_pred, rhand_faces = self.loss_compute(hand_params, None, obj_points, gt_rhand_vs, region_mask, trans=sample['obj_trans'], cam_extr=sample['cam_extr'], gt_hand_params=sample['hand_params'], obj_normals=sample['obj_point_normals'])
@@ -989,15 +998,6 @@ class TestTTAEpoch(EvalEpochVAE_mae):
             
             total_loss = sum(dict_loss.values())
             
-            # valid_keys = self.cfg.loss.train.keys()
-            # valid_loss_dict = {}
-            # for key in valid_keys:
-            #     if self.cfg.loss.train[key]:
-            #         if bug_mode is not None: key_name = bug_mode + '_' + key
-            #         valid_loss_dict.update({key: dict_loss[key_name]})
-            # total_loss = sum(valid_loss_dict.values())   
-            
-            # 还是记录loss_dist_h, loss_dist_o但是不计入total_loss
             msg_loss, losses = self.Losses.report(dict_loss, total_loss, mode=self.mode)
             msg = msg_loss
             pbar.set_postfix_str(msg)
@@ -1023,15 +1023,9 @@ class TestTTAEpoch(EvalEpochVAE_mae):
                 
             if save_pred:
                 recon_params_list = []
-                if isinstance(hand_params_list, dict):
-                    keys = hand_params_list[0].keys()
-                    for hand_params in hand_params_list:
-                        recon_params = torch.cat([hand_params['global_orient'], hand_params['hand_pose'], hand_params['transl']], dim=1)
-                        recon_params_list.append(recon_params)
-                else:
-                    for hand_params in hand_params_list:
-                        recon_params = hand_params[:, 10:]
-                        recon_params_list.append(recon_params)
+                for hand_params in hand_params_list:
+                    recon_params = hand_params[:, 10:]
+                    recon_params_list.append(recon_params)
                 # import pdb; pdb.set_trace()
                 B = recon_params.shape[0]      
                 
@@ -1049,20 +1043,7 @@ class TestTTAEpoch(EvalEpochVAE_mae):
                 stop_flag = True
                 
         if save_pred:
-            recon_rhand_params = torch.cat(recon_rhand_params)
-            name = f'{self.cfg.chkpt}_{self.cfg.eval_ds}set_grabnet_pred' if self.cfg.grabnet else f'{self.cfg.chkpt}_{self.cfg.eval_ds}set_pred'
-            pth_path = os.path.join(self.output_dir, name + '.pth')
-            torch.save(recon_rhand_params, pth_path)
-            
-            recon_rhand_params = recon_rhand_params.numpy()
-            data = {
-                'recon_params': recon_rhand_params
-            }
-            path = os.path.join(self.output_dir, name + '.pkl')
-            import pickle
-            with open(path, 'wb') as f:
-                pickle.dump(data, f)
-            print(f"predicted rhand params saved!")
+            self.save_pred_pkl(recon_rhand_params)
                 
         self.log(self.Losses, epoch=epoch)
         return model, stop_flag
