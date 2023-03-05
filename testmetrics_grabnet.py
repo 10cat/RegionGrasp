@@ -136,6 +136,7 @@ def testmetrics(cfg):
                 save_obj_folder = os.path.join(cfg.output_dir, 'gt_sim', 'obj')
                 makepath(save_obj_folder)
                 
+<<<<<<< HEAD
                 sim_dist_pred = simulation.main(sample_idx=sample_info['index'], 
                                         sample=sample_info, 
                                         save_gif_folder=save_gif_folder, 
@@ -147,6 +148,19 @@ def testmetrics(cfg):
                                         save_obj_folder=save_obj_folder)
                 
                 dict_metrics_iters['sim_dist_pred'] = sim_dist_pred
+=======
+                # sim_dist_pred = simulation.main(sample_idx=sample_info['index'], 
+                #                         sample=sample_info, 
+                #                         save_gif_folder=save_gif_folder, 
+                #                         save_obj_folder=save_obj_folder)
+                
+                sim_dist_gt = simulation.main(sample_idx=sample_info['index'], 
+                                        sample=sample_info_gt, 
+                                        save_gif_folder=save_gif_folder, 
+                                        save_obj_folder=save_obj_folder)
+                
+                # dict_metrics_iters['sim_dist_pred'] = sim_dist_pred
+>>>>>>> beea1da049ea1fc9b99e0b837b109bffc0b1a133
                 dict_metrics_iters['sim_dist_gt'] = sim_dist_gt
             
             records.append(dict_metrics_iters)

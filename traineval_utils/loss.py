@@ -190,7 +190,11 @@ class cGraspvaeLoss(nn.Module):
         #     dict_loss.update({'loss_penetr': loss_penetr})
             
 
+<<<<<<< HEAD
         ### KL Loss ####
+=======
+        #### KL Loss ####
+>>>>>>> beea1da049ea1fc9b99e0b837b109bffc0b1a133
         if sample_stats is not None: 
             p_mean, log_vars, Zin = sample_stats
             loss_kl = self.KLLoss(rhand_vs, p_mean, log_vars)
@@ -393,8 +397,8 @@ class MPMLoss(nn.Module):
         super().__init__()
         self.pc_loss_cham = ChamferDistanceL2Loss()
         
-    def forward(self, pred_pc, gt_pc, pred_centers, gt_centers, dict_loss):
-        dict_loss['recon_centers_loss'] = self.pc_loss_cham(pred_centers, gt_centers)
+    def forward(self, pred_pc, gt_pc, dict_loss):
+        # dict_loss['recon_centers_loss'] = self.pc_loss_cham(pred_centers, gt_centers)
         dict_loss['recon_loss'] = self.pc_loss_cham(pred_pc, gt_pc)
         
         return dict_loss

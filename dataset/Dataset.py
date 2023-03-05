@@ -240,12 +240,10 @@ class PretrainDataset_balanced(PretrainDataset):
         
         
         
-        
-        
-        
 class ObManDataset(ObManThumb):
     def __init__(self, ds_root, shapenet_root, mano_root, split='train', joint_nb=21, mini_factor=None, use_cache=False, root_palm=False, mode='all', segment=False, use_external_points=True, apply_obj_transform=True, expand_times=1, resample_num=2048, object_centric=False, use_mano=False, cfg=None):
         super().__init__(ds_root, shapenet_root, mano_root, split, joint_nb, mini_factor, use_cache, root_palm, mode, segment, use_external_points, apply_obj_transform, expand_times, resample_num, object_centric, use_mano)
+        self.cfg = cfg
         annot_root = os.path.join(self.root, 'thumbHOI_new')
         sample_id = np.load(os.path.join(annot_root, 'samples_id.npy'))
         annotations_thumb = []
@@ -258,10 +256,11 @@ class ObManDataset(ObManThumb):
         self.samples_selected = sample_id
         self.annotations_thumb = annotations_thumb
         self.use_mano = use_mano
-        self.cfg = cfg
+        
+        self.permutation = np.arange(self.resample_num)
+        
         
     def get_verts3d_mano(self, idx):
-        
         hand_trans = torch.tensor(self.mano_trans[idx])
         hand_rot = torch.tensor(self.mano_rot[idx])
         hand_pose = torch.tensor(self.hand_poses[idx])
@@ -272,6 +271,12 @@ class ObManDataset(ObManThumb):
         hand_params = torch.cat([hand_rot, hand_pose, hand_trans], dim=0)
         
         return hand_verts, hand_params
+    
+    def shuffle_points(self, pc, num):
+        # TODO: shuffle点的顺序
+        np.random.shuffle(self.permutation)
+        pc = pc[self.permutation[:num]]
+        return pc
         
     def __len__(self):
             return len(self.samples_selected)
@@ -304,7 +309,8 @@ class ObManDataset(ObManThumb):
         obj_point_normals = ObjMesh.face_normals[face_ids]
         
         if self.cfg.rand:
-            np.random.seed(index + 1)
+            assert not self.cfg.rand_id, "Please set the rand id"
+            np.random.seed(idx + self.cfg.rand_id)
             pick_face = np.random.randint(0, ObjMesh.faces.shape[0] - 1)
             mask_center = ObjMesh.triangles_center[int(pick_face)]
             # import pdb; pdb.set_trace()
@@ -318,8 +324,11 @@ class ObManDataset(ObManThumb):
         if self.cfg.tta:
             obj_scale_tensor = torch.tensor(obj_scale).type_as(obj_points).repeat(self.resample_num, 1) # [N', 1]
             obj_points = torch.cat((obj_points, obj_scale_tensor), dim=-1)# [N', 4]
-        sample['input_pc'] = obj_points
         
+        # TODO: augment data with permutation of points
+        obj_points = self.shuffle_points(obj_points, self.resample_num)
+        
+        sample['input_pc'] = obj_points
         sample['sample_id'] = torch.Tensor([index])
         # sample['input_pc'] = torch.from_numpy(obj_points).to(torch.float32)
         sample['contact_center'] = torch.from_numpy(mask_center).to(torch.float32)
@@ -344,6 +353,7 @@ class ObManDataset_test(ObManDataset):
         with open(test_pred_path, 'rb') as f:
             data = pickle.load(f)
         self.pred_hand_params = data['recon_params']
+        self.cfg = cfg
             
     def __getitem__(self, idx):
         
@@ -532,11 +542,23 @@ class GrabNetDataset(GrabNetThumb):
         if self.cfg.tta:
             obj_scale_tensor = torch.tensor(1.0).type_as(obj_resp_points_trans).repeat(self.resample_num, 1) # [N', 1]
             obj_resp_points_trans = torch.cat((obj_resp_points_trans, obj_scale_tensor), dim=-1)# [N', 4]
+            
+        if self.cfg.rand:
+            assert not self.cfg.rand_id, "Please set the rand id"
+            np.random.seed(idx + self.cfg.rand_id)
+            obj_name = self.frame_objs[idx]
+            obj_mesh = self.object_meshes[obj_name]
+            pick_face = np.random.randint(0, obj_mesh.faces.shape[0] - 1)
+            mask_center = obj_mesh.triangles_center[int(pick_face)]
+            # import pdb; pdb.set_trace()
+            mask_center = torch.from_numpy(mask_center).to(self.dtype)
+        else:
+            mask_center = data_out['contact_center'].to(self.dtype)
         
         sample['sample_id'] = torch.Tensor([idx]).to(torch.int32)
         sample['input_pc'] = obj_resp_points_trans
         # import pdb; pdb.set_trace()
-        sample['contact_center'] = data_out['contact_center'].to(self.dtype)
+        sample['contact_center'] = mask_center
         sample['obj_point_normals'] = torch.from_numpy(obj_point_normal_trans).to(self.dtype)
         sample['hand_verts'] = data_out['verts_rhand'].to(self.dtype)
         
@@ -553,7 +575,7 @@ class GrabNet_test(GrabNetDataset):
     def __init__(self, dataset_root, ds_name='train', batch_size=32, sample_same=False, mano_path=None, frame_names_file='frame_names.npz', grabnet_thumb=False, obj_meshes_folder='contact_meshes', output_root=None, dtype=torch.float32, only_params=False, load_on_ram=False, resample_num=8192, cfg=None):
         super().__init__(dataset_root, ds_name, batch_size, sample_same, mano_path, frame_names_file, grabnet_thumb, obj_meshes_folder, output_root, dtype, only_params, load_on_ram, resample_num)
         
-        test_pred_path = os.path.join(cfg.output_dir, f'{cfg.chkpt}_{cfg.run_mode}set_pred.pkl')
+        test_pred_path = os.path.join(cfg.output_dir, f'{cfg.chkpt}_{cfg.run_mode}set_grabnet_pred.pkl')
         
         with open(test_pred_path, 'rb') as f:
             data = pickle.load(f)

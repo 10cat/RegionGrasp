@@ -32,7 +32,7 @@ scheduler: {
 # model settings
 model: {
   group_size: 32,
-  num_group: 128,
+  num_group: 64,
   transformer: {
     mask_ratio: 0.6,
     # mask_ratio: 0.4,
@@ -62,10 +62,10 @@ visual_interval: {
   }
 }
 
-# coef: {
-#   recon_centers_loss: 1.,
-#   recon_loss: 1.
-# }
+coef: {
+  # recon_centers_loss: 0.,
+  recon_loss: 1.
+}
 
 
 # eval_inference_iteration

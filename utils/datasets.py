@@ -11,7 +11,7 @@ from dataset.obman_preprocess import ObManObj, ObManObj_MAE
 
 
 def get_dataset(cfg, mode='train'):
-    ds_name = cfg.dataset.name if not cfg.grabnet else 'grabnet'
+    ds_name = cfg.dataset.name if not cfg.get('grabnet') or not cfg.grabnet else 'grabnet'
     
     if ds_name == 'obman_pretrain':
         ds_root = cfg.obman_root

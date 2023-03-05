@@ -283,9 +283,11 @@ if __name__ == "__main__":
     parser.add_argument('--use_pos', action='store_true')
     parser.add_argument('--refine', action='store_true')
     parser.add_argument('--rand', action='store_true')
+    parser.add_argument('--rand_id', type=int, default=None)
     parser.add_argument('--tta', action='store_true')
     parser.add_argument('--grabnet', action='store_true')
     parser.add_argument('--grabnet_rnum', type=int, default=2048)
+    parser.add_argument('--region_rand', action='store_true')
 
     args = parser.parse_args()
 
