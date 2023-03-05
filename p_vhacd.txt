@@ -29,7 +29,7 @@ Examples:
 
 + OpenCL (OFF)
 + Parameters
-	 input                                       tmp/objs/tmpc9oe3tzo.obj
+	 input                                       tmp/objs/tmpdnb9hkl1.obj
 	 resolution                                  1000000
 	 max. depth                                  20
 	 max. concavity                              0.001
@@ -46,36 +46,19 @@ Examples:
 	 OpenCL acceleration                         1
 	 OpenCL platform ID                          0
 	 OpenCL device ID                            0
-	 output                                      tmp/objs/tmpc9oe3tzo.obj
+	 output                                      tmp/objs/tmpdnb9hkl1.obj
 	 log                                         p_vhacd.txt
 + Load mesh
 + Voxelization
-	 dim = 64	-> 24959 voxels
-	 dim = 216	-> 874923 voxels
-	 dim = 226	-> 1000393 voxels
-	 time 1.50037s
+	 dim = 64	-> 35276 voxels
+	 dim = 193	-> 799148 voxels
+	 time 0.386541s
 + Compute primitive set
-	 # primitives               1000393
-	 # inside surface           895175
-	 # on surface               105218
-	 time 0.0300652s
+	 # primitives               799148
+	 # inside surface           596719
+	 # on surface               202429
+	 time 0.0204292s
 + Approximate Convex Decomposition
 	 Subdivision level 1
-	 -> Part[0] C  = 0.162001, E  = 0.0890193, VS = 105218, VI = 895175
-		 [Regular sampling]
-			 Best  0082 T=0.637054 C=0.593813 B=0.008834 S=0.034407 (0.0, 0.0, 1.0, 0.056)
-
-		 [Refining] Number of clipping planes 9
-
-			 Best  0003 T=0.638945 C=0.595654 B=0.008884 S=0.034407 (0.0, 0.0, 1.0, 0.057)
-
-	 Subdivision level 2
-	 -> Part[0] C  = 0.0360853, E  = 0.0160689, VS = 17037, VI = 11447
-		 [Regular sampling] Number of clipping planes 43
-
-			 Best  0037 T=0.031269 C=0.029466 B=0.000001 S=0.001802 (0.0, 0.0, 1.0, 0.081)
-
-		 [Refining] Number of clipping planes 9
-
-			 Best  0002 T=0.030966 C=0.029161 B=0.000003 S=0.001802 (0.0, 0.0, 1.0, 0.083)
-
+	 -> Part[0] C  = 0.705934, E  = 0.0752336, VS = 202429, VI = 596719
+		 [Regular sampling] Number of clipping planes 141
