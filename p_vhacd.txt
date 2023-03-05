@@ -29,7 +29,7 @@ Examples:
 
 + OpenCL (OFF)
 + Parameters
-	 input                                       tmp/objs/tmpd_oerpde.obj
+	 input                                       tmp/objs/tmpop4hcn8f.obj
 	 resolution                                  1000000
 	 max. depth                                  20
 	 max. concavity                              0.001
@@ -46,7 +46,7 @@ Examples:
 	 OpenCL acceleration                         1
 	 OpenCL platform ID                          0
 	 OpenCL device ID                            0
-	 output                                      tmp/objs/tmpd_oerpde.obj
+	 output                                      tmp/objs/tmpop4hcn8f.obj
 	 log                                         p_vhacd.txt
 + Load mesh
 + Voxelization
