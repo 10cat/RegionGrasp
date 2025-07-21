@@ -1,6 +1,0 @@
-type: mae
-kwargs:  {
-  use_cache: True, 
-  object_centric: False,
-  resample_num: 3000
-}

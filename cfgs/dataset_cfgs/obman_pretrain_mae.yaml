@@ -1,6 +1,0 @@
-kwargs:  {
-  use_cache: True,
-  expand_times: 1,
-  object_centric: True,
-  resample_num: 2048
-}

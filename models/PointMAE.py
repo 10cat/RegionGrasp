@@ -13,31 +13,6 @@ from pytorch3d.ops import knn_points, sample_farthest_points
 from timm.models.layers import DropPath, trunc_normal_
 from traineval_utils import pointnet_util
 
-# --复习用：
-# class Attention(nn.Module):
-#     def __init__(self, dim, num_heads, qk_scale, qkv_bias, attn_drop, proj_drop):
-#         super().__init__()
-#         self.num_heads = num_heads
-#         head_dim = dim // num_heads
-#         self.qk_scale = qk_scale or head_dim ** -0.5
-#         self.qkv = nn.Linear(dim, dim * 3, bias=qkv_bias)
-#         self.attn_drop = nn.Dropout(attn_drop)
-#         self.proj = nn.Linear(dim, dim)
-#         self.proj_drop = nn.Dropout(proj_drop)
-        
-#     def forward(self, x):
-#         B, N, C = x.shape
-        
-#         qkv = self.qkv(x).reshape(B, N, 3, self.num_heads, C // self.num_heads).permute(2, 0, 3, 1, 4)
-#         q, k, v = qkv[0], qkv[1], qkv[2]
-        
-#         attn = (q @ k.transpoes(-1, -2)) * self.qk_scale
-#         attn = self.attn_drop(attn)
-#         attn = torch.softmax(attn, dim=-1)
-#         x = (attn @ v).transpose(1, 2).reshape(B, N, C)
-#         x = self.proj(x)
-#         x = self.proj_drop(x)
-#         return x
 
 class Encoder(nn.Module):   ## Embedding module
     def __init__(self, encoder_channel):
@@ -82,11 +57,7 @@ class Grouper(nn.Module):
     def forward(self, xyz, return_idx=False):
         B, N, _ = xyz.shape
         center = fps(xyz, self.num_group)
-        # center, _ = sample_farthest_points(xyz, K=self.num_group)
-        # import pdb; pdb.set_trace()
         idx = knn_point(self.group_size, xyz, center)
-        # knn = knn_points(center, xyz, K=self.group_size)
-        # idx = knn.idx
         idx_orig = idx
         
         assert idx.size(1) == self.num_group
@@ -123,9 +94,6 @@ class Mlp(nn.Module):
         return x
 
 class Block(nn.Module):
-    """使用VisionTransformer的Block结构：先norm后multihead + 先norm后MLP
-
-    """
     def __init__(self, dim, num_heads, mlp_ratio=4., qkv_bias=False, qk_scale=None, drop=0., attn_drop=0., drop_path=0., act_layer=nn.GELU, norm_layer=nn.LayerNorm):
         super().__init__()
         self.norm1 = norm_layer(dim)
@@ -206,13 +174,11 @@ class MaskTransformer(nn.Module):
         self.depth = config.depth 
         self.drop_path_rate = config.drop_path_rate
         self.num_heads = config.num_heads 
-        # print_log(f'[args] {config.transformer_config}', logger = 'Transformer')
         # embedding
         self.encoder_dims =  config.encoder_dims
         self.encoder = Encoder(encoder_channel = self.encoder_dims)
 
         self.mask_type = config.mask_type
-
         self.pos_embed = nn.Sequential(
             nn.Linear(3, 128),
             nn.GELU(),
@@ -250,9 +216,7 @@ class MaskTransformer(nn.Module):
         mask_idx = []
         for points in center:
             points = points.unsqueeze(0) # [1, G, 3]
-            # 从所有center中随机选取mask block的中心
             index = random.randint(0, points.size(1) - 1)
-            # 计算该中心到其他points的距离
             dists = torch.norm(points[:, index].unsqueeze() - points, p=2, dim=-1) # 1,G,3 - 1,G,3 ->1,G
             
             idx = torch.argsort(dists, dim=-1, descending=False)[0] # G (list)
@@ -266,9 +230,7 @@ class MaskTransformer(nn.Module):
                 
     def mask_center_rand(self, center, noaug=False):
         B, G, _ = center.shape
-        # import pdb; pdb.set_trace()
         if noaug or self.mask_ratio == 0:
-            # 不进行任何的mask
             return torch.zeros(center.shape[:2]).bool()
         num_mask = int(self.mask_ratio * G)
         batch_mask = np.zeros([B, G])
@@ -301,7 +263,7 @@ class MaskTransformer(nn.Module):
         center_vis = center[~bool_masked_pos].reshape(B, -1, 3)
         
         # pos embed for visible patch only
-        pos = self.pos_embed(center_vis)
+        pos = self.pos_embed(center_vis) # input_dim = (B, P, 3) where P is the number of point patch / centers
         
         # transformer
         x_vis = self.blocks(x_vis, pos)
@@ -384,15 +346,10 @@ class PointMAE_orig(nn.Module):
             full_vis = vis_points + center[~mask].unsqueeze(1)
             full_rebuild = rebuild_points + center[mask].unsqueeze(1)
             full = torch.cat([full_vis, full_rebuild], dim=0)
-            # full_points = torch.cat([rebuild_points,vis_points], dim=0)
             full_center = torch.cat([center[mask], center[~mask]], dim=0)
-            # full = full_points + full_center.unsqueeze(1)
-            # import pdb; pdb.set_trace()
             ret2 = full_vis.reshape(B, -1, 3)
-            # ret1 = full.reshape(B, -1, 3)
             ret1 = full_rebuild.reshape(B, -1, 3)
             full_center = full_center.reshape(B, -1, 3)
-            # return ret1, ret2
             return ret1, ret2, full_center, rebuild_points, gt_points
         
         return rebuild_points, gt_points
@@ -428,10 +385,8 @@ class PointMAE(PointMAE_orig):
         pos_full = torch.cat([pos_emd_vis, pos_emd_mask], dim=1)
         
         x_rec = self.MAE_decoder(x_full, pos_full, N)
-        # import pdb; pdb.set_trace()
         
         B, M, C = x_rec.shape
-        # rebuild_points = self.increase_dim(x_rec.transpose(1, 2)).transpose(1, 2).reshape(B * M, -1, 3)
         rebuild_points_centralized = self.neighbors_head(x_rec.transpose(1, 2)).transpose(1, 2).reshape(B * M, -1, 3)
         rebuild_centers = self.centers_head(x_rec.transpose(1, 2)).transpose(1, 2).reshape(B, -1, 3)
         rebuild_points = rebuild_points_centralized + rebuild_centers.reshape(-1, 1, 3)
@@ -443,16 +398,9 @@ class PointMAE(PointMAE_orig):
         if vis: #visualization
             vis_points = neighborhood[~mask].reshape(B * (self.num_group - M), -1, 3)
             full_vis = vis_points + center[~mask].unsqueeze(1)
-            # full = torch.cat([full_vis, rebuild_points], dim=0)
-            # full_points = torch.cat([rebuild_points,vis_points], dim=0)
-            # full_center = torch.cat([center[mask], center[~mask]], dim=0)
-            # full = full_points + full_center.unsqueeze(1)
-            # import pdb; pdb.set_trace()
             ret2 = full_vis.reshape(B, -1, 3)
-            # ret1 = full.reshape(B, -1, 3)
             ret1 = rebuild_points.reshape(B, -1, 3)
             vis_center = center[mask].reshape(B, -1, 3)
-            # return ret1, ret2
             return ret1, ret2, vis_center, rebuild_centers, rebuild_points, gt_centers, gt_points
         
         return rebuild_centers, rebuild_points, gt_centers, gt_points
@@ -484,7 +432,6 @@ class PointMAE_PC(PointMAE):
         
         # gt_masked_points
         B, _, C = x_vis.shape
-        # import pdb; pdb.set_trace()
         gt_centers = center[mask].reshape(B, -1, 3)
         
         # masked number
@@ -492,10 +439,8 @@ class PointMAE_PC(PointMAE):
         N = gt_centers.shape[1]
         c_rec = self.center_predictor(x_vis, pos, return_token_num=N)
         rebuild_centers = self.center_head_0(c_rec.transpose(1, 2)).transpose(1, 2)
-        # import pdb; pdb.set_trace()
         
         pos_emd_vis = self.decoder_pos_embed(center[~mask]).reshape(B, -1, C)
-        # NOTE: use rebuild_centers to do the position embedding, instead of the ground truth masked centers
         pos_emd_mask = self.decoder_pos_embed(rebuild_centers.reshape(-1, 3)).reshape(B, -1, C)
         
         _,N,_ = pos_emd_mask.shape
@@ -509,27 +454,15 @@ class PointMAE_PC(PointMAE):
         B, M, C = x_rec.shape
         gt_points_centralized = neighborhood[mask].reshape(B * M, -1, 3)
         gt_points = gt_points_centralized + center[mask].unsqueeze(1)
-        # rebuild_points = self.increase_dim(x_rec.transpose(1, 2)).transpose(1, 2).reshape(B * M, -1, 3)
         rebuild_points_centralized = self.neighbors_head(x_rec.transpose(1, 2)).transpose(1, 2).reshape(B * M, -1, 3)
-        # rebuild_centers_bias = self.centers_head(x_rec.transpose(1, 2)).transpose(1, 2)
-        # rebuild_centers = rebuild_centers + rebuild_centers_bias
-        # import pdb; pdb.set_trace()
         rebuild_points = rebuild_points_centralized + rebuild_centers.reshape(-1, 1, 3)
-        # rebuild_centers = rebuild_centers.reshape(B, -1, 3)
         
         if vis: #visualization
             vis_points = neighborhood[~mask].reshape(B * (self.num_group - M), -1, 3)
             full_vis = vis_points + center[~mask].unsqueeze(1)
-            # full = torch.cat([full_vis, rebuild_points], dim=0)
-            # full_points = torch.cat([rebuild_points,vis_points], dim=0)
-            # full_center = torch.cat([center[mask], center[~mask]], dim=0)
-            # full = full_points + full_center.unsqueeze(1)
-            # import pdb; pdb.set_trace()
             ret2 = full_vis.reshape(B, -1, 3)
-            # ret1 = full.reshape(B, -1, 3)
             ret1 = rebuild_points.reshape(B, -1, 3)
             vis_center = center[mask].reshape(B, -1, 3)
-            # return ret1, ret2
             return ret1, ret2, vis_center, rebuild_centers, rebuild_points, gt_centers, gt_points, rebuild_points_centralized, gt_points_centralized
         
         return rebuild_centers, rebuild_points, gt_centers, gt_points, rebuild_points_centralized, gt_points_centralized

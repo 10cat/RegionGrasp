@@ -309,7 +309,7 @@ class ObManDataset(ObManThumb):
         obj_point_normals = ObjMesh.face_normals[face_ids]
         
         if self.cfg.rand:
-            assert not self.cfg.rand_id, "Please set the rand id"
+            assert self.cfg.rand_id is not None, "Please set the rand id"
             np.random.seed(idx + self.cfg.rand_id)
             pick_face = np.random.randint(0, ObjMesh.faces.shape[0] - 1)
             mask_center = ObjMesh.triangles_center[int(pick_face)]
@@ -544,7 +544,7 @@ class GrabNetDataset(GrabNetThumb):
             obj_resp_points_trans = torch.cat((obj_resp_points_trans, obj_scale_tensor), dim=-1)# [N', 4]
             
         if self.cfg.rand:
-            assert not self.cfg.rand_id, "Please set the rand id"
+            assert self.cfg.rand_id is not None, "Please set the rand id"
             np.random.seed(idx + self.cfg.rand_id)
             obj_name = self.frame_objs[idx]
             obj_mesh = self.object_meshes[obj_name]

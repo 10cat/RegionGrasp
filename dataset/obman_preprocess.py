@@ -71,7 +71,6 @@ class ObManResample(obman):
         obj_re = self.obj_resampled[class_id][sample_id]
         points = obj_re['points']
         face_ids = obj_re['faces']
-        # import pdb; pdb.set_trace() # CHECK:物体平移以及回传的平移参数debug
         
         obj_transform = obj_transforms[idx]
         hom_points = np.concatenate([points, np.ones([points.shape[0], 1])], axis=1)
@@ -81,9 +80,6 @@ class ObManResample(obman):
             trans_points = self.cam_extr.dot(obj_transform)
         trans_points = trans_points.dot(hom_points.T).T[:, :3]
         
-        # rotmat = transform_mat[:, :3]
-        # trans = transform_mat[:, -1]
-        # obj_trans = trans + points.mean(axis=0)
         obj_trans = trans_points.mean(axis=0)
         if obj_centric:
             trans_points -= obj_trans
@@ -119,8 +115,6 @@ class ObManObj(ObManResample):
         np.random.seed(seed1)
         N = self.resample_num
         mask_centers = np.floor(np.random.random(self.__len__()) * N).astype(np.int32)
-        # np.random.seed(seed2)
-        # NOTE: 虽然训练阶段是需要固定点数的，但是pretrain阶段可以扩大mask掉的点数，可以一定程度上防止模型过拟合
         if ratio_lb is not None:
             assert ratio_ub is not None
             mask_Ks = np.round((ratio_lb + (ratio_ub - ratio_lb) * np.random.random(self.__len__())) * N).astype(np.int32)
@@ -133,7 +127,6 @@ class ObManObj(ObManResample):
         tree = KDTree(points)
         center_id = int(self.mask_centers[idx])
         K = self.mask_Ks[idx] # type: ignore
-        # pdb.set_trace()
         distances, indices = tree.query(points[center_id].reshape(1, -1), K)
         
         mask = np.ones_like(points)
@@ -231,15 +224,7 @@ class ObManThumb(ObManResample):
         
     def thumb_query_point(self, HandMesh, ObjMesh, pene_th=0.002, contact_th=-0.005):
         thumb_vertices = HandMesh.vertices[self.thumb_vertices_ids]
-        # ObjQuery = trimesh.proximity.ProximityQuery(ObjMesh)
-        #  -- 以thumb_vertices_ids为query计算signed distances并返回相对应的closest faces
-        #  the on_surface return is not signed_dists, 所以需要专门计算signed dists， 再用on_surface返回obj上最近的面
-        # h2o_signed_dists = ObjQuery.signed_distance(thumb_vertices)
-        # _, _, h2o_closest_fid = ObjQuery.on_surface(thumb_vertices)
-        # TODO: trimesh.proximity.signed_distance包含了closest_points而没有输出triangle_ids,改写使输出triangle_ids -- 这样只用计算一次closest_points
         h2o_signed_dists, h2o_closest_fid = signed_distance(ObjMesh, thumb_vertices)
-        # -- 用sdf_th阈值进一步选取thumb上真正的contact部分
-        # NOTE: OUTSIDE mesh -> NEG； INSIDE the mesh -> POS
         penet_flag = h2o_signed_dists < pene_th
         contact_flag = h2o_signed_dists > contact_th
         flag = penet_flag & contact_flag
@@ -291,7 +276,6 @@ class ObManThumb(ObManResample):
         hand_shape = torch.tensor(self.hand_shapes[idx]).reshape(1, -1)
         hand_verts = self.rh_mano(betas=hand_shape, global_orient=hand_rot,
                                   hand_pose=hand_pose, transl=hand_trans).vertices.squeeze(0)
-        # import pdb; pdb.set_trace()
         
         return hand_verts
     
@@ -308,75 +292,28 @@ class ObManThumb(ObManResample):
             hand_verts = self.get_verts3d(idx)
             hand_faces = self.get_faces3d(idx)
         
-        # import pdb;pdb.set_trace()
-        
         obj_mesh = self.get_sample_obj_mesh(idx)
         obj_verts, _ = self.get_obj_verts_faces(idx)
-        # import pdb; pdb.set_trace()
-        
-        # hand_verts_gt = self.get_verts3d(idx)
-        # hand_faces_gt = self.get_faces3d(idx)
         
         if self.obj_centric:
             hand_verts -= obj_trans
             obj_verts -= obj_trans
         HandMesh = trimesh.Trimesh(vertices=hand_verts, faces=hand_faces)
         ObjMesh = trimesh.Trimesh(vertices=obj_verts, faces=obj_mesh['faces'])
-        # HandMeshGT = trimesh.Trimesh(vertices=hand_verts_gt, faces=hand_faces_gt)
-        
-        # import pdb; pdb.set_trace()
-        # #DONE: visualization check - 位移是否正确
-        # root = '/home/yilin/Codes/test_visuals/train_trans_annot'
-        # makepath(root)
-        # ObjMesh.export(os.path.join(root, f'{idx}_obj.ply'))
-        # HandMesh.export(os.path.join(root, f'{idx}_hand.ply'))
-        # HandMeshGT.export(os.path.join(root, f'{idx}_hand_gt.ply'))
         
         
         point_contact, contact_fids  = self.thumb_query_point(HandMesh, ObjMesh)
         if point_contact is None:
-            # DONE: 筛掉没有手接触的sample
             return None
-        
-        # dists, contact_indices = self.get_KNN_in_pc(ObjPoints, point_contact)
-        
-        # import pdb; pdb.set_trace()
-        
-        # contact_pc, input_pc_hr = self.divide_pointcloud(ObjPoints, contact_indices)
-        
-        # DONE:region_visual --> 820有点太大了，先取一半吧410
-        # PC_contact = trimesh.PointCloud(vertices=contact_ps, colors=colors_like(config.colors['yellow']))
-        # PC_rem = trimesh.PointCloud(vertices=rem_ps, colors=colors_like(config.colors['green']))
-        
-        # PC_contact.export('test_pc_contact.ply')
-        # PC_rem.export('test_pc_rem.ply')
-        # ObjMesh.export('test_mesh.ply')
-        # HandMesh.export('hand_mesh.ply')
-        
-        # import pdb; pdb.set_trace()
-        
-        # TODO: random sampling Np = 2048 from the rem_ps
-        # np.random.seed(idx)
-        # input_pc, sampled_indices = self.input_pc_sample(idx, input_pc_hr)
         
         annot['center_point'] = point_contact
         annot['contact_faces'] = contact_fids
-        # annot['contact_pc'] = contact_pc
-        # annot['input_pc_hr'] = input_pc_hr
-        # annot['input_pc'] = input_pc
-        # annot['sampled_indices'] = sampled_indices
         
         return annot
     
 
   
 def sampling_check(objdataset):
-    """
-    研究采样方式和点数对于几何体所有面覆盖的情况
-
-    Args:
-        objdataset (dataset): obj dataset
-    """
     unique_objs = objdataset.unique_objs
     ratio_avg = 0
     for pair in unique_objs:
@@ -395,8 +332,6 @@ def sampling_check(objdataset):
     return
 
 def get_thumb_condition(ds_root, args):
-    # import pdb; pdb.set_trace()
-    # use_cache = ~args.preprocess
     dataset = ObManThumb(ds_root=ds_root, 
                            shapenet_root=config.SHAPENET_ROOT,
                            mano_root=config.mano_root,

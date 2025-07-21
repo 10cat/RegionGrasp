@@ -190,12 +190,8 @@ class cGraspvaeLoss(nn.Module):
         #     dict_loss.update({'loss_penetr': loss_penetr})
             
 
-<<<<<<< HEAD
-        ### KL Loss ####
-=======
         #### KL Loss ####
->>>>>>> beea1da049ea1fc9b99e0b837b109bffc0b1a133
-        if sample_stats is not None: 
+        if sample_stats is not None and mode != 'test': 
             p_mean, log_vars, Zin = sample_stats
             loss_kl = self.KLLoss(rhand_vs, p_mean, log_vars)
         else:

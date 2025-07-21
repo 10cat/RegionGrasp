@@ -72,9 +72,7 @@ optim: {
 model: {
     cnet_type: mae,
     cnet: {
-      # chkpt_path: 'pointmae_og_balance/models/checkpoint_70.pth',
-      # chkpt_path: 'pointmae_og_bal_d6/models/checkpoint_20.pth',
-      chkpt_path: ,
+      chkpt_path: 'the_path_of_pretrain_model_checkpoint',
       kwargs: {
         group_size: 32,
         num_group: 128,

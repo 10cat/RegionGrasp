@@ -1,18 +1,18 @@
 kwargs: {
   train:  {
     use_cache: True,
-    resample_num: 2048,
+    resample_num: 3000,
     rand_each_num: {
-      obman: 30,
-      grabnet: 1500
+      obman: 60, # 30
+      grabnet: 3000 # 1500
     }
   },
   val: {
     use_cache: True,
-    resample_num: 2048,
+    resample_num: 3000,
     rand_each_num: {
-      obman: 5,
-      grabnet: 250
+      obman: 10, # 5
+      grabnet: 500 # 250
     }
   }
 }

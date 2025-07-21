@@ -17,7 +17,6 @@ def get_dataset(cfg, mode='train'):
         ds_root = cfg.obman_root
         shapenet_root = cfg.shapenet_root
         configs = cfg.dataset[mode]._base_.kwargs
-        # import pdb; pdb.set_trace() # dataset配置问题
         if cfg.mae:
             dataset = ObManObj_MAE(ds_root = ds_root,
                                 shapenet_root = shapenet_root,

@@ -2,5 +2,5 @@ type: mae
 kwargs:  {
   use_cache: True, 
   object_centric: True,
-  resample_num: 2048
+  resample_num: 3000
 }

@@ -18,20 +18,11 @@ def get_config(args, paths, folder=None):
     elif args.cfgs != 'config':
         cfg_root = './cfgs'
         cfg_path = os.path.join(cfg_root, folder, args.cfgs+'.yaml')
-        
+    # import pdb; pdb.set_trace()
     config = OmegaConf.load(cfg_path)
     config = OmegaConf.to_container(config, resolve=True)
     config.update({'cfg_path': cfg_path, 'run_type':folder})
     return config
-
-# def adjust_config(config, args):
-#     config.loss.train.loss_edge = False if args.no_loss_edge else True
-#     config.loss.train.loss_mesh_rec = False if args.no_loss_mesh_rec else True
-#     config.loss.train.loss_dist_h = False if args.no_loss_dist_h else True
-#     config.loss.train.loss_dist_o = False if args.no_loss_dist_o else True
-#     config.loss.train.loss_penetr = True if args.loss_penetr else False
-#     config.loss.train.loss_mano = True if args.loss_mano else False
-    
 
 def merge_new_config(config, new_config):
     for key, val in new_config.items():
@@ -75,43 +66,6 @@ def config_paths(machine, exp_name):
         output_dir = "/home/datassd/yilin/Outputs/ConditionHOI/"+exp_name
         mano_root = "/home/datassd/yilin/Codes/_toolbox/mano"
         mano_rh_path = f"/home/datassd/yilin/Codes/_toolbox/mano/models/MANO_RIGHT.pkl"
-        
-    if machine == '216':
-        grabnet_root = "/home/yilin/GrabNet"
-        obman_root = "/home/yilin/obman"
-        shapenet_root = "/home/yilin/ShapeNet_obman"
-        output_root = "/home/yilin/Outputs/ConditionHOI/"
-        output_dir = "/home/yilin/Outputs/ConditionHOI/"+exp_name
-        mano_root = "/home/yilin/Codes/_toolbox/mano"
-        mano_rh_path = f"/home/yilin/Codes/_toolbox/mano/models/MANO_RIGHT.pkl"
-        # mano_rh_path = f"/home/yilin/Codes/Hand/affordance-CVAE/models/mano/MANO_RIGHT.pkl"
-        
-    if machine == '208' or machine == '50':
-        grabnet_root = "/home/shihao/yilin/GrabNet"
-        obman_root = "/home/shihao/yilin/obman"
-        shapenet_root = "/home/shihao/yilin/ShapeNet_obman"
-        output_root = "/home/shihao/yilin/Outputs/ConditionHOI/"
-        output_dir = "/home/shihao/yilin/Outputs/ConditionHOI/"+exp_name
-        mano_root = "/home/shihao/yilin/Codes/_toolbox/mano"
-        mano_rh_path = f"/home/shihao/yilin/Codes/_toolbox/mano/models/MANO_RIGHT.pkl"
-        
-    if machine == '195':
-        grabnet_root = "/home/jupyter-yiling/GrabNet"
-        obman_root = "/home/jupyter-yiling/obman"
-        shapenet_root = "/home/jupyter-yiling/ShapeNet_obman"
-        output_root = "/home/jupyter-yiling/Outputs/ConditionHOI/"
-        output_dir = "/home/jupyter-yiling/Outputs/ConditionHOI/"+exp_name
-        mano_root = "/home/jupyter-yiling/Codes/_toolbox/mano"
-        mano_rh_path = f"/home/jupyter-yiling/Codes/_toolbox/mano/models/MANO_RIGHT.pkl"
-        
-    if machine == '41':
-        grabnet_root = "/ssd_data/yilin/GrabNet"
-        obman_root = "/ssd_data/yilin/obman"
-        shapenet_root = "/ssd_data/yilin/ShapeNetCore.v2"
-        output_root = "/ssd_data/yilin/Outputs/ConditionHOI/"
-        output_dir = "/ssd_data/yilin/Outputs/ConditionHOI/"+exp_name
-        mano_root = "/home/yilin/smpl_models/mano"
-        mano_rh_path = f"/home/yilin/smpl_models/mano/MANO_RIGHT.pkl"
     
     model_root = os.path.join(output_dir, 'models')
     
@@ -123,7 +77,6 @@ def config_paths(machine, exp_name):
     paths['mano_root'] = mano_root
     paths['mano_rh_path'] = mano_rh_path
     paths['model_root'] = model_root
-    # paths['machine'] = machine
     
     return paths
 

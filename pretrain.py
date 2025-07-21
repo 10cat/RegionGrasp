@@ -35,10 +35,8 @@ def obj_comp(cfg=None):
     bs = cfg.batch_size
     
     model = ConditionBERT if model == 'bert' else ConditionTrans
-    # net = model(embed_dim=cfg.embed_dim, num_heads=cfg.num_heads, mlp_ratio=cfg.mlp_ratio, glob_feat_dim=cfg.glob_feat_dim, depth={'encoder':cfg.depth, 'decoder':cfg.depth}, knn_layer=cfg.knn_layer_num, fps=True)
     net = model(**cfg.model.kwargs)
     if mode == 'train':
-        # TODO: dataset传入cfg参数
         trainset = get_dataset(cfg, mode='train')
         valset = get_dataset(cfg, mode='val')
          
@@ -53,7 +51,6 @@ def obj_comp(cfg=None):
         
         trainepoch = PretrainEpoch(chloss, optimizer, scheduler, output_dir=cfg.output_dir, cfg=cfg)
         valepoch = PretrainEpoch(chloss, optimizer, scheduler, output_dir=cfg.output_dir, mode='val', cfg=cfg)
-        # import pdb; pdb.set_trace()
         
         for epoch in range(cfg.num_epoch):
             net, _ = trainepoch(trainloader, epoch, net)
@@ -73,7 +70,6 @@ def mae(cfg=None):
         net = PointMAE(cfg.model)
     else:
         net = PointMAE_orig(cfg.model)
-    # import pdb; pdb.set_trace()
     
     if mode == 'train':
         trainset = get_dataset(cfg, mode='train')
@@ -83,7 +79,6 @@ def mae(cfg=None):
         valloader = data.DataLoader(valset, batch_size=bs, shuffle=False)
         
         optimizer, scheduler = build_optim_sche(net, cfg=cfg)
-        # import pdb; pdb.set_trace()
         
         loss = MPMLoss()
         
@@ -96,15 +91,11 @@ def mae(cfg=None):
         stopflag = False
         for epoch in range(cfg.num_epoch):
             net, _ = trainepoch(trainloader, epoch, net, optimizer, scheduler)
-            # if epoch % cfg.check_interval == 0:
             _, stop_flag = valepoch(valloader, epoch, net, optimizer, scheduler)
             if stop_flag:
                 print("Early stopping occur!")
                 break
     
-    
-    
-
 
 if __name__ == "__main__":
     import argparse
@@ -141,13 +132,8 @@ if __name__ == "__main__":
 
     set_random_seed(1024)
     
-    # cfg = MyOptions()
-    # DONE: 读取配置文件并转化成字典，同时加入args的配置
-    
     exp_name = cfgsu.config_exp_name(args)
     paths = cfgsu.config_paths(args.machine, exp_name['exp_name'])
-    
-    # import pdb; pdb.set_trace()
     
     conf = cfgsu.get_config(args, paths, args.cfgs_fodler)
     conf.update(exp_name)
@@ -155,12 +141,8 @@ if __name__ == "__main__":
     conf.update(args.__dict__) # args的配置也记录下来
     
     cfg = EasyDict()
-    # DONE: transform the dict config to easydict
     cfg = cfgsu.merge_new_config(cfg, conf)
     
-    # cfg = cfgsu.adjust_config(cfg, args)
-    # conf = OmegaConf.structured(cfg)
-    # import pdb; pdb.set_trace()
     os.environ['CUDA_VISIBLE_DEVICES'] = cfg.cuda_id
     os.environ['OMP_NUM_THREAD'] = '1'
     torch.set_num_threads(1)
@@ -174,13 +156,11 @@ if __name__ == "__main__":
         wandb.init(project=cfg.project_name,
                 name=cfg.exp_name,
                 config=conf,
-                dir=os.path.join(cfg.output_root, 'wandb')) # omegaconf: resolve=True即可填写自动变量
-                # dir: set the absolute path for storing the metadata of each runs
+                dir=os.path.join(cfg.output_root, 'wandb')) 
                 
-    print(f"================ {cfg.run_type} experiment running! ================") # NOTE: Checkpoint! 提醒一下当前实验的属性
+    print(f"================ {cfg.run_type} experiment running! ================")
         
     if cfg.mae: 
-        # TODO: pretrain--传入cfg参数
         mae(cfg = cfg)
     else:
         obj_comp(cfg=cfg)

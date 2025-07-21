@@ -5,6 +5,7 @@ sys.path.append('..')
 import numpy as np
 import torch
 import torch.nn as nn
+from traineval_utils import pointnet_util
 
 
 def fps(pc, num):
