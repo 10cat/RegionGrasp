@@ -61,12 +61,3 @@ If you find our code or paper helpful, please cite with the following bibtex and
   note={arXiv preprint arXiv:2410.07995}
 }
 ```
-
-
-
-
-
-
-
-
-# Update contributors
